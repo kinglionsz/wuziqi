@@ -1,0 +1,141 @@
+.board {
+  display: inline-block;
+  border: 8px solid #8b5a2b;
+  background: linear-gradient(45deg, #d2b48c 0%, #bc8f8f 100%);
+  background-image: 
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 30px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 30px),
+    linear-gradient(45deg, #d2b48c 0%, #bc8f8f 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  max-width: 90vw;
+}
+
+.board-row {
+  display: flex;
+}
+
+.board-cell {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(139, 90, 43, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease;
+  touch-action: manipulation;
+}
+
+.board-cell:hover {
+  background-color: rgba(230, 200, 156, 0.5);
+}
+
+.board-cell:active {
+  background-color: rgba(230, 200, 156, 0.7);
+}
+
+.stone {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  position: absolute;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(0.8);
+  animation: stoneAppear 0.4s ease-out forwards;
+}
+
+@keyframes stoneAppear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  80% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.stone.black {
+  background: radial-gradient(circle at 30% 30%, #333, #000);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+.stone.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #e0e0e0);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+}
+
+.preview-stone {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  position: absolute;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.preview-stone.black {
+  background: radial-gradient(circle at 30% 30%, #333, #000);
+}
+
+.preview-stone.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #e0e0e0);
+  border: 1px solid #ddd;
+}
+
+/* 响应式调整 */
+@media (max-width: 600px) {
+  .board {
+    padding: 8px;
+    border-width: 6px;
+  }
+  
+  .board-cell {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .stone {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .preview-stone {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 400px) {
+  .board {
+    padding: 6px;
+    border-width: 4px;
+  }
+  
+  .board-cell {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .stone {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .preview-stone {
+    width: 14px;
+    height: 14px;
+  }
+}
