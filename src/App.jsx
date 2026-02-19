@@ -104,9 +104,24 @@ const findBestMove = (board, aiPlayer) => {
   let bestScore = -Infinity
   let bestMove = null
 
-  // 优先考虑中心位置
   const center = 7
-  const priorityMoves = []
+
+  // 检查棋盘是否为空
+  let isEmptyBoard = true
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      if (board[row][col]) {
+        isEmptyBoard = false
+        break
+      }
+    }
+    if (!isEmptyBoard) break
+  }
+
+  // 如果是空棋盘，直接返回中心位置
+  if (isEmptyBoard) {
+    return { row: 7, col: 7 }
+  }
 
   for (let row = 0; row < 15; row++) {
     for (let col = 0; col < 15; col++) {
@@ -147,6 +162,11 @@ const findBestMove = (board, aiPlayer) => {
         }
       }
     }
+  }
+
+  // 如果没有找到最佳位置（所有位置评分相同为0），返回中心附近
+  if (!bestMove) {
+    return { row: 7, col: 7 }
   }
 
   return bestMove
@@ -282,7 +302,7 @@ function App() {
         setIsAIThinking(false)
       }, 500)
     }
-  }, [currentPlayer, gameMode, gameOver])
+  }, [currentPlayer, gameMode, gameOver, board, isAIThinking])
 
   // 格式化时间
   const formatTime = (seconds) => {
