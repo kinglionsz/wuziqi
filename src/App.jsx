@@ -198,7 +198,6 @@ function App() {
   const [showReplayModal, setShowReplayModal] = useState(false)
   const [replayIndex, setReplayIndex] = useState(-1)
   const [gameRecords, setGameRecords] = useState([])
-  const [isAIThinking, setIsAIThinking] = useState(false)
   
   // 在线对战
   const [roomId, setRoomId] = useState('')
@@ -210,6 +209,7 @@ function App() {
   const turnStartTime = useRef(null)
   const audioRef = useRef(null)
   const bgMusicRef = useRef(null)
+  const aiMoveRef = useRef(false)
 
   // 音效播放
   const playSound = useCallback((type) => {
@@ -290,19 +290,19 @@ function App() {
     }
   }, [])
 
-  // AI 落子
+  // AI 落子 - 使用 ref 避免依赖循环
   useEffect(() => {
-    if (gameMode === 'pve' && currentPlayer === AI_PLAYER && !gameOver && !isAIThinking) {
-      setIsAIThinking(true)
+    if (gameMode === 'pve' && currentPlayer === AI_PLAYER && !gameOver && !aiMoveRef.current) {
+      aiMoveRef.current = true
       setTimeout(() => {
         const bestMove = findBestMove(board, AI_PLAYER)
         if (bestMove) {
           handleCellClick(bestMove.row, bestMove.col)
         }
-        setIsAIThinking(false)
+        aiMoveRef.current = false
       }, 500)
     }
-  }, [currentPlayer, gameMode, gameOver, board, isAIThinking])
+  }, [currentPlayer, gameMode, gameOver])
 
   // 格式化时间
   const formatTime = (seconds) => {
@@ -341,9 +341,8 @@ function App() {
   const handleCellClick = (row, col) => {
     if (gameOver || board[row][col]) return
     
-    // PVP 模式下检查是否轮到正确玩家
+    // 在线对战模式下检查是否轮到正确玩家
     if (gameMode === 'online' && playerColor && currentPlayer !== playerColor) return
-    if (gameMode === 'pve' && currentPlayer === AI_PLAYER) return
 
     playSound('place')
 
@@ -425,6 +424,7 @@ function App() {
     setShowVictoryModal(false)
     setMoveHistory([])
     setReplayIndex(-1)
+    aiMoveRef.current = false
     gameStartTime.current = Date.now()
     turnStartTime.current = Date.now()
   }

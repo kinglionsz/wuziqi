@@ -2,9 +2,6 @@
   display: inline-block;
   border: 8px solid #8b5a2b;
   background-color: var(--board-color, #DEB887);
-  background-image: 
-    repeating-linear-gradient(90deg, var(--line-color) 0px, var(--line-color) 1px, transparent 1px, transparent 30px),
-    repeating-linear-gradient(0deg, var(--line-color) 0px, var(--line-color) 1px, transparent 1px, transparent 30px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   padding: 10px;
@@ -19,8 +16,8 @@
 .board-cell {
   width: 30px;
   height: 30px;
-  border: 1px solid var(--line-color);
-  border-opacity: 0.3;
+  border-right: 1px solid var(--line-color);
+  border-bottom: 1px solid var(--line-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,6 +25,16 @@
   position: relative;
   transition: background-color 0.2s ease;
   touch-action: manipulation;
+}
+
+/* 第一列左边框 */
+.board-cell:first-child {
+  border-left: 1px solid var(--line-color);
+}
+
+/* 第一行上边框 */
+.board-row:first-child .board-cell {
+  border-top: 1px solid var(--line-color);
 }
 
 .board-cell:hover {
@@ -38,14 +45,17 @@
   background-color: rgba(230, 200, 156, 0.7);
 }
 
-/* 星位点 */
+/* 星位点 - 定位在交叉点 */
 .star-point {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--line-color);
   position: absolute;
-  z-index: 0;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .star-point.center-star {
@@ -62,7 +72,7 @@
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform: scale(0.8);
   animation: stoneAppear 0.4s ease-out forwards;
-  z-index: 1;
+  z-index: 2;
 }
 
 @keyframes stoneAppear {
@@ -129,7 +139,7 @@
   position: absolute;
   opacity: 0.5;
   transition: all 0.2s ease;
-  z-index: 2;
+  z-index: 3;
 }
 
 .preview-stone.black {
@@ -162,6 +172,11 @@
     width: 18px;
     height: 18px;
   }
+  
+  .star-point {
+    width: 6px;
+    height: 6px;
+  }
 }
 
 @media (max-width: 400px) {
@@ -183,5 +198,10 @@
   .preview-stone {
     width: 14px;
     height: 14px;
+  }
+  
+  .star-point {
+    width: 5px;
+    height: 5px;
   }
 }
