@@ -87,7 +87,7 @@ h1 {
 
 .undo-button { background-color: #ff9800; color: white; }
 .undo-button:hover:not(:disabled) { background-color: #f57c00; transform: translateY(-2px); }
-.undo-button:disabled { background-color: #cccccc; cursor: not-allowed; box-shadow: none; }
+.undo-button:disabled { background-color: #cccccc; color: #666666; cursor: not-allowed; box-shadow: none; }
 
 .rules-button { background-color: #2196F3; color: white; }
 .rules-button:hover { background-color: #1976D2; transform: translateY(-2px); }
@@ -110,6 +110,7 @@ h1 {
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.8);
+  color: #333333;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -245,6 +246,7 @@ h1 {
   border: 2px solid #ddd;
   border-radius: 8px;
   background: white;
+  color: #333333;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -262,6 +264,8 @@ h1 {
   cursor: pointer;
   font-size: 0.9rem;
   min-width: 60px;
+  color: #333333;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
 }
 
 .theme-buttons button.active {
@@ -275,6 +279,7 @@ h1 {
   border-radius: 8px;
   cursor: pointer;
   background: white;
+  color: #333333;
 }
 
 .toggle-buttons button.active {
@@ -401,6 +406,7 @@ h1 {
   border: 1px solid #ddd;
   border-radius: 8px;
   background: white;
+  color: #333333;
   cursor: pointer;
   transition: all 0.3s ease;
 }
