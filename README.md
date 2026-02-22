@@ -67,25 +67,40 @@ npm run preview
 wuziqi/
 ├── src/
 │   ├── components/
-│   │   ├── Board.jsx    # 棋盘组件
-│   │   └── Board.css    # 棋盘样式
-│   ├── App.jsx          # 主应用组件
-│   ├── App.css          # 主应用样式
-│   ├── index.css        # 全局样式
-│   └── main.jsx         # 入口文件
-├── public/              # 静态资源
-├── index.html          # HTML 模板
-├── vite.config.js      # Vite 配置
-└── package.json        # 项目配置
+│   │   ├── Board/           # 棋盘组件
+│   │   └── Modals/          # 模态框组件
+│   │       ├── VictoryModal.jsx
+│   │       ├── RulesModal.jsx
+│   │       ├── SettingsModal.jsx
+│   │       └── ReplayModal.jsx
+│   ├── hooks/
+│   │   └── useGameLogic.js  # 游戏逻辑 Hook
+│   ├── utils/
+│   │   ├── constants.js     # 常量配置
+│   │   ├── ai.js            # AI 算法
+│   │   └── sound.js         # 音效工具
+│   ├── App.jsx              # 主应用组件
+│   ├── App.css              # 主应用样式
+│   ├── index.css            # 全局样式
+│   └── main.jsx             # 入口文件
+├── public/                  # 静态资源
+├── index.html               # HTML 模板
+├── vite.config.js           # Vite 配置
+└── package.json             # 项目配置
 ```
 
 ## 部署信息
 
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
-- **当前版本**: v0.4
+- **当前版本**: v0.5
 
 ## 版本历史
 
+- **v0.5** - 重构组件结构，优化 AI 算法性能
+  - 拆分 App.jsx 从 765 行至模块化结构
+  - 新增 hooks/useGameLogic 管理游戏状态
+  - 提取 utils/ 文件夹存放工具函数
+  - 优化 AI 候选位置算法，减少计算量
 - **v0.4** - 修复按钮文字颜色可读性问题，优化非active状态按钮的对比度
 - **v0.3** - 修复棋盘线条和AI落子问题
 - **v0.2** - 添加AI对战、音效、主题和游戏记录功能
