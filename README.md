@@ -20,6 +20,11 @@
 - **游戏记录**：自动保存到本地存储
 - **回放功能**：查看对局过程
 
+### 云端功能
+- **云端存储** - 游戏记录自动同步到 Supabase 数据库
+- **双记录系统** - 本地存储 + 云端存储双备份
+- **在线对战预留** - 已集成实时订阅功能，支持未来在线对战
+
 ### 其他功能
 - 最后落子高亮标记
 - 悔棋功能
@@ -30,6 +35,7 @@
 
 - **前端框架**: React 19
 - **构建工具**: Vite 7
+- **后端服务**: Supabase (PostgreSQL + Realtime)
 - **部署平台**: 腾讯云 CloudBase
 
 ## 快速开始
@@ -75,6 +81,8 @@ wuziqi/
 │   │       └── ReplayModal.jsx
 │   ├── hooks/
 │   │   └── useGameLogic.js  # 游戏逻辑 Hook
+│   ├── lib/
+│   │   └── supabase.js      # Supabase 客户端和操作函数
 │   ├── utils/
 │   │   ├── constants.js     # 常量配置
 │   │   ├── ai.js            # AI 算法
@@ -85,6 +93,7 @@ wuziqi/
 │   └── main.jsx             # 入口文件
 ├── public/                  # 静态资源
 ├── index.html               # HTML 模板
+├── .env                     # 环境变量配置
 ├── vite.config.js           # Vite 配置
 └── package.json             # 项目配置
 ```
@@ -93,18 +102,48 @@ wuziqi/
 
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
 - **当前版本**: v0.5
+- **部署时间**: 2026-02-22
 
 ## 版本历史
 
-- **v0.5** - 重构组件结构，优化 AI 算法性能
+- **v0.5** - 重构组件结构，集成 Supabase 数据库
   - 拆分 App.jsx 从 765 行至模块化结构
   - 新增 hooks/useGameLogic 管理游戏状态
   - 提取 utils/ 文件夹存放工具函数
   - 优化 AI 候选位置算法，减少计算量
+  - 集成 Supabase 数据库，实现云端存储
+  - 创建 game_records 和 game_rooms 数据表
+  - 添加本地/云端双记录系统
+  - 预留在线对战实时同步接口
 - **v0.4** - 修复按钮文字颜色可读性问题，优化非active状态按钮的对比度
 - **v0.3** - 修复棋盘线条和AI落子问题
 - **v0.2** - 添加AI对战、音效、主题和游戏记录功能
 - **v0.1** - 初始版本
+
+## 数据库表结构
+
+### game_records (游戏记录表)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID | 主键 |
+| created_at | TIMESTAMP | 创建时间 |
+| winner | TEXT | 获胜方 (black/white/draw) |
+| game_mode | TEXT | 游戏模式 (pvp/pve/online) |
+| moves | INTEGER | 总步数 |
+| duration_seconds | INTEGER | 游戏时长(秒) |
+| theme | TEXT | 主题 |
+| move_history | JSONB | 棋谱数据 |
+
+### game_rooms (在线对战房间表)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID | 主键 |
+| room_code | TEXT | 房间代码 |
+| status | TEXT | 状态 (waiting/playing/finished) |
+| player_black | TEXT | 黑棋玩家 |
+| player_white | TEXT | 白棋玩家 |
+| board_state | JSONB | 棋盘状态 |
+| move_history | JSONB | 移动历史 |
 
 ---
 
