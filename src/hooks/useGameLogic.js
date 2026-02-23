@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { BOARD_SIZE, AI_PLAYER, GAME_MODES, THEMES } from '../utils/constants'
+import { BOARD_SIZE, AI_PLAYER, GAME_MODES, THEMES, AI_LEVELS } from '../utils/constants'
 import { checkWinner, checkDraw, findBestMove } from '../utils/ai'
 import { playSound } from '../utils/sound'
 import { saveGameRecord as saveToSupabase } from '../lib/supabase'
