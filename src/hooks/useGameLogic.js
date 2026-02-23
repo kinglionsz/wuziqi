@@ -12,7 +12,8 @@ import { saveGameRecord as saveToSupabase } from '../lib/supabase'
 export const useGameLogic = ({ 
   gameMode, 
   soundEnabled, 
-  theme 
+  theme,
+  aiLevel = AI_LEVELS.MEDIUM
 }) => {
   // 游戏状态
   const [board, setBoard] = useState(() => 
@@ -66,7 +67,7 @@ export const useGameLogic = ({
     if (gameMode === GAME_MODES.PVE && currentPlayer === AI_PLAYER && !gameOver && !aiMoveRef.current) {
       aiMoveRef.current = true
       const timer = setTimeout(() => {
-        const bestMove = findBestMove(board, AI_PLAYER)
+        const bestMove = findBestMove(board, AI_PLAYER, aiLevel)
         if (bestMove) {
           handleCellClick(bestMove.row, bestMove.col)
         }
@@ -74,7 +75,7 @@ export const useGameLogic = ({
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [currentPlayer, gameMode, gameOver, board])
+  }, [currentPlayer, gameMode, gameOver, board, aiLevel])
 
   // 保存游戏记录
   const saveGameRecord = useCallback(async (winnerValue) => {

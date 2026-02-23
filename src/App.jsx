@@ -2,14 +2,14 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Board from './components/Board'
 import { VictoryModal, RulesModal, ReplayModal, SettingsModal } from './components/Modals'
 import { useGameLogic } from './hooks/useGameLogic'
-import { THEMES, GAME_MODES, AI_PLAYER } from './utils/constants'
+import { THEMES, GAME_MODES, AI_PLAYER, AI_LEVELS } from './utils/constants'
 import { playSound } from './utils/sound'
 import './App.css'
 
 function App() {
   // 游戏设置状态
   const [gameMode, setGameMode] = useState(GAME_MODES.PVP)
-  const [aiLevel, setAiLevel] = useState('medium')
+  const [aiLevel, setAiLevel] = useState(AI_LEVELS.MEDIUM)
   const [theme, setTheme] = useState('default')
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [bgMusicEnabled, setBgMusicEnabled] = useState(false)
@@ -38,7 +38,7 @@ function App() {
     saveGameRecord,
     formatTime,
     setBoard
-  } = useGameLogic({ gameMode, soundEnabled, theme })
+  } = useGameLogic({ gameMode, soundEnabled, theme, aiLevel })
 
   // 背景音乐引用
   const bgMusicRef = useRef(null)
@@ -72,6 +72,15 @@ function App() {
     setGameMode(mode)
     resetGame()
   }, [resetGame])
+
+  // 处理难度切换
+  const handleAiLevelChange = useCallback((level) => {
+    setAiLevel(level)
+    // 切换难度时重置游戏，确保新难度立即生效
+    if (gameMode === GAME_MODES.PVE) {
+      resetGame()
+    }
+  }, [gameMode, resetGame])
 
   // 回放功能
   const startReplay = useCallback(() => {
@@ -221,7 +230,7 @@ function App() {
         bgMusicEnabled={bgMusicEnabled}
         onClose={() => setShowSettingsModal(false)}
         onChangeMode={handleModeChange}
-        onChangeAiLevel={setAiLevel}
+        onChangeAiLevel={handleAiLevelChange}
         onChangeTheme={setTheme}
         onToggleSound={() => setSoundEnabled(prev => !prev)}
         onToggleBgMusic={() => setBgMusicEnabled(prev => !prev)}
