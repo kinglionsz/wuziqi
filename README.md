@@ -186,5 +186,44 @@ npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
 | move_history | JSONB | 移动历史 |
 
 ---
+## 本地运行示例
+
+在项目根目录下运行以下命令启动开发服务器：
+
+```bash
+npm start
+```
+
+**预期输出：**
+
+```
+> xiaochidian@0.6.0 start
+> concurrently "npm run dev" "npm run server"
+
+[0] 
+[0] > xiaochidian@0.6.0 dev
+[0] > vite
+
+[1] 
+[1] > xiaochidian@0.6.0 server
+[1] > node server/server.js
+
+[1] ========================================
+[1] 🎮 五子棋在线对战服务器已启动
+[1] 📡 监听端口: 3001
+[1] 🌐 前端连接地址: http://localhost:5173
+[1] ========================================
+
+[0]   VITE v7.3.1  ready in XXX ms
+[0] 
+[0]   ➜  Local:   http://localhost:5173/
+[0]   ➜  Network: use --host to expose
+```
+
+启动成功后：
+- 前端地址: http://localhost:5173
+- 后端服务器: http://localhost:3001
+
+
 
 © 2026 狮王李
