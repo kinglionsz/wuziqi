@@ -136,26 +136,13 @@ cloudbase service create -e codebuddy-9gu42kpn62ead2e2 -p wuziqi -f wuziqi-serve
 ### 在线对战配置说明
 
 **当前状态**：
-- 云函数已部署 (wuziqi-server)
-- HTTP 服务已创建
-- 但前端代码仍连接本地 localhost，需要配置
+- 云函数部署遇到配置问题
+- CloudBase 云托管需要开通按流量计费（包年包月无法使用）
+- 云函数不支持 WebSocket，无法实现真正的实时在线对战
 
-**配置步骤**：
-
-1. **创建 .env.production 文件**
-```bash
-VITE_SOCKET_URL=https://codebuddy-9gu42kpn62ead2e2-1402693592.ap-shanghai.app.tcloudbase.com/wuziqi
-```
-
-2. **重新构建部署**
-```bash
-npm run build
-npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
-```
-
-**简化方案**：
-- 当前已可使用双人对战和人机对战
-- 在线对战需要配置前端连接地址
+**结论**：
+- 当前版本只支持本地双人对战和人机对战
+- 在线对战功能需要使用其他方案（如自建服务器）
 
 ### 本次 v0.6 部署内容
 
