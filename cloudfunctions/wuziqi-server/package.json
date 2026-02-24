@@ -1,0 +1,10 @@
+{
+  "name": "wuziqi-server-scf",
+  "version": "0.8.0",
+  "description": "五子棋在线对战服务器 - 腾讯云函数版本",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {}
+}

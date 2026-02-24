@@ -348,7 +348,7 @@ function App() {
       </audio>
 
       <div className="footer">
-        <p>©️狮王李 保留所有权利 2026 | 版本 v0.6</p>
+        <p>©️狮王李 保留所有权利 2026 | 版本 v0.8</p>
       </div>
     </div>
   )
