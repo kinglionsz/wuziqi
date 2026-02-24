@@ -23,11 +23,11 @@ app.use(cors())
 const httpServer = createServer(app)
 
 // 创建 Socket.io 服务器
-// 生产环境必须设置 ALLOWED_ORIGIN 环境变量
+// 开发环境允许所有来源，生产环境需设置 ALLOWED_ORIGIN 环境变量
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.ALLOWED_ORIGIN 
-      || (process.env.NODE_ENV === 'production' ? null : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174']),
+      || (process.env.NODE_ENV === 'production' ? null : '*'),
     methods: ['GET', 'POST'],
     credentials: !!process.env.ALLOWED_ORIGIN
   }
@@ -432,7 +432,7 @@ function sendError(socket, callback, errorMessage) {
 
 // 启动服务器
 const PORT = process.env.PORT || 3001
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`========================================`)
   console.log(`🎮 五子棋在线对战服务器已启动`)
   console.log(`📡 监听端口: ${PORT}`)
