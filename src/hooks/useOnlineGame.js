@@ -290,30 +290,38 @@ export const useOnlineGame = () => {
    */
   const leaveRoom = useCallback(() => {
     if (socketRef.current && roomInfo) {
+      // 添加超时处理
+      const timeoutId = setTimeout(() => {
+        // 超时后也清理状态
+        console.warn('[离开房间超时]，强制清理状态')
+        setRoomInfo(null)
+        setGameState({
+          board: null,
+          currentTurn: 'black',
+          gameOver: false,
+          winner: null,
+          isDraw: false
+        })
+        setError(null)
+      }, 5000)
+
       socketRef.current.emit('leave_room', { roomId: roomInfo.roomId }, (response) => {
-        // 只有在服务器确认成功后才清理状态
+        clearTimeout(timeoutId)
+        // 无论成功失败都清理状态
         if (response?.success) {
-          setRoomInfo(null)
-          setGameState({
-            board: null,
-            currentTurn: 'black',
-            gameOver: false,
-            winner: null,
-            isDraw: false
-          })
-          setError(null)
+          console.log('[离开房间成功]')
         } else {
           console.error('[离开房间失败]', response?.error)
-          // 失败时也清理状态，避免卡在房间中
-          setRoomInfo(null)
-          setGameState({
-            board: null,
-            currentTurn: 'black',
-            gameOver: false,
-            winner: null,
-            isDraw: false
-          })
         }
+        setRoomInfo(null)
+        setGameState({
+          board: null,
+          currentTurn: 'black',
+          gameOver: false,
+          winner: null,
+          isDraw: false
+        })
+        setError(null)
       })
     } else {
       // 如果没有连接，直接清理状态

@@ -45,6 +45,8 @@ export const RoomModal = ({
   const handleLeaveRoom = () => {
     playSound('click', soundEnabled)
     onLeaveRoom()
+    // 离开房间后关闭模态框
+    onClose()
   }
 
   const handleClose = () => {
