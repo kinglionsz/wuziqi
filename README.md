@@ -104,9 +104,9 @@ wuziqi/
 ## 部署信息
 
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
-- **当前版本**: v0.6
-- **部署时间**: 2026-02-23
-- **部署平台**: 腾讯云 CloudBase 静态网站托管
+- **当前版本**: v0.8
+- **部署时间**: 2026-02-24
+- **部署平台**: 腾讯云 CloudBase 静态网站托管 + 云函数
 
 ### 部署步骤
 
@@ -114,9 +114,24 @@ wuziqi/
 # 1. 构建生产版本
 npm run build
 
-# 2. 部署到 CloudBase
+# 2. 部署前端到 CloudBase
 npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
+
+# 3. 部署云函数 (可选，用于在线对战)
+cloudbase fn deploy wuziqi-server -e codebuddy-9gu42kpn62ead2e2 --dir ./cloudfunctions/wuziqi-server --ws --force
+
+# 4. 创建 HTTP 访问服务 (可选)
+cloudbase service create -e codebuddy-9gu42kpn62ead2e2 -p wuziqi -f wuziqi-server
 ```
+
+### 本次 v0.8 部署内容
+
+- 部署前端到 CloudBase 静态托管
+- 部署云函数 (wuziqi-server)
+- 创建 HTTP 访问服务
+- 更新版本号至 v0.8
+- 保留云托管备份方案 (cloudbase_backup/)
+- 添加云函数部署方案 (cloudfunctions/)
 
 ### 本次 v0.6 部署内容
 
@@ -132,6 +147,13 @@ npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
 
 ## 版本历史
 
+- **v0.8** - 部署到腾讯云 CloudBase
+  - 前端部署到 CloudBase 静态托管
+  - 云函数部署 (wuziqi-server)
+  - 创建 HTTP 访问服务
+  - 更新版本号至 v0.8
+  - 保留云托管备份方案 (cloudbase_backup/)
+  - 添加云函数部署方案 (cloudfunctions/)
 - **v0.6** - 实现在线对战功能
   - 新增后端服务器 (Express + Socket.io)
   - 实现创建/加入房间功能（6位房间码）
