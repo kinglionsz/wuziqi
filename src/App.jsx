@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Board from './components/Board'
-import { VictoryModal, RulesModal, ReplayModal, SettingsModal } from './components/Modals'
+import { VictoryModal, RulesModal, ReplayModal, SettingsModal, RoomModal } from './components/Modals'
 import { useGameLogic } from './hooks/useGameLogic'
+import { useOnlineGame } from './hooks/useOnlineGame'
 import { THEMES, GAME_MODES, AI_PLAYER, AI_LEVELS } from './utils/constants'
 import { playSound } from './utils/sound'
 import './App.css'
@@ -19,7 +20,23 @@ function App() {
   const [showRulesModal, setShowRulesModal] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [showReplayModal, setShowReplayModal] = useState(false)
+  const [showRoomModal, setShowRoomModal] = useState(false)
   const [replayIndex, setReplayIndex] = useState(-1)
+  
+  // 在线游戏状态
+  const {
+    socket,
+    roomInfo,
+    isConnected,
+    gameState,
+    error: onlineError,
+    createRoom: onlineCreateRoom,
+    joinRoom: onlineJoinRoom,
+    placePiece: onlinePlacePiece,
+    restartGame: onlineRestartGame,
+    leaveRoom: onlineLeaveRoom,
+    clearError: clearOnlineError
+  } = useOnlineGame()
   
   // 使用游戏逻辑 Hook
   const {
@@ -52,26 +69,70 @@ function App() {
     }
   }, [bgMusicEnabled])
 
-  // 游戏结束检测 - 显示胜利模态框
+  // 游戏结束检测 - 显示胜利模态框（本地游戏）
   useEffect(() => {
-    if (gameOver && !showReplayModal) {
+    if (gameOver && !showReplayModal && gameMode !== GAME_MODES.ONLINE) {
       const timer = setTimeout(() => setShowVictoryModal(true), 500)
       return () => clearTimeout(timer)
     }
-  }, [gameOver, showReplayModal])
+  }, [gameOver, showReplayModal, gameMode])
+
+  // 在线游戏结束检测 - 显示胜利模态框
+  useEffect(() => {
+    if (gameMode === GAME_MODES.ONLINE && roomInfo && gameState.gameOver && !showReplayModal) {
+      const timer = setTimeout(() => setShowVictoryModal(true), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [gameState.gameOver, showReplayModal, gameMode, roomInfo])
+
+  // 监听离开房间 - 当 roomInfo 变为 null 时，重置为本地游戏
+  useEffect(() => {
+    // 当从在线模式离开房间后，自动切换到人机对战模式
+    if (gameMode === GAME_MODES.ONLINE && !roomInfo && !showRoomModal) {
+      setGameMode(GAME_MODES.PVE)
+      resetGame()
+    }
+  }, [roomInfo, gameMode, showRoomModal, resetGame])
 
   // 处理重新开始
   const handleRestart = useCallback(() => {
-    saveGameRecord(winner)
-    resetGame()
+    // 在线游戏：调用服务器重新开始
+    if (gameMode === GAME_MODES.ONLINE && roomInfo) {
+      onlineRestartGame()
+    } else {
+      saveGameRecord(winner)
+      resetGame()
+    }
     setShowVictoryModal(false)
-  }, [resetGame, saveGameRecord, winner])
+  }, [gameMode, roomInfo, winner, resetGame, saveGameRecord, onlineRestartGame])
 
   // 处理模式切换
   const handleModeChange = useCallback((mode) => {
-    setGameMode(mode)
-    resetGame()
-  }, [resetGame])
+    // 如果从在线模式切换到其他模式，确保清理在线状态
+    if (gameMode === GAME_MODES.ONLINE && roomInfo) {
+      // 先离开房间，等待服务器响应后再切换模式
+      onlineLeaveRoom()
+      // 注意：leaveRoom 内部会清理 roomInfo 和 gameState
+      // 模式切换将在 useEffect 中自动处理（当 roomInfo 变为 null 时）
+    } else if (mode === GAME_MODES.ONLINE) {
+      // 如果切换到在线模式，显示房间模态框
+      setShowRoomModal(true)
+      setGameMode(mode)
+    } else {
+      // 本地模式切换直接重置
+      setGameMode(mode)
+      resetGame()
+    }
+  }, [resetGame, gameMode, roomInfo, onlineLeaveRoom])
+
+  // 处理在线游戏落子
+  const handleOnlineCellClick = useCallback((row, col) => {
+    if (gameState?.gameOver) return
+    if (gameState?.currentTurn !== roomInfo?.role) {
+      return
+    }
+    onlinePlacePiece(row, col)
+  }, [roomInfo, gameState, onlinePlacePiece])
 
   // 处理难度切换
   const handleAiLevelChange = useCallback((level) => {
@@ -166,7 +227,12 @@ function App() {
           >
             悔棋
           </button>
-          <button onClick={() => setShowSettingsModal(true)} className="settings-button">设置</button>
+          {/* 在线游戏时显示房间管理按钮 */}
+          {gameMode === GAME_MODES.ONLINE && roomInfo ? (
+            <button onClick={() => setShowRoomModal(true)} className="room-button">房间管理</button>
+          ) : (
+            <button onClick={() => setShowSettingsModal(true)} className="settings-button">设置</button>
+          )}
           <button onClick={() => setShowRulesModal(true)} className="rules-button">规则</button>
         </div>
       </div>
@@ -185,6 +251,20 @@ function App() {
         >
           人机对战
         </button>
+        <button 
+          className={gameMode === GAME_MODES.ONLINE ? 'active' : ''} 
+          onClick={() => { 
+            // 如果已在在线模式且有房间，打开房间管理；否则切换模式
+            if (gameMode === GAME_MODES.ONLINE && roomInfo) {
+              setShowRoomModal(true)
+            } else {
+              handleModeChange(GAME_MODES.ONLINE)
+            }
+            playSound('click', soundEnabled); 
+          }}
+        >
+          在线对战
+        </button>
         {moveHistory.length > 0 && (
           <button onClick={startReplay} className="replay-button">回放</button>
         )}
@@ -193,10 +273,10 @@ function App() {
       {/* 棋盘 */}
       <div className="game-board">
         <Board 
-          board={board} 
-          onCellClick={handleCellClick} 
-          currentPlayer={currentPlayer}
-          gameOver={gameOver}
+          board={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.board : board} 
+          onCellClick={gameMode === GAME_MODES.ONLINE && roomInfo ? handleOnlineCellClick : handleCellClick} 
+          currentPlayer={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.currentTurn : currentPlayer}
+          gameOver={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.gameOver : gameOver}
           theme={theme}
         />
       </div>
@@ -204,12 +284,12 @@ function App() {
       {/* 胜利模态框 */}
       <VictoryModal
         isOpen={showVictoryModal}
-        isDraw={isDraw}
-        winner={winner}
+        isDraw={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.isDraw : isDraw}
+        winner={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.winner : winner}
         gameTime={gameTime}
         blackTime={blackTime}
         whiteTime={whiteTime}
-        moveCount={moveHistory.length}
+        moveCount={gameMode === GAME_MODES.ONLINE && roomInfo ? (gameState.board?.flat().filter(c => c !== null).length || 0) : moveHistory.length}
         formatTime={formatTime}
         onRestart={handleRestart}
       />
@@ -245,6 +325,21 @@ function App() {
         onReplayStep={replayStep}
         onNextStep={nextReplayStep}
         onPrevStep={prevReplayStep}
+      />
+
+      {/* 房间模态框 */}
+      <RoomModal
+        isOpen={showRoomModal}
+        isConnected={isConnected}
+        roomInfo={roomInfo}
+        gameState={gameState}
+        error={onlineError}
+        soundEnabled={soundEnabled}
+        onClose={() => setShowRoomModal(false)}
+        onCreateRoom={onlineCreateRoom}
+        onJoinRoom={onlineJoinRoom}
+        onLeaveRoom={onlineLeaveRoom}
+        onClearError={clearOnlineError}
       />
 
       {/* 隐藏的背景音乐音频元素 */}

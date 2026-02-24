@@ -96,6 +96,12 @@ export const SettingsModal = ({
             >
               人机对战
             </button>
+            <button 
+              className={gameMode === GAME_MODES.ONLINE ? 'active' : ''} 
+              onClick={() => handleModeChange(GAME_MODES.ONLINE)}
+            >
+              在线对战
+            </button>
           </div>
         </div>
 
