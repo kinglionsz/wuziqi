@@ -1,6 +1,11 @@
 /**
- * 五子棋在线对战服务器
+ * 五子棋在线对战服务器 - CloudBase云托管版本
  * 使用 Express + Socket.io 实现实时双人对战
+ * 
+ * 部署说明：
+ * 1. 将此文件夹上传到 CloudBase 云托管
+ * 2. 设置环境变量：ALLOWED_ORIGIN (前端域名)
+ * 3. 端口由 CloudBase 自动分配 (通过 PORT 环境变量)
  */
 
 import express from 'express'
@@ -20,23 +25,29 @@ import {
 const app = express()
 app.use(cors())
 
+// CloudBase 健康检查端点
+app.get('/', (req, res) => {
+  res.send('五子棋在线对战服务器 running')
+})
+
 const httpServer = createServer(app)
 
+// 获取 CloudBase 提供的端口（默认3000）
+const PORT = process.env.PORT || 3000
+
+// 获取允许的源 (CloudBase 环境变量)
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*'
+
 // 创建 Socket.io 服务器
-// 开发环境允许所有来源，生产环境需设置 ALLOWED_ORIGIN 环境变量
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.ALLOWED_ORIGIN 
-      || (process.env.NODE_ENV === 'production' ? null : '*'),
+    origin: ALLOWED_ORIGIN,
     methods: ['GET', 'POST'],
-    credentials: !!process.env.ALLOWED_ORIGIN
+    credentials: ALLOWED_ORIGIN !== '*'
   }
 })
 
-// 生产环境验证
-if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGIN) {
-  console.warn('[警告] 生产环境未设置 ALLOWED_ORIGIN，CORS 已禁用（仅支持同源请求）')
-}
+console.log(`[配置] CORS origin: ${ALLOWED_ORIGIN}`)
 
 // 存储所有房间
 const rooms = {}
@@ -73,6 +84,18 @@ const getPlayerRole = (roomId, socketId) => {
   const room = rooms[roomId]
   if (!room || !room.players[socketId]) return null
   return room.players[socketId].role
+}
+
+/**
+ * 发送错误信息的辅助函数
+ */
+function sendError(socket, callback, errorMessage) {
+  console.log(`[错误] ${errorMessage}`)
+  if (callback) {
+    callback({ success: false, error: errorMessage })
+  } else {
+    socket.emit('error', { error: errorMessage })
+  }
 }
 
 // Socket.io 连接处理
@@ -374,7 +397,7 @@ io.on('connection', (socket) => {
     if (callback) callback({ success: true })
   })
 
-  // ===== 6. 重新开始游戏 =====
+  // ===== 7. 重新开始游戏 =====
   socket.on('restart_game', (data, callback) => {
     const { roomId } = data
     const room = rooms[roomId]
@@ -418,41 +441,45 @@ io.on('connection', (socket) => {
   })
 })
 
-/**
- * 发送错误信息的辅助函数
- */
-function sendError(socket, callback, errorMessage) {
-  console.log(`[错误] ${errorMessage}`)
-  if (callback) {
-    callback({ success: false, error: errorMessage })
-  } else {
-    socket.emit('error', { error: errorMessage })
-  }
-}
-
 // 启动服务器
-const PORT = process.env.PORT || 3001
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`========================================`)
-  console.log(`🎮 五子棋在线对战服务器已启动`)
-  console.log(`📡 监听端口: ${PORT}`)
-  console.log(`🌐 前端连接地址: http://localhost:5173`)
-  console.log(`========================================`)
-})
+let server = null
+if (process.env.TCB_FUNCTION_NAME) {
+  // 函数型部署：导出 main 函数
+  module.exports = {
+    main: async (event, context) => {
+      // 首次调用时启动服务器
+      if (!server) {
+        server = httpServer.listen(PORT, '0.0.0.0', () => {
+          console.log(`🎮 五子棋在线对战服务器已启动 (CloudBase函数型)`)
+          console.log(`📡 监听端口: ${PORT}`)
+        })
+      }
+      return {
+        isBase64Encoded: false,
+        statusCode: 200,
+        headers: { 'Content-Type': 'text/plain' },
+        body: '服务器运行中'
+      }
+    }
+  }
+} else {
+  // 普通部署：直接启动服务器
+  httpServer.listen(PORT, '0.0.0.0', () => {
+    console.log(`========================================`)
+    console.log(`🎮 五子棋在线对战服务器已启动 (CloudBase版)`)
+    console.log(`📡 监听端口: ${PORT}`)
+    console.log(`🌐 环境: ${process.env.NODE_ENV || 'development'}`)
+    console.log(`========================================`)
+  })
+}
 
 // 处理未捕获的异常
 process.on('uncaughtException', (err) => {
   console.error('[服务器异常]', err)
-  // 在生产环境中，可以选择退出进程让容器重启
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1)
-  }
+  process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[未处理的 Promise 拒绝]', reason)
-  // 在生产环境中，可以选择退出进程让容器重启  
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1)
-  }
+  process.exit(1)
 })

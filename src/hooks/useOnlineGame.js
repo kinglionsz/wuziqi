@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { io } from 'socket.io-client'
 
 // Socket.io 服务器地址
-// 生产环境使用 VITE_SOCKET_URL 环境变量，开发环境默认 localhost:3001
+// 生产环境使用 VITE_SOCKET_URL 环境变量，开发环境默认 localhost:3000
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
-  (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
+  (import.meta.env.PROD ? window.location.origin : 'http://localhost:3000')
 
 /**
  * 在线对战游戏 Hook
@@ -37,7 +37,7 @@ export const useOnlineGame = () => {
     setSocket(socketInstance)
 
     socketInstance.on('connect', () => {
-      console.log('[Socket] 已连接到服务器')
+      console.log('[Socket] 已连接到服务器:', SOCKET_URL)
       setIsConnected(true)
       setError(null)
     })

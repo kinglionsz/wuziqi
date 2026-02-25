@@ -24,33 +24,35 @@ npm run build
 npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
 ```
 
-### 2. 后端部署 (云托管)
+### 2. 后端部署 (云托管 - 容器型)
+
+> **重要**：必须使用「容器型」部署，而非「函数型」！
 
 #### 方式一：通过 CloudBase 控制台部署
 
 1. 登录 [CloudBase 控制台](https://console.cloud.tencent.com/tcb)
 2. 进入「云托管」页面
-3. 创建服务：
+3. 点击「创建服务」
+4. 填写配置：
    - 服务名称：`wuziqi-server`
-   - 地域：选择你已有的环境地域
-   - 网络：默认
+   - 地域：上海
+   - 部署方式：选择「容器型」
 
-4. 创建版本：
-   - 上传方式：选择「上传代码包」
-   - 上传 `cloudbase/server/` 目录
-   - 启动命令：`node server.js`
-   - 端口：`3001`
+5. 点击「创建版本」
+6. 填写容器配置：
+   - 镜像：选择「手动上传」
+   - 代码包：上传 `cloudbase/server/` 目录
+   - 端口：`3000`
    - 环境变量：
      ```
-     ALLOWED_ORIGIN=https://你的前端域名.com
-     NODE_ENV=production
+     ALLOWED_ORIGIN=*
      ```
 
-5. 创建流量策略：
+7. 创建流量策略：
    - 流量入口：HTTP/HTTPS
    - 分配策略：默认轮询
 
-#### 方式二：通过 CLI 部署
+#### 方式二：通过 CLI 部署（容器型）
 
 ```bash
 # 安装 CloudBase CLI (如果未安装)
@@ -59,8 +61,9 @@ npm install -g @cloudbase/cli
 # 登录
 tcb login
 
-# 部署服务
-tcb service deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server -p ./cloudbase/server
+# 部署服务（容器型）
+cd cloudbase/server
+tcb cloudrun deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --port 3000 --force
 ```
 
 ### 3. 获取后端服务地址
@@ -68,6 +71,11 @@ tcb service deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server -p ./cloudbase
 部署完成后，在云托管控制台获取服务地址，格式类似：
 ```
 wuziqi-server-xxx.service-xxx.tcbns.tencentyun.com
+```
+
+或：
+```
+wuziqi-server-xxx-xxx-xxxxxx.sh.run.tcloudbase.com
 ```
 
 ### 4. 配置前端环境变量
@@ -105,9 +113,9 @@ ALLOWED_ORIGIN=https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com
 
 | 变量名 | 必填 | 说明 | 示例 |
 |--------|------|------|------|
-| ALLOWED_ORIGIN | 是 | 允许的跨域请求源 | https://your-domain.com |
+| ALLOWED_ORIGIN | 是 | 允许的跨域请求源 | https://your-domain.com 或 * |
 | NODE_ENV | 否 | 运行环境 | production |
-| PORT | 否 | 监听端口 (CloudBase自动设置) | 3001 |
+| PORT | 否 | 监听端口 (CloudBase自动设置) | 3000 |
 
 ### 前端环境变量
 
@@ -124,10 +132,10 @@ ALLOWED_ORIGIN=https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com
 ### 本地后端服务
 
 ```bash
-cd server
+cd cloudbase/server
 npm install
-npm start
-# 后端运行在 http://localhost:3001
+node index.js
+# 后端运行在 http://localhost:3000
 ```
 
 ### 本地前端服务
@@ -146,13 +154,21 @@ npm run dev
 - 检查后端服务是否正常运行
 - 检查 CORS 配置是否正确
 - 检查前端 VITE_SOCKET_URL 是否正确
+- **重要**：确保使用「容器型」部署而非「函数型」
 
 ### 2. WebSocket 连接失败
 
 - 确保 CloudBase 云托管已正确配置 WebSocket
 - 检查是否使用了正确的协议 (wss://)
+- 检查端口配置是否为 3000
 
-### 3. 房间创建/加入失败
+### 3. 容器部署失败 (Liveness probe failed)
+
+- 确保服务器代码监听的是端口 3000（CloudBase 默认端口）
+- 确保导出 main 函数（如果使用函数型部署）
+- 推荐使用容器型部署，避免函数型的限制
+
+### 4. 房间创建/加入失败
 
 - 检查后端日志
 - 确保两玩家使用相同房间号
