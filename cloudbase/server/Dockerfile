@@ -16,5 +16,9 @@ COPY . .
 # 暴露端口
 EXPOSE 3000
 
+# 设置环境变量
+# 强制禁用数据库（调试用，设为 false 启用数据库）
+ENV FORCE_DISABLE_DB=1
+
 # 启动命令
 CMD ["node", "index.js"]

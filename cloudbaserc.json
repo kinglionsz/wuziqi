@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "envId": "{{env.ENV_ID}}",
+  "envId": "codebuddy-9gu42kpn62ead2e2",
   "$schema": "https://framework-1258016615.tcloudbaseapp.com/schema/latest.json",
   "framework": {
     "name": "cloudbase-react-template",
@@ -23,5 +23,8 @@
         "type": "none"
       }
     }
+  },
+  "cloudrun": {
+    "name": "wuziqi-server"
   }
 }

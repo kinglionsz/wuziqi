@@ -20,14 +20,6 @@ import {
   createRoom,
   BOARD_SIZE 
 } from './utils/gameLogic.js'
-import { 
-  getRoom, 
-  saveRoom, 
-  deleteRoom,
-  initDatabase,
-  setSocketEmitter,
-  saveRoomBackground 
-} from './utils/database.js'
 
 // 创建 Express 应用和 HTTP 服务器
 const app = express()
@@ -54,9 +46,6 @@ const io = new Server(httpServer, {
     credentials: ALLOWED_ORIGIN !== '*'
   }
 })
-
-// 设置数据库的 socket 发射器，用于向客户端发送数据库状态
-setSocketEmitter(io)
 
 console.log(`[配置] CORS origin: ${ALLOWED_ORIGIN}`)
 
@@ -114,8 +103,7 @@ io.on('connection', (socket) => {
   console.log(`[新连接] socketId: ${socket.id}`)
 
   // ===== 1. 创建房间 =====
-  socket.on('create_room', async (data, callback) => {
-    console.log(`[房间创建] ====== 开始创建房间 ====== 时间戳: ${Date.now()}`)
+  socket.on('create_room', (data, callback) => {
     // 生成唯一房间号
     let roomId = generateRoomId(6)
     
@@ -134,13 +122,6 @@ io.on('connection', (socket) => {
 
     console.log(`[房间创建] roomId: ${roomId}, 房主: ${socket.id}`)
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
     // 通过回调返回结果给客户端
     callback({ 
       success: true, 
@@ -152,21 +133,9 @@ io.on('connection', (socket) => {
   })
 
   // ===== 2. 加入房间 =====
-  socket.on('join_room', async (data, callback) => {
-    console.log(`[房间加入] ====== 开始加入房间 ====== roomId: ${data.roomId}, 时间戳: ${Date.now()}`)
+  socket.on('join_room', (data, callback) => {
     const { roomId } = data
-    let room = rooms[roomId]
-
-    // 如果内存中没有房间，尝试从数据库加载
-    if (!room) {
-      console.log(`[数据库] 尝试从数据库加载房间: ${roomId}`)
-      const dbRoom = await dbGetRoom(roomId)
-      if (dbRoom) {
-        room = dbRoom
-        rooms[roomId] = room
-        console.log(`[数据库] 房间加载成功: ${roomId}`)
-      }
-    }
+    const room = rooms[roomId]
 
     // 校验房间是否存在
     if (!room) {
@@ -195,13 +164,6 @@ io.on('connection', (socket) => {
     room.status = 'playing'
     room.startTime = Date.now()
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
     // 告诉加入者成功了
     callback({ 
       success: true, 
@@ -220,26 +182,9 @@ io.on('connection', (socket) => {
   })
 
   // ===== 3. 落子 =====
-  socket.on('place_piece', async (data, callback) => {
-    const startTime = Date.now()
+  socket.on('place_piece', (data, callback) => {
     const { roomId, row, col } = data
-    console.log(`[落子] 开始处理 roomId: ${roomId}, 位置: (${row}, ${col}), 时间戳: ${startTime}`)
-    let room = rooms[roomId]
-    console.log(`[落子] ${Date.now() - startTime}ms - 检查内存房间`)
-
-    // 如果内存中没有房间，尝试从数据库加载
-    if (!room) {
-      console.log(`[数据库] ${Date.now() - startTime}ms - 尝试从数据库加载房间: ${roomId}`)
-      const dbRoom = await dbGetRoom(roomId)
-      if (dbRoom) {
-        room = dbRoom
-        rooms[roomId] = room
-        console.log(`[数据库] ${Date.now() - startTime}ms - 房间加载成功`)
-      }
-    } else {
-      console.log(`[落子] ${Date.now() - startTime}ms - 使用内存中的房间`)
-    }
-
+    const room = rooms[roomId]
     const playerRole = getPlayerRole(roomId, socket.id)
 
     // 基本校验
@@ -266,7 +211,6 @@ io.on('connection', (socket) => {
 
     // 校验落子位置合法性
     const validation = validateMove(row, col, room.board)
-    console.log(`[落子] ${Date.now() - startTime}ms - 验证完成`)
     if (!validation.valid) {
       sendError(socket, callback, validation.error)
       return
@@ -274,7 +218,6 @@ io.on('connection', (socket) => {
 
     // 更新棋盘
     room.board[row][col] = playerRole
-    console.log(`[落子] ${Date.now() - startTime}ms - 棋盘更新完成`)
     
     // 记录落子历史
     room.moveHistory.push({
@@ -291,15 +234,6 @@ io.on('connection', (socket) => {
       room.winner = playerRole
 
       console.log(`[游戏结束] roomId: ${roomId}, 获胜者: ${playerRole}`)
-
-      // 持久化到数据库
-      console.log(`[落子] ${Date.now() - startTime}ms - 开始保存到数据库...`)
-      try {
-        await dbSaveRoom(room)
-        console.log(`[落子] ${Date.now() - startTime}ms - 数据库保存完成`)
-      } catch (err) {
-        console.error('[数据库] 保存房间失败:', err.message)
-      }
 
       // 广播游戏结束
       io.to(roomId).emit('game_over', {
@@ -324,15 +258,6 @@ io.on('connection', (socket) => {
 
       console.log(`[游戏结束] roomId: ${roomId}, 平局`)
 
-      // 持久化到数据库
-      console.log(`[落子] ${Date.now() - startTime}ms - 开始保存到数据库(平局)...`)
-      try {
-        await dbSaveRoom(room)
-        console.log(`[落子] ${Date.now() - startTime}ms - 数据库保存完成`)
-      } catch (err) {
-        console.error('[数据库] 保存房间失败:', err.message)
-      }
-
       io.to(roomId).emit('game_over', {
         winner: null,
         isDraw: true,
@@ -352,9 +277,6 @@ io.on('connection', (socket) => {
     // 切换回合
     room.currentTurn = playerRole === 'black' ? 'white' : 'black'
 
-    // 后台保存到数据库（不阻塞游戏流程）
-    saveRoomBackground(room)
-
     // 广播棋盘更新
     io.to(roomId).emit('sync_board', {
       board: room.board,
@@ -371,7 +293,7 @@ io.on('connection', (socket) => {
   })
 
   // ===== 4. 断开连接 =====
-  socket.on('disconnect', async () => {
+  socket.on('disconnect', () => {
     const roomId = socketToRoom[socket.id]
     
     if (roomId && rooms[roomId]) {
@@ -396,19 +318,6 @@ io.on('connection', (socket) => {
         if (Object.keys(room.players).length === 0) {
           console.log(`[房间删除] roomId: ${roomId}, 原因: 房间为空`)
           delete rooms[roomId]
-          // 从数据库删除
-          try {
-            await dbDeleteRoom(roomId)
-          } catch (err) {
-            console.error('[数据库] 删除房间失败:', err.message)
-          }
-        } else {
-          // 持久化到数据库
-          try {
-            await dbSaveRoom(room)
-          } catch (err) {
-            console.error('[数据库] 保存房间失败:', err.message)
-          }
         }
       }
       
@@ -545,10 +454,6 @@ if (process.env.TCB_FUNCTION_NAME) {
           console.log(`📡 监听端口: ${PORT}`)
         })
       }
-      
-      // 初始化数据库
-      await initDatabase()
-      
       return {
         isBase64Encoded: false,
         statusCode: 200,
@@ -559,15 +464,12 @@ if (process.env.TCB_FUNCTION_NAME) {
   }
 } else {
   // 普通部署：直接启动服务器
-  httpServer.listen(PORT, '0.0.0.0', async () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`========================================`)
     console.log(`🎮 五子棋在线对战服务器已启动 (CloudBase版)`)
     console.log(`📡 监听端口: ${PORT}`)
     console.log(`🌐 环境: ${process.env.NODE_ENV || 'development'}`)
     console.log(`========================================`)
-    
-    // 初始化数据库
-    await initDatabase()
   })
 }
 

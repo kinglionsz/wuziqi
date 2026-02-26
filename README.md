@@ -162,9 +162,10 @@ wuziqi/
 ## 部署信息
 
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
-- **当前版本**: v1.0
-- **部署时间**: 2026-02-25
+- **当前版本**: v1.1
+- **部署时间**: 2026-02-26
 - **后端服务**: wuziqi-server (函数型云托管) - 运行正常
+- **后端版本**: wuziqi-server-031
 - **后端地址**: wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
 - **部署平台**: 腾讯云 CloudBase 静态网站托管 + 云托管
 
@@ -218,6 +219,66 @@ i 提交函数型云托管 wuziqi-server 已完成！
 └───────────────┴────────────┴─────────────────────┴──────────┴──────────┘
 ```
 
+### 本次 v1.1 部署内容 (2026-02-26)
+
+#### 问题描述
+服务器日志出现以下错误：
+```
+ReferenceError: dbInitFailed is not defined
+[数据库] 保存房间失败: dbInitFailed is not defined
+[数据库] 删除房间失败: dbInitFailed is not defined
+```
+
+#### 问题分析
+1. 在 `cloudbase/server/utils/database.js` 第58行使用了 `dbInitFailed` 变量，但没有在文件开头声明
+2. 在 `cloudbase/server/index.js` 中缺少 `setSocketEmitter` 调用，导致数据库状态无法通知客户端
+
+#### 修复步骤
+
+**步骤1：修复 database.js 变量声明**
+```javascript
+// 修改前 (cloudbase/server/utils/database.js 第13-15行)
+let app, db
+let io = null  // Socket.io 实例
+
+// 修改后
+let app, db
+let dbInitFailed = false  // 数据库初始化失败标记
+let io = null  // Socket.io 实例
+```
+
+**步骤2：修复 index.js 缺少的调用**
+```javascript
+// 添加导入 (cloudbase/server/index.js)
+import {
+  getRoom as dbGetRoom,
+  saveRoom as dbSaveRoom,
+  deleteRoom as dbDeleteRoom,
+  initDatabase,
+  setSocketEmitter  // 新增
+} from './utils/database.js'
+
+// 在创建 io 实例后添加调用
+const io = new Server(httpServer, {...})
+setSocketEmitter(io)  // 新增
+```
+
+**步骤3：重新部署到 CloudBase**
+```bash
+npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --targetPath ./cloudbase/server
+```
+
+#### 修复结果
+- 新版本：wuziqi-server-031
+- 部署时间：2026-02-26 23:36:17
+- 服务状态：normal ✅
+- 游戏功能正常运行
+
+#### 注意事项
+- 由于 CloudBase 云托管环境无法创建数据库集合（需要更高权限），当前使用内存存储
+- 房间数据在容器重启后会丢失，但游戏对战功能正常
+- 如需持久化存储，需要在 CloudBase 控制台手动创建 `wuziqi_rooms` 集合
+
 ### 本次 v0.8 部署内容
 
 - 部署前端到 CloudBase 静态托管
@@ -252,6 +313,12 @@ i 提交函数型云托管 wuziqi-server 已完成！
 
 ## 版本历史
 
+- **v1.1** - 修复数据库初始化问题 (2026-02-26)
+  - 修复 `dbInitFailed is not defined` 错误
+  - 添加缺失的变量声明 `let dbInitFailed = false`
+  - 修复 index.js 缺少的 `setSocketEmitter` 调用
+  - 重新部署到 CloudBase (wuziqi-server-031)
+  - 当前使用内存存储房间数据（容器重启后丢失）
 - **v1.0** - CloudBase 云托管部署成功，在线对战正式上线
   - 成功部署 CloudBase 云托管后端服务器（容器型）
   - 后端服务地址：wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com

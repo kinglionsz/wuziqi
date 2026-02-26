@@ -16,13 +16,6 @@ import {
   createRoom,
   BOARD_SIZE 
 } from './utils/gameLogic.js'
-import { 
-  getRoom as dbGetRoom, 
-  saveRoom as dbSaveRoom, 
-  deleteRoom as dbDeleteRoom,
-  initDatabase,
-  setSocketEmitter
-} from './utils/database.js'
 
 // 创建 Express 应用
 const app = express()
@@ -49,9 +42,6 @@ const io = new Server(httpServer, {
 })
 
 console.log(`[配置] CORS origin: ${ALLOWED_ORIGIN}`)
-
-// 设置数据库的 socket 发射器，用于向客户端发送数据库状态
-setSocketEmitter(io)
 
 // 房间存储
 const rooms = {}
@@ -92,7 +82,7 @@ function sendError(socket, callback, errorMessage) {
 io.on('connection', (socket) => {
   console.log(`[新连接] socketId: ${socket.id}`)
 
-  socket.on('create_room', async (data, callback) => {
+  socket.on('create_room', (data, callback) => {
     let roomId = generateRoomId(6)
     while (rooms[roomId]) {
       roomId = generateRoomId(6)
@@ -105,13 +95,6 @@ io.on('connection', (socket) => {
 
     console.log(`[房间创建] roomId: ${roomId}, 房主: ${socket.id}`)
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
     callback({ 
       success: true, 
       roomId, 
@@ -121,20 +104,9 @@ io.on('connection', (socket) => {
     })
   })
 
-  socket.on('join_room', async (data, callback) => {
+  socket.on('join_room', (data, callback) => {
     const { roomId } = data
-    let room = rooms[roomId]
-
-    // 如果内存中没有房间，尝试从数据库加载
-    if (!room) {
-      console.log(`[数据库] 尝试从数据库加载房间: ${roomId}`)
-      const dbRoom = await dbGetRoom(roomId)
-      if (dbRoom) {
-        room = dbRoom
-        rooms[roomId] = room
-        console.log(`[数据库] 房间加载成功: ${roomId}`)
-      }
-    }
+    const room = rooms[roomId]
 
     if (!room) {
       callback({ success: false, error: '房间不存在' })
@@ -153,13 +125,6 @@ io.on('connection', (socket) => {
     room.status = 'playing'
     room.startTime = Date.now()
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
     callback({ 
       success: true, 
       roomId, 
@@ -175,20 +140,9 @@ io.on('connection', (socket) => {
     })
   })
 
-  socket.on('place_piece', async (data, callback) => {
+  socket.on('place_piece', (data, callback) => {
     const { roomId, row, col } = data
-    let room = rooms[roomId]
-
-    // 如果内存中没有房间，尝试从数据库加载
-    if (!room) {
-      console.log(`[数据库] 尝试从数据库加载房间: ${roomId}`)
-      const dbRoom = await dbGetRoom(roomId)
-      if (dbRoom) {
-        room = dbRoom
-        rooms[roomId] = room
-      }
-    }
-
+    const room = rooms[roomId]
     const playerRole = getPlayerRole(roomId, socket.id)
 
     if (!room) {
@@ -230,13 +184,6 @@ io.on('connection', (socket) => {
       room.status = 'finished'
       room.winner = playerRole
 
-      // 持久化到数据库
-      try {
-        await dbSaveRoom(room)
-      } catch (err) {
-        console.error('[数据库] 保存房间失败:', err.message)
-      }
-
       io.to(roomId).emit('game_over', {
         winner: playerRole,
         lastMove: { row, col },
@@ -252,13 +199,6 @@ io.on('connection', (socket) => {
     if (checkDraw(room.board)) {
       room.status = 'finished'
 
-      // 持久化到数据库
-      try {
-        await dbSaveRoom(room)
-      } catch (err) {
-        console.error('[数据库] 保存房间失败:', err.message)
-      }
-
       io.to(roomId).emit('game_over', {
         winner: null,
         isDraw: true,
@@ -273,13 +213,6 @@ io.on('connection', (socket) => {
 
     room.currentTurn = playerRole === 'black' ? 'white' : 'black'
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
     io.to(roomId).emit('sync_board', {
       board: room.board,
       lastMove: { row, col, player: playerRole },
@@ -291,7 +224,7 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('disconnect', async () => {
+  socket.on('disconnect', () => {
     const roomId = socketToRoom[socket.id]
     
     if (roomId && rooms[roomId]) {
@@ -310,19 +243,6 @@ io.on('connection', (socket) => {
 
         if (Object.keys(room.players).length === 0) {
           delete rooms[roomId]
-          // 从数据库删除
-          try {
-            await dbDeleteRoom(roomId)
-          } catch (err) {
-            console.error('[数据库] 删除房间失败:', err.message)
-          }
-        } else {
-          // 持久化到数据库
-          try {
-            await dbSaveRoom(room)
-          } catch (err) {
-            console.error('[数据库] 保存房间失败:', err.message)
-          }
         }
       }
       
@@ -444,9 +364,6 @@ export async function main(event, context) {
     })
   }
 
-  // 初始化数据库
-  await initDatabase()
-
   return {
     isBase64Encoded: false,
     statusCode: 200,
@@ -457,12 +374,9 @@ export async function main(event, context) {
 
 // 如果不是 CloudBase 函数型环境，则直接启动服务器（容器型部署或本地开发）
 if (typeof process.env.TCB_FUNCTION_NAME === 'undefined') {
-  httpServer.listen(PORT, '0.0.0.0', async () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`🎮 五子棋在线对战服务器已启动`)
     console.log(`📡 监听端口: ${PORT}`)
-    
-    // 初始化数据库
-    await initDatabase()
   })
 }
 

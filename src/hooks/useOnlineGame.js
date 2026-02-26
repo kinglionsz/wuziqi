@@ -169,6 +169,28 @@ export const useOnlineGame = () => {
       setError(data.error)
     })
 
+    // 监听数据库状态（用于调试）
+    socketInstance.on('db_status', (data) => {
+      const { type, message, timestamp } = data
+      const time = new Date(timestamp).toLocaleTimeString()
+      switch (type) {
+        case 'info':
+          console.log(`[数据库] 💾 ${time} - ${message}`)
+          break
+        case 'success':
+          console.log(`[数据库] ✅ ${time} - ${message}`)
+          break
+        case 'error':
+          console.error(`[数据库] ❌ ${time} - ${message}`)
+          break
+        case 'disabled':
+          console.warn(`[数据库] ⏭️  ${time} - ${message}`)
+          break
+        default:
+          console.log(`[数据库] ${time} - ${message}`)
+      }
+    })
+
     return () => {
       socketInstance.disconnect()
     }
