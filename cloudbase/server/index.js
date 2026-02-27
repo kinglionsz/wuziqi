@@ -433,17 +433,13 @@ io.on('connection', (socket) => {
 
 // 启动服务器
 let server = null
+let isFunctionMode = false
 
 // CloudBase 函数型入口 (仅在函数型部署时使用)
 // 容器型部署会直接执行后面的 httpServer.listen
 export async function main(event, context) {
-  if (!server) {
-    server = httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log(`🎮 五子棋在线对战服务器已启动 (CloudBase函数型)`)
-      console.log(`📡 监听端口: ${PORT}`)
-    })
-  }
-
+  isFunctionMode = true
+  
   // 初始化数据库
   await initDatabase()
 

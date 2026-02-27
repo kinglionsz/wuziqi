@@ -1,3 +1,5 @@
+# CODEBUDDY.md This file provides guidance to CodeBuddy when working with code in this repository.
+
 ---
 description: CloudBase AI Development Rules Guide - Provides scenario-based best practices to ensure development quality
 globs: *
@@ -6,6 +8,18 @@ inclusion: always
 ---
 
 # CloudBase AI Development Rules Guide
+
+## 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `npm start` | 同时启动前端开发服务器 (localhost:5173) 和后端服务器 (localhost:3000) |
+| `npm run dev` | 仅启动前端 Vite 开发服务器 |
+| `npm run server` | 仅启动后端 Socket.io 服务器 |
+| `npm run server:dev` | 启动后端服务器并启用文件监视 (--watch) |
+| `npm run build` | 构建生产版本到 `dist/` 目录 |
+| `npm run preview` | 预览生产构建 |
+| `npm run lint` | 运行 ESLint 检查代码 |
 
 ## 🗂️ Rule File Path Resolution Strategy
 
@@ -479,3 +493,47 @@ When users request deployment to CloudBase:
 12. **Logs & Monitoring (日志监控)**: `#/devops/log`
 13. **Extensions (扩展功能)**: `#/apis`
 14. **Environment Settings (环境配置)**: `#/env`
+
+---
+
+## 项目架构
+
+本项目是一个在线五子棋游戏，采用 React + Express + Socket.io 架构，部署于腾讯云 CloudBase。
+
+### 前端架构 (`src/`)
+
+- **App.jsx**: 主应用组件，协调游戏模式切换（双人/人机/在线）、模态框管理和主题设置
+- **hooks/useGameLogic.js**: 本地游戏逻辑 Hook，管理棋盘状态、计时器、胜负判定、AI 对战逻辑。包含悔棋、回放功能
+- **hooks/useOnlineGame.js**: 在线对战 Hook，通过 Socket.io 与后端通信，管理房间创建/加入、实时同步
+- **components/Board/**: 棋盘渲染组件，支持6种主题样式
+- **components/Modals/**: 模态框集合（胜利、规则、设置、回放、房间管理）
+- **utils/ai.js**: AI 算法实现，三种难度：简单（随机+基础进攻）、中等（偶尔失误）、困难（Minimax + Alpha-Beta 剪枝）
+- **utils/constants.js**: 游戏常量（棋盘大小15x15、主题配置、游戏模式）
+- **lib/supabase.js**: Supabase 客户端，用于云端存储游戏记录
+
+### 后端架构 (`cloudbase/server/`)
+
+- **index.js**: 服务器入口，同时支持 CloudBase 函数型部署（导出 main 函数）和本地开发/容器型部署（直接监听端口）
+- **utils/gameLogic.js**: 共享的游戏逻辑（胜负判定、房间创建、ID 生成）
+- **utils/database.js**: 数据库抽象层，支持 CloudBase NoSQL 数据库（优先）和内存存储（降级）
+
+### 实时通信协议
+
+Socket.io 事件：
+- `create_room` / `join_room`: 房间管理
+- `place_piece`: 落子同步，后端验证合法性后广播 `sync_board`
+- `game_over`: 游戏结束广播胜负
+- `opponent_disconnected`: 对手断线通知
+
+### 部署架构
+
+- **前端**: CloudBase 静态网站托管 (`dist/` 目录)
+- **后端**: CloudBase 函数型云托管 (`wuziqi-server` 服务，端口 3000)
+- **数据库**: CloudBase NoSQL 数据库（如权限受限则回退到内存存储）
+
+### 关键注意事项
+
+1. **双模式部署**: index.js 通过检查 `process.env.TCB_FUNCTION_NAME` 判断是函数型还是容器型环境
+2. **AI 算法**: 困难模式使用深度搜索（默认深度3），性能敏感，避免在渲染线程中同步计算
+3. **数据库降级**: CloudBase 云托管环境可能无法动态创建集合，database.js 会自动降级到内存存储
+4. **房间数据**: 内存存储模式下，容器重启后房间数据丢失，但游戏过程中数据正常
