@@ -104,20 +104,21 @@ export const generateRoomId = (length = 6) => {
 /**
  * 创建房间对象
  * @param {string} roomId - 房间号
- * @param {string} socketId - 创建者 socket ID
+ * @param {string} hostId - 创建者用户 ID
  * @returns {Object}
  */
-export const createRoom = (roomId, socketId) => {
+export const createRoom = (roomId, hostId) => {
   return {
     roomId,
     players: {
-      [socketId]: { role: 'black', ready: false }
+      [hostId]: { role: 'black', ready: true, socketId: null, isDisconnected: false }
     },
     board: createEmptyBoard(),
     currentTurn: 'black',
     status: 'waiting', // waiting | ready | playing | finished
     spectators: [],
     winner: null,
+    isDraw: false,
     startTime: null,
     moveHistory: []
   }

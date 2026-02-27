@@ -6,14 +6,27 @@ import { io } from 'socket.io-client'
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
   (import.meta.env.PROD ? window.location.origin : 'http://localhost:3000')
 
+// 生成或获取唯一用户 ID
+const getUserId = () => {
+  let userId = localStorage.getItem('wuziqi_user_id')
+  if (!userId) {
+    userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    localStorage.setItem('wuziqi_user_id', userId)
+  }
+  return userId
+}
+
 /**
  * 在线对战游戏 Hook
  * 处理 Socket.io 连接、房间管理、游戏逻辑
  */
 export const useOnlineGame = () => {
   const socketRef = useRef(null)
+  const userIdRef = useRef(getUserId())
+  const reconnectAttemptsRef = useRef(0)
   const [socket, setSocket] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [isReconnecting, setIsReconnecting] = useState(false)
   const [roomInfo, setRoomInfo] = useState(null)
   const [error, setError] = useState(null)
   const [gameState, setGameState] = useState({
@@ -26,11 +39,15 @@ export const useOnlineGame = () => {
 
   // 初始化 Socket 连接
   useEffect(() => {
+    const userId = userIdRef.current
+    const savedRoomId = localStorage.getItem('wuziqi_current_room')
+    
     const socketInstance = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000
     })
 
     socketRef.current = socketInstance
@@ -40,16 +57,80 @@ export const useOnlineGame = () => {
       console.log('[Socket] 已连接到服务器:', SOCKET_URL)
       setIsConnected(true)
       setError(null)
+      
+      // 连接成功后立即进行身份认证
+      socketInstance.emit('authenticate', { 
+        userId, 
+        roomId: savedRoomId 
+      }, (response) => {
+        if (response.success && response.reconnected) {
+          console.log('[Socket] 成功恢复房间:', response.roomId)
+          setIsReconnecting(false)
+          
+          // 恢复房间信息
+          setRoomInfo({
+            roomId: response.roomId,
+            role: response.role,
+            status: response.room.status,
+            isHost: response.role === 'black'
+          })
+          
+          // 恢复游戏状态
+          setGameState({
+            board: response.room.board,
+            currentTurn: response.room.currentTurn,
+            gameOver: response.room.status === 'finished',
+            winner: response.room.winner,
+            isDraw: response.room.isDraw || false
+          })
+          
+          // 清除保存的房间（如果游戏已结束）
+          if (response.room.status === 'finished') {
+            localStorage.removeItem('wuziqi_current_room')
+          }
+        } else {
+          console.log('[Socket] 新连接，无房间需要恢复')
+          localStorage.removeItem('wuziqi_current_room')
+        }
+      })
     })
 
-    socketInstance.on('disconnect', () => {
-      console.log('[Socket] 已断开连接')
+    socketInstance.on('disconnect', (reason) => {
+      console.log('[Socket] 已断开连接，原因:', reason)
       setIsConnected(false)
+      
+      // 如果正在游戏中，标记为重连状态
+      if (roomInfo && roomInfo.status === 'playing' && !gameState.gameOver) {
+        setIsReconnecting(true)
+        setError('连接断开，正在尝试重连...')
+        
+        // 保存当前房间号以便重连
+        localStorage.setItem('wuziqi_current_room', roomInfo.roomId)
+      }
+    })
+
+    socketInstance.on('reconnect', (attemptNumber) => {
+      console.log('[Socket] 重新连接成功，尝试次数:', attemptNumber)
+      reconnectAttemptsRef.current = attemptNumber
+    })
+
+    socketInstance.on('reconnect_attempt', (attemptNumber) => {
+      console.log('[Socket] 尝试重连:', attemptNumber)
+      setError(`正在重连... (${attemptNumber}/10)`)
+    })
+
+    socketInstance.on('reconnect_failed', () => {
+      console.error('[Socket] 重连失败')
+      setIsReconnecting(false)
+      setError('无法重新连接到服务器，请刷新页面重试')
+      localStorage.removeItem('wuziqi_current_room')
     })
 
     socketInstance.on('connect_error', (err) => {
       console.error('[Socket] 连接错误:', err.message)
-      setError('无法连接到服务器，请检查网络连接')
+      if (!isReconnecting) {
+        setError('无法连接到服务器，请检查网络连接')
+      }
     })
 
     // 监听房间创建成功
@@ -122,11 +203,26 @@ export const useOnlineGame = () => {
       }))
     })
 
-    // 监听对手断开连接
+    // 监听对手断开连接（等待重连）
+    socketInstance.on('opponent_disconnected_pending', (data) => {
+      console.log('[Socket] 对手暂时断开，等待重连:', data)
+      setError(`对手暂时断开，等待重连... (${data.reconnectTimeout / 1000}秒)`)
+      setRoomInfo(prev => prev ? { ...prev, opponentDisconnected: true } : null)
+    })
+
+    // 监听对手完全断开连接
     socketInstance.on('opponent_disconnected', (data) => {
       console.log('[Socket] 对手断开连接:', data)
       setError('对手已断开连接')
-      setRoomInfo(prev => prev ? { ...prev, status: 'disconnected' } : null)
+      setRoomInfo(prev => prev ? { ...prev, status: 'disconnected', opponentDisconnected: false } : null)
+      localStorage.removeItem('wuziqi_current_room')
+    })
+
+    // 监听对手重连成功
+    socketInstance.on('opponent_reconnected', (data) => {
+      console.log('[Socket] 对手已重连:', data)
+      setError(null)
+      setRoomInfo(prev => prev ? { ...prev, opponentDisconnected: false } : null)
     })
 
     // 监听对手离开房间
@@ -211,6 +307,13 @@ export const useOnlineGame = () => {
         setError(response.error || '创建房间失败')
         return
       }
+      // 保存用户 ID 和房间号
+      if (response.userId) {
+        userIdRef.current = response.userId
+        localStorage.setItem('wuziqi_user_id', response.userId)
+      }
+      localStorage.setItem('wuziqi_current_room', response.roomId)
+      
       // 处理回调返回的数据
       setRoomInfo({
         roomId: response.roomId,
@@ -247,6 +350,13 @@ export const useOnlineGame = () => {
         setError(response.error || '加入房间失败')
         return
       }
+      // 保存用户 ID 和房间号
+      if (response.userId) {
+        userIdRef.current = response.userId
+        localStorage.setItem('wuziqi_user_id', response.userId)
+      }
+      localStorage.setItem('wuziqi_current_room', response.roomId)
+      
       // 处理回调返回的数据
       setRoomInfo({
         roomId: response.roomId,
@@ -311,6 +421,10 @@ export const useOnlineGame = () => {
    * 离开房间
    */
   const leaveRoom = useCallback(() => {
+    // 清除本地存储的房间信息
+    localStorage.removeItem('wuziqi_current_room')
+    setIsReconnecting(false)
+    
     if (socketRef.current && roomInfo) {
       // 添加超时处理
       const timeoutId = setTimeout(() => {
@@ -369,6 +483,7 @@ export const useOnlineGame = () => {
   return {
     socket,
     isConnected,
+    isReconnecting,
     roomInfo,
     gameState,
     error,
