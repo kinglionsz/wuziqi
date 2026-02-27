@@ -1,6 +1,8 @@
-# 五子棋游戏 (Gomoku)
+# 五子棋游戏 (Gomoku) - xiaochidian
 
-一个精美的在线五子棋游戏，支持人机对战、双人对战等多种模式。
+一个精美的在线五子棋游戏，支持人机对战、双人对战、在线对战等多种模式。
+
+> **项目名称**: xiaochidian - 来源于 `package.json` 中的 `name` 字段，作为项目的唯一标识符
 
 ## 功能特性
 
@@ -163,7 +165,7 @@ wuziqi/
 ## 部署信息
 
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
-- **当前版本**: v1.1
+- **当前版本**: v1.2
 - **部署时间**: 2026-02-27
 - **后端服务**: wuziqi-server (容器型云托管) - 运行正常
 - **后端版本**: wuziqi-server-001
@@ -204,10 +206,18 @@ npm run build
 # 2. 部署前端到 CloudBase
 npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
 
-# 3. 部署云函数 (可选，用于在线对战)
+# 3. 部署后端到 CloudBase 云托管
+# 方式一：使用 CloudBase CLI
+tcb cloudrun deploy -s wuziqi-server --port 3000 --source ./cloudbase/server --force
+
+# 方式二：进入 server 目录后部署
+cd cloudbase/server
+tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force
+
+# 4. 部署云函数 (可选，用于在线对战)
 cloudbase fn deploy wuziqi-server -e codebuddy-9gu42kpn62ead2e2 --dir ./cloudfunctions/wuziqi-server --ws --force
 
-# 4. 创建 HTTP 访问服务 (可选)
+# 5. 创建 HTTP 访问服务 (可选)
 cloudbase service create -e codebuddy-9gu42kpn62ead2e2 -p wuziqi -f wuziqi-server
 ```
 
@@ -244,6 +254,30 @@ i 提交函数型云托管 wuziqi-server 已完成！
 │ wuziqi-server │ 函数型服务 │ 2026-02-25 02:03:50 │ normal   │ 允许     │
 └───────────────┴────────────┴─────────────────────┴──────────┴──────────┘
 ```
+
+### 本次 v1.2 部署内容 (2026-02-27)
+
+#### 问题修复
+1. **断线重连缓冲期不匹配** (关键Bug)
+   - 问题：`disconnect` 定时器设置为60秒，但 `getDisconnectedUser` 检查只有10秒
+   - 影响：手机端断线10-60秒内重连，系统不认用户，显示"无房间需要恢复"
+   - 修复：统一为60秒缓冲期
+
+2. **数据库操作阻塞响应**
+   - 问题：`create_room`、`join_room`、`place_piece` 中的 `await dbSaveRoom()` 阻塞了 Socket.io 回调
+   - 影响：创建房间、加入房间、落子有明显延迟（3秒+）
+   - 修复：将数据库操作改为后台异步执行，即时响应用户操作
+
+3. **移除不必要的数据库查询**
+   - 问题：`join_room` 和 `place_piece` 尝试从数据库加载房间（`await dbGetRoom`）
+   - 影响：即使房间在内存中，也会等待数据库查询超时
+   - 修复：完全移除数据库查询依赖，纯内存操作
+
+#### 优化效果
+- ✅ 创建房间：即时响应，立即显示房间号
+- ✅ 加入房间：即时响应，立即进入游戏
+- ✅ 落子：即时响应，棋子立即显示
+- ✅ 断线重连：60秒内可正常恢复房间状态
 
 ### 本次 v1.1 部署内容 (2026-02-26)
 
@@ -339,6 +373,11 @@ npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --target
 
 ## 版本历史
 
+- **v1.2** - 修复断线重连和响应延迟问题 (2026-02-27)
+  - 修复断线重连缓冲期不匹配（10秒→60秒）
+  - 将数据库操作改为后台异步，消除响应延迟
+  - 移除不必要的数据库查询依赖
+  - 优化在线对战体验，创建/加入/落子即时响应
 - **v1.1** - 修复数据库初始化问题 (2026-02-26)
   - 修复 `dbInitFailed is not defined` 错误
   - 添加缺失的变量声明 `let dbInitFailed = false`

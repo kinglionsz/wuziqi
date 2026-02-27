@@ -278,6 +278,7 @@ function App() {
           currentPlayer={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.currentTurn : currentPlayer}
           gameOver={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.gameOver : gameOver}
           theme={theme}
+          lastMove={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.lastMove : null}
         />
       </div>
 
@@ -348,7 +349,7 @@ function App() {
       </audio>
 
       <div className="footer">
-        <p>©️狮王李 保留所有权利 2026 | 版本 v1.0</p>
+        <p>©️狮王李 保留所有权利 2026 | 版本 v1.2</p>
       </div>
     </div>
   )

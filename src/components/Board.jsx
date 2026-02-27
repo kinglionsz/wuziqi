@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import './Board.css';
 
 const THEMES = {
@@ -34,7 +34,7 @@ const THEMES = {
   }
 };
 
-const Board = ({ board, onCellClick, currentPlayer, gameOver, theme = 'default' }) => {
+const Board = ({ board, onCellClick, currentPlayer, gameOver, theme = 'default', lastMove: propLastMove }) => {
   const [hoverPosition, setHoverPosition] = useState(null);
   const currentTheme = THEMES[theme] || THEMES.default;
 
@@ -48,7 +48,7 @@ const Board = ({ board, onCellClick, currentPlayer, gameOver, theme = 'default' 
     setHoverPosition(null);
   };
 
-  // 找到最后一步
+  // 找到最后一步（如果没有从 props 传递）
   const getLastMove = () => {
     for (let i = board.length - 1; i >= 0; i--) {
       for (let j = board[i].length - 1; j >= 0; j--) {
@@ -60,7 +60,10 @@ const Board = ({ board, onCellClick, currentPlayer, gameOver, theme = 'default' 
     return null;
   };
 
-  const lastMove = getLastMove();
+  // 优先使用 props 传递的 lastMove，否则通过遍历计算
+  const lastMove = useMemo(() => {
+    return propLastMove || getLastMove();
+  }, [propLastMove, board]);
 
   return (
     <div className="board" style={{ 
@@ -87,13 +90,23 @@ const Board = ({ board, onCellClick, currentPlayer, gameOver, theme = 'default' 
               
               {/* 棋子 */}
               {cell === 'black' && (
-                <div className={`stone black ${lastMove && lastMove.row === rowIndex && lastMove.col === colIndex ? 'last-move' : ''}`}>
-                  {lastMove && lastMove.row === rowIndex && lastMove.col === colIndex && <div className="last-move-indicator"></div>}
+                <div 
+                  className={`stone black ${lastMove?.row === rowIndex && lastMove?.col === colIndex ? 'last-move' : ''}`}
+                  style={{ willChange: 'transform, box-shadow' }}
+                >
+                  {lastMove?.row === rowIndex && lastMove?.col === colIndex && (
+                    <div className="last-move-indicator" style={{ willChange: 'opacity' }}></div>
+                  )}
                 </div>
               )}
               {cell === 'white' && (
-                <div className={`stone white ${lastMove && lastMove.row === rowIndex && lastMove.col === colIndex ? 'last-move' : ''}`}>
-                  {lastMove && lastMove.row === rowIndex && lastMove.col === colIndex && <div className="last-move-indicator"></div>}
+                <div 
+                  className={`stone white ${lastMove?.row === rowIndex && lastMove?.col === colIndex ? 'last-move' : ''}`}
+                  style={{ willChange: 'transform, box-shadow' }}
+                >
+                  {lastMove?.row === rowIndex && lastMove?.col === colIndex && (
+                    <div className="last-move-indicator" style={{ willChange: 'opacity' }}></div>
+                  )}
                 </div>
               )}
               

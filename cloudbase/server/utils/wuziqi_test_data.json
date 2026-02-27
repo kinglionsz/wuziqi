@@ -1,0 +1,21 @@
+{
+  "roomId": "TEST001",
+  "players": {
+    "user_test_001": {
+      "role": "black",
+      "ready": true,
+      "socketId": null,
+      "isDisconnected": false
+    }
+  },
+  "board": [],
+  "currentTurn": "black",
+  "status": "waiting",
+  "spectators": [],
+  "winner": null,
+  "isDraw": false,
+  "startTime": null,
+  "moveHistory": [],
+  "createdAt": 1740723880000,
+  "updatedAt": 1740723880000
+}

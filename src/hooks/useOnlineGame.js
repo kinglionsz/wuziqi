@@ -192,7 +192,8 @@ export const useOnlineGame = () => {
       setGameState(prev => ({
         ...prev,
         board: data.board,
-        currentTurn: data.currentTurn
+        currentTurn: data.currentTurn,
+        lastMove: data.lastMove || null
       }))
     })
 
@@ -412,6 +413,17 @@ export const useOnlineGame = () => {
       setError('还未轮到您落子')
       return
     }
+    
+    // 乐观更新：本地立即更新棋盘状态（确保高亮立即显示）
+    const newBoard = gameState.board.map((r, i) => 
+      i === row ? r.map((c, j) => j === col ? roomInfo.role : c) : r
+    )
+    setGameState(prev => ({
+      ...prev,
+      board: newBoard,
+      currentTurn: roomInfo.role === 'black' ? 'white' : 'black',
+      lastMove: { row, col, player: roomInfo.role }
+    }))
     
     socketRef.current.emit('place_piece', {
       roomId: roomInfo.roomId,

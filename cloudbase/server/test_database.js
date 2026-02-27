@@ -16,7 +16,7 @@ import cloudbase from '@cloudbase/node-sdk'
 
 // 配置
 const envId = process.env.TCB_ENV_ID || 'codebuddy-9gu42kpn62ead2e2'
-const collectionName = 'wuziqi_rooms_test'
+const collectionName = 'wuziqi_rooms'
 
 // 检查环境变量
 console.log('========== 环境变量检查 ==========')
@@ -54,17 +54,39 @@ async function main() {
     process.exit(1)
   }
   
-  // 测试1: 创建集合
+  // 测试1: 检查并创建集合
   console.log('')
-  console.log('2. 创建测试集合...')
+  console.log('2. 检查测试集合...')
+  
+  let collectionExists = false
+  let existingData = null
+  
+  // 先尝试查询集合，检查是否存在
   try {
-    await db.createCollection(collectionName)
-    console.log('   ✅ 集合创建成功')
+    const checkResult = await db.collection(collectionName).limit(1).get()
+    if (checkResult.data) {
+      collectionExists = true
+      existingData = checkResult.data
+      console.log('   ℹ️  发现集合:', collectionName)
+      console.log('   集合内容:', JSON.stringify(existingData, null, 2))
+    }
   } catch (e) {
-    if (e.message.includes('exists')) {
-      console.log('   ℹ️  集合已存在，继续...')
-    } else {
-      console.error('   ❌ 创建集合失败:', e.message)
+    // 查询失败，可能是集合不存在或其他错误
+    console.log('   ℹ️  集合不存在或查询失败:', e.message)
+  }
+  
+  // 如果集合不存在，尝试创建
+  if (!collectionExists) {
+    console.log('   正在创建集合...')
+    try {
+      await db.createCollection(collectionName)
+      console.log('   ✅ 集合创建成功')
+    } catch (e) {
+      if (e.message.includes('exists')) {
+        console.log('   ℹ️  集合已存在（创建时检测到），继续...')
+      } else {
+        console.error('   ❌ 创建集合失败:', e.message)
+      }
     }
   }
   

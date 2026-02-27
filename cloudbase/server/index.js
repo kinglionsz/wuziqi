@@ -33,6 +33,77 @@ app.get('/', (req, res) => {
   res.send('五子棋在线对战服务器 running')
 })
 
+// 数据库测试端点
+app.get('/test-db', async (req, res) => {
+  console.log('[测试端点] 开始数据库测试...')
+  const results = {
+    timestamp: new Date().toISOString(),
+    env: {
+      TCB_ENV_ID: process.env.TCB_ENV_ID || '(未设置)',
+      TCB_FUNCTION_NAME: process.env.TCB_FUNCTION_NAME || '(未设置)',
+      PORT: process.env.PORT || 3000
+    },
+    tests: []
+  }
+  
+  try {
+    // 测试1: 检查数据库模块
+    results.tests.push({ name: '数据库模块加载', status: 'success', message: 'database.js 模块已加载' })
+    
+    // 测试2: 尝试初始化数据库
+    const initResult = await initDatabase()
+    results.tests.push({ 
+      name: '数据库初始化', 
+      status: initResult ? 'success' : 'warning', 
+      message: initResult ? '数据库初始化成功' : '数据库初始化失败，将使用内存存储'
+    })
+    
+    // 测试3: 尝试保存测试房间
+    const testRoom = {
+      roomId: 'TEST_' + Date.now(),
+      players: {},
+      board: Array(15).fill(null).map(() => Array(15).fill(null)),
+      currentTurn: 'black',
+      status: 'testing',
+      spectators: [],
+      winner: null,
+      isDraw: false,
+      startTime: null,
+      moveHistory: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    }
+    
+    try {
+      await dbSaveRoom(testRoom)
+      results.tests.push({ name: '保存测试房间', status: 'success', message: `房间 ${testRoom.roomId} 保存成功` })
+      
+      // 测试4: 尝试读取房间
+      const loadedRoom = await dbGetRoom(testRoom.roomId)
+      if (loadedRoom) {
+        results.tests.push({ name: '读取测试房间', status: 'success', message: `成功读取房间 ${loadedRoom.roomId}` })
+        
+        // 测试5: 删除测试房间
+        await dbDeleteRoom(testRoom.roomId)
+        results.tests.push({ name: '删除测试房间', status: 'success', message: '测试房间已清理' })
+      } else {
+        results.tests.push({ name: '读取测试房间', status: 'error', message: '无法读取保存的房间' })
+      }
+    } catch (saveError) {
+      results.tests.push({ name: '保存测试房间', status: 'error', message: saveError.message })
+    }
+    
+    results.overall = results.tests.every(t => t.status !== 'error') ? 'success' : 'partial'
+    
+  } catch (error) {
+    results.tests.push({ name: '整体测试', status: 'error', message: error.message })
+    results.overall = 'error'
+  }
+  
+  console.log('[测试端点] 测试结果:', results.overall)
+  res.json(results)
+})
+
 const httpServer = http.createServer(app)
 
 // 获取端口
@@ -76,9 +147,9 @@ const getDisconnectedUser = (userId) => {
   const userInfo = disconnectedUsers[userId]
   if (!userInfo) return null
   
-  // 检查是否超过10秒缓冲期
+  // 检查是否超过60秒缓冲期
   const now = Date.now()
-  if (now - userInfo.disconnectTime > 10000) {
+  if (now - userInfo.disconnectTime > 60000) {
     delete disconnectedUsers[userId]
     return null
   }
@@ -236,7 +307,7 @@ io.on('connection', (socket) => {
     callback({ success: true, reconnected: false })
   })
 
-  socket.on('create_room', async (data, callback) => {
+  socket.on('create_room', (data, callback) => {
     const userId = socket.userId || socket.id
     
     let roomId = generateRoomId(6)
@@ -260,13 +331,7 @@ io.on('connection', (socket) => {
 
     console.log(`[房间创建] roomId: ${roomId}, 房主: ${userId} (${socket.id})`)
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
+    // 立即返回响应，不等待数据库操作
     callback({ 
       success: true, 
       roomId, 
@@ -275,23 +340,17 @@ io.on('connection', (socket) => {
       currentTurn: room.currentTurn,
       userId
     })
+    
+    // 数据库保存改为后台异步执行，不阻塞响应
+    dbSaveRoom(room).catch(err => {
+      console.error('[数据库] 保存房间失败:', err.message)
+    })
   })
 
-  socket.on('join_room', async (data, callback) => {
+  socket.on('join_room', (data, callback) => {
     const { roomId } = data
     const userId = socket.userId || socket.id
-    let room = rooms[roomId]
-
-    // 如果内存中没有房间，尝试从数据库加载
-    if (!room) {
-      console.log(`[数据库] 尝试从数据库加载房间: ${roomId}`)
-      const dbRoom = await dbGetRoom(roomId)
-      if (dbRoom) {
-        room = dbRoom
-        rooms[roomId] = room
-        console.log(`[数据库] 房间加载成功: ${roomId}`)
-      }
-    }
+    const room = rooms[roomId]
 
     if (!room) {
       callback({ success: false, error: '房间不存在' })
@@ -343,13 +402,7 @@ io.on('connection', (socket) => {
     room.status = 'playing'
     room.startTime = Date.now()
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
+    // 立即返回响应
     callback({ 
       success: true, 
       roomId, 
@@ -357,6 +410,11 @@ io.on('connection', (socket) => {
       board: room.board,
       currentTurn: room.currentTurn,
       userId
+    })
+    
+    // 数据库保存后台异步执行
+    dbSaveRoom(room).catch(err => {
+      console.error('[数据库] 保存房间失败:', err.message)
     })
 
     io.to(roomId).emit('game_start', {
@@ -366,23 +424,13 @@ io.on('connection', (socket) => {
     })
   })
 
-  socket.on('place_piece', async (data, callback) => {
+  socket.on('place_piece', (data, callback) => {
     const { roomId, row, col } = data
     const userId = socket.userId || socket.id
     
-    console.log(`[落子请求] roomId: ${roomId}, userId: ${userId}, socket.userId: ${socket.userId}, 位置: (${row}, ${col})`)
+    console.log(`[落子请求] roomId: ${roomId}, userId: ${userId}, 位置: (${row}, ${col})`)
     
-    let room = rooms[roomId]
-
-    // 如果内存中没有房间，尝试从数据库加载
-    if (!room) {
-      console.log(`[数据库] 尝试从数据库加载房间: ${roomId}`)
-      const dbRoom = await dbGetRoom(roomId)
-      if (dbRoom) {
-        room = dbRoom
-        rooms[roomId] = room
-      }
-    }
+    const room = rooms[roomId]
 
     const playerRole = getPlayerRole(roomId, userId)
     console.log(`[落子检查] playerRole: ${playerRole}, room.currentTurn: ${room?.currentTurn}, room.status: ${room?.status}`)
@@ -426,13 +474,7 @@ io.on('connection', (socket) => {
       room.status = 'finished'
       room.winner = playerRole
 
-      // 持久化到数据库
-      try {
-        await dbSaveRoom(room)
-      } catch (err) {
-        console.error('[数据库] 保存房间失败:', err.message)
-      }
-
+      // 广播游戏结束
       io.to(roomId).emit('game_over', {
         winner: playerRole,
         lastMove: { row, col },
@@ -442,19 +484,18 @@ io.on('connection', (socket) => {
       if (callback) {
         callback({ success: true, gameOver: true, winner: playerRole })
       }
+      
+      // 后台异步保存到数据库
+      dbSaveRoom(room).catch(err => {
+        console.error('[数据库] 保存房间失败:', err.message)
+      })
       return
     }
 
     if (checkDraw(room.board)) {
       room.status = 'finished'
 
-      // 持久化到数据库
-      try {
-        await dbSaveRoom(room)
-      } catch (err) {
-        console.error('[数据库] 保存房间失败:', err.message)
-      }
-
+      // 广播游戏结束（平局）
       io.to(roomId).emit('game_over', {
         winner: null,
         isDraw: true,
@@ -464,18 +505,17 @@ io.on('connection', (socket) => {
       if (callback) {
         callback({ success: true, gameOver: true, isDraw: true })
       }
+      
+      // 后台异步保存到数据库
+      dbSaveRoom(room).catch(err => {
+        console.error('[数据库] 保存房间失败:', err.message)
+      })
       return
     }
 
     room.currentTurn = playerRole === 'black' ? 'white' : 'black'
 
-    // 持久化到数据库
-    try {
-      await dbSaveRoom(room)
-    } catch (err) {
-      console.error('[数据库] 保存房间失败:', err.message)
-    }
-
+    // 广播棋盘更新（不等待数据库）
     io.to(roomId).emit('sync_board', {
       board: room.board,
       lastMove: { row, col, player: playerRole },
@@ -485,6 +525,11 @@ io.on('connection', (socket) => {
     if (callback) {
       callback({ success: true, gameOver: false })
     }
+    
+    // 后台异步保存到数据库
+    dbSaveRoom(room).catch(err => {
+      console.error('[数据库] 保存房间失败:', err.message)
+    })
   })
 
   socket.on('disconnect', async () => {
@@ -505,14 +550,14 @@ io.on('connection', (socket) => {
         // 标记为断线状态，但不立即删除
         room.players[actualUserId].isDisconnected = true
         
-        // 存入断线缓冲区（10秒内可以重连）
+        // 存入断线缓冲区（60秒内可以重连）
         disconnectedUsers[actualUserId] = {
           roomId,
           role: playerRole,
           disconnectTime: Date.now()
         }
         
-        // 延迟删除（10秒后），存储定时器ID以便取消
+        // 延迟删除（60秒后），存储定时器ID以便取消
         const timeoutId = setTimeout(async () => {
           // 清除定时器记录
           delete disconnectTimeouts[actualUserId]
@@ -552,7 +597,7 @@ io.on('connection', (socket) => {
               }
             }
           }
-        }, 10000) // 10秒缓冲期
+        }, 60000) // 60秒缓冲期（给手机端更多重连时间）
         
         // 存储定时器ID，以便重连时取消
         disconnectTimeouts[actualUserId] = timeoutId
@@ -562,7 +607,7 @@ io.on('connection', (socket) => {
           io.to(roomId).emit('opponent_disconnected_pending', {
             role: playerRole,
             message: '对手暂时断开，等待重连...',
-            reconnectTimeout: 10000
+            reconnectTimeout: 60000
           })
         }
       }
