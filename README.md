@@ -279,6 +279,23 @@ i 提交函数型云托管 wuziqi-server 已完成！
 - ✅ 落子：即时响应，棋子立即显示
 - ✅ 断线重连：60秒内可正常恢复房间状态
 
+#### 代码审查报告 (2026-02-27)
+
+##### 发现的问题
+
+| 严重程度 | 位置 | 问题描述 |
+|----------|------|----------|
+| **CRITICAL** | `src/hooks/useOnlineGame.js:417-436` | 乐观更新缺少回滚机制 - 落子被服务器拒绝时不会回滚本地状态 |
+| WARNING | `cloudbase/server/index.js:554,603` | `disconnectedUsers` 和 `disconnectTimeouts` 对象可能内存泄漏 |
+| WARNING | `cloudbase/server/index.js:510,530` | 数据库保存失败无重试机制 |
+
+##### 已修复
+- ✅ **CRITICAL**: 乐观更新回滚机制 - 落子被服务器拒绝时自动回滚本地状态
+
+##### 待修复 (后续版本)
+- 断线用户对象定期清理机制
+- 数据库保存重试机制
+
 ### 本次 v1.1 部署内容 (2026-02-26)
 
 #### 问题描述
@@ -378,6 +395,7 @@ npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --target
   - 将数据库操作改为后台异步，消除响应延迟
   - 移除不必要的数据库查询依赖
   - 优化在线对战体验，创建/加入/落子即时响应
+  - **代码审查修复**: 乐观更新回滚机制 - 落子被服务器拒绝时自动回滚本地状态
 - **v1.1** - 修复数据库初始化问题 (2026-02-26)
   - 修复 `dbInitFailed is not defined` 错误
   - 添加缺失的变量声明 `let dbInitFailed = false`
