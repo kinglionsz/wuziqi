@@ -415,6 +415,11 @@ export const useOnlineGame = () => {
     }
     
     // 乐观更新：本地立即更新棋盘状态（确保高亮立即显示）
+    // 保存旧状态用于回滚
+    const oldBoard = gameState.board.map(row => [...row])
+    const oldTurn = gameState.currentTurn
+    const oldLastMove = gameState.lastMove
+    
     const newBoard = gameState.board.map((r, i) => 
       i === row ? r.map((c, j) => j === col ? roomInfo.role : c) : r
     )
@@ -431,6 +436,13 @@ export const useOnlineGame = () => {
       col
     }, (response) => {
       if (!response.success) {
+        // 回滚状态
+        setGameState(prev => ({
+          ...prev,
+          board: oldBoard,
+          currentTurn: oldTurn,
+          lastMove: oldLastMove
+        }))
         setError(response.error || '落子失败')
       }
     })
