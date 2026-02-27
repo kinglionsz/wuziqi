@@ -63,26 +63,31 @@ export const useOnlineGame = () => {
         userId, 
         roomId: savedRoomId 
       }, (response) => {
+        console.log('[Socket] 认证响应:', response)
         if (response.success && response.reconnected) {
-          console.log('[Socket] 成功恢复房间:', response.roomId)
+          console.log('[Socket] 成功恢复房间:', response.roomId, '角色:', response.role)
           setIsReconnecting(false)
           
           // 恢复房间信息
-          setRoomInfo({
+          const newRoomInfo = {
             roomId: response.roomId,
             role: response.role,
             status: response.room.status,
             isHost: response.role === 'black'
-          })
+          }
+          console.log('[Socket] 设置 roomInfo:', newRoomInfo)
+          setRoomInfo(newRoomInfo)
           
           // 恢复游戏状态
-          setGameState({
+          const newGameState = {
             board: response.room.board,
             currentTurn: response.room.currentTurn,
             gameOver: response.room.status === 'finished',
             winner: response.room.winner,
             isDraw: response.room.isDraw || false
-          })
+          }
+          console.log('[Socket] 设置 gameState:', newGameState)
+          setGameState(newGameState)
           
           // 清除保存的房间（如果游戏已结束）
           if (response.room.status === 'finished') {
@@ -222,7 +227,22 @@ export const useOnlineGame = () => {
     socketInstance.on('opponent_reconnected', (data) => {
       console.log('[Socket] 对手已重连:', data)
       setError(null)
-      setRoomInfo(prev => prev ? { ...prev, opponentDisconnected: false } : null)
+      setRoomInfo(prev => prev ? { 
+        ...prev, 
+        opponentDisconnected: false,
+        status: data.room?.status || prev.status
+      } : null)
+      
+      // 更新游戏状态（如果有房间数据）
+      if (data.room) {
+        setGameState({
+          board: data.room.board,
+          currentTurn: data.room.currentTurn,
+          gameOver: data.room.status === 'finished',
+          winner: data.room.winner,
+          isDraw: data.room.isDraw || false
+        })
+      }
     })
 
     // 监听对手离开房间
@@ -378,14 +398,17 @@ export const useOnlineGame = () => {
    * 落子
    */
   const placePiece = useCallback((row, col) => {
+    console.log('[落子尝试]', { row, col, roomInfo, gameState })
     if (!socketRef.current || !roomInfo) {
       setError('未连接到服务器或不在房间中')
       return
     }
     if (gameState.gameOver) {
+      console.log('[落子失败] 游戏已结束')
       return
     }
     if (gameState.currentTurn !== roomInfo.role) {
+      console.log('[落子失败] 未轮到您', { currentTurn: gameState.currentTurn, myRole: roomInfo.role })
       setError('还未轮到您落子')
       return
     }

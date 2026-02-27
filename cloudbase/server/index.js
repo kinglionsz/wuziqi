@@ -158,10 +158,19 @@ io.on('connection', (socket) => {
         // 清理断线缓冲区
         clearDisconnectedUser(userId)
         
-        // 通知房间内其他玩家用户已重连
+        // 通知房间内其他玩家用户已重连，并发送最新房间状态
         socket.to(disconnectedInfo.roomId).emit('opponent_reconnected', {
           userId,
-          role: disconnectedInfo.role
+          role: disconnectedInfo.role,
+          room: {
+            roomId: room.roomId,
+            status: room.status,
+            currentTurn: room.currentTurn,
+            board: room.board,
+            players: getRoomPlayers(disconnectedInfo.roomId),
+            winner: room.winner,
+            isDraw: room.isDraw
+          }
         })
         
         console.log(`[用户重连] userId: ${userId}, roomId: ${disconnectedInfo.roomId}`)
