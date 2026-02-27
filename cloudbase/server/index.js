@@ -57,7 +57,8 @@ setSocketEmitter(io)
 const rooms = {}
 const socketToRoom = {}
 const userToSocket = {} // userId -> socket.id 映射
-const disconnectedUsers = {} // 断线用户缓冲区: userId -> { roomId, role, disconnectTime }
+const disconnectedUsers = {} // 断线用户缓冲区: userId -> { roomId, role, disconnectTime, timeoutId }
+const disconnectTimeouts = {} // userId -> timeoutId 映射，用于取消清理定时器
 
 const getRoomPlayers = (roomId) => {
   const room = rooms[roomId]
@@ -157,6 +158,13 @@ io.on('connection', (socket) => {
         
         // 清理断线缓冲区
         clearDisconnectedUser(userId)
+        
+        // 清除断线清理定时器，防止已重连用户被清理
+        if (disconnectTimeouts[userId]) {
+          clearTimeout(disconnectTimeouts[userId])
+          delete disconnectTimeouts[userId]
+          console.log(`[取消清理定时器] userId: ${userId}`)
+        }
         
         // 通知房间内其他玩家用户已重连，并发送最新房间状态
         socket.to(disconnectedInfo.roomId).emit('opponent_reconnected', {
@@ -297,6 +305,13 @@ io.on('connection', (socket) => {
       socket.join(roomId)
       socketToRoom[socket.id] = roomId
       
+      // 清除断线清理定时器
+      if (disconnectTimeouts[userId]) {
+        clearTimeout(disconnectTimeouts[userId])
+        delete disconnectTimeouts[userId]
+        console.log(`[取消清理定时器] userId: ${userId}`)
+      }
+      
       console.log(`[重新加入] userId: ${userId}, roomId: ${roomId}`)
       
       callback({ 
@@ -354,6 +369,9 @@ io.on('connection', (socket) => {
   socket.on('place_piece', async (data, callback) => {
     const { roomId, row, col } = data
     const userId = socket.userId || socket.id
+    
+    console.log(`[落子请求] roomId: ${roomId}, userId: ${userId}, socket.userId: ${socket.userId}, 位置: (${row}, ${col})`)
+    
     let room = rooms[roomId]
 
     // 如果内存中没有房间，尝试从数据库加载
@@ -367,6 +385,7 @@ io.on('connection', (socket) => {
     }
 
     const playerRole = getPlayerRole(roomId, userId)
+    console.log(`[落子检查] playerRole: ${playerRole}, room.currentTurn: ${room?.currentTurn}, room.status: ${room?.status}`)
 
     if (!room) {
       sendError(socket, callback, '房间不存在')
@@ -493,11 +512,14 @@ io.on('connection', (socket) => {
           disconnectTime: Date.now()
         }
         
-        // 延迟删除（10秒后）
-        setTimeout(async () => {
+        // 延迟删除（10秒后），存储定时器ID以便取消
+        const timeoutId = setTimeout(async () => {
+          // 清除定时器记录
+          delete disconnectTimeouts[actualUserId]
+          
           const userInfo = disconnectedUsers[actualUserId]
           if (userInfo && userInfo.roomId === roomId) {
-            // 检查用户是否已经重连
+            // 检查用户是否已经重连（isDisconnected 为 false 表示已重连，不执行清理）
             if (room.players[actualUserId] && room.players[actualUserId].isDisconnected) {
               // 确认删除玩家
               delete room.players[actualUserId]
@@ -531,6 +553,9 @@ io.on('connection', (socket) => {
             }
           }
         }, 10000) // 10秒缓冲期
+        
+        // 存储定时器ID，以便重连时取消
+        disconnectTimeouts[actualUserId] = timeoutId
         
         // 立即通知对手（但房间仍然保留）
         if (room.status === 'playing') {
