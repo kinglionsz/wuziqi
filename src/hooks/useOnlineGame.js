@@ -414,21 +414,18 @@ export const useOnlineGame = () => {
       return
     }
     
-    // 乐观更新：本地立即更新棋盘状态（确保高亮立即显示）
-    // 保存旧状态用于回滚
-    const oldBoard = gameState.board.map(row => [...row])
-    const oldTurn = gameState.currentTurn
-    const oldLastMove = gameState.lastMove
-    
-    const newBoard = gameState.board.map((r, i) => 
-      i === row ? r.map((c, j) => j === col ? roomInfo.role : c) : r
-    )
-    setGameState(prev => ({
-      ...prev,
-      board: newBoard,
-      currentTurn: roomInfo.role === 'black' ? 'white' : 'black',
-      lastMove: { row, col, player: roomInfo.role }
-    }))
+    // 乐观更新：使用函数式更新获取最新状态
+    setGameState(prev => {
+      const newBoard = prev.board.map((r, i) => 
+        i === row ? r.map((c, j) => j === col ? roomInfo.role : c) : r
+      )
+      return {
+        ...prev,
+        board: newBoard,
+        currentTurn: roomInfo.role === 'black' ? 'white' : 'black',
+        lastMove: { row, col, player: roomInfo.role }
+      }
+    })
     
     socketRef.current.emit('place_piece', {
       roomId: roomInfo.roomId,
@@ -436,13 +433,19 @@ export const useOnlineGame = () => {
       col
     }, (response) => {
       if (!response.success) {
-        // 回滚状态
-        setGameState(prev => ({
-          ...prev,
-          board: oldBoard,
-          currentTurn: oldTurn,
-          lastMove: oldLastMove
-        }))
+        // 服务端拒绝，回滚状态（重新获取最新状态）
+        setGameState(prev => {
+          // 移除刚才的落子
+          const rolledBackBoard = prev.board.map((r, i) => 
+            i === row ? r.map((c, j) => j === col ? null : c) : r
+          )
+          return {
+            ...prev,
+            board: rolledBackBoard,
+            currentTurn: roomInfo.role, // 恢复为当前玩家回合
+            lastMove: null // 清除高亮
+          }
+        })
         setError(response.error || '落子失败')
       }
     })
