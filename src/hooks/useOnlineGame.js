@@ -24,6 +24,14 @@ export const useOnlineGame = () => {
   const socketRef = useRef(null)
   const userIdRef = useRef(getUserId())
   const reconnectAttemptsRef = useRef(0)
+  
+  // 前端计时器 refs - 用于实时更新时间显示
+  const timerRef = useRef(null)
+  const gameStartTimeRef = useRef(null)  // 游戏开始时间
+  const turnStartTimeRef = useRef(null)   // 当前回合开始时间
+  const accumulatedBlackTimeRef = useRef(0)  // 黑方累计时间
+  const accumulatedWhiteTimeRef = useRef(0)   // 白方累计时间
+  
   const [socket, setSocket] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isReconnecting, setIsReconnecting] = useState(false)
@@ -34,7 +42,11 @@ export const useOnlineGame = () => {
     currentTurn: 'black',
     gameOver: false,
     winner: null,
-    isDraw: false
+    isDraw: false,
+    // 时间相关
+    blackTime: 0,
+    whiteTime: 0,
+    gameTime: 0
   })
 
   // 初始化 Socket 连接
@@ -141,6 +153,11 @@ export const useOnlineGame = () => {
     // 监听房间创建成功
     socketInstance.on('room_created', (data) => {
       console.log('[Socket] 房间创建成功:', data)
+      // 重置计时器
+      gameStartTimeRef.current = Date.now()
+      turnStartTimeRef.current = Date.now()
+      accumulatedBlackTimeRef.current = 0
+      accumulatedWhiteTimeRef.current = 0
       setRoomInfo({
         roomId: data.roomId,
         role: data.role,
@@ -159,6 +176,11 @@ export const useOnlineGame = () => {
     // 监听加入成功
     socketInstance.on('join_success', (data) => {
       console.log('[Socket] 加入房间成功:', data)
+      // 重置计时器
+      gameStartTimeRef.current = Date.now()
+      turnStartTimeRef.current = Date.now()
+      accumulatedBlackTimeRef.current = 0
+      accumulatedWhiteTimeRef.current = 0
       setRoomInfo({
         roomId: data.roomId,
         role: data.role,
@@ -183,6 +205,11 @@ export const useOnlineGame = () => {
     // 监听游戏开始
     socketInstance.on('game_start', (data) => {
       console.log('[Socket] 游戏开始:', data)
+      // 重置计时器
+      gameStartTimeRef.current = Date.now()
+      turnStartTimeRef.current = Date.now()
+      accumulatedBlackTimeRef.current = 0
+      accumulatedWhiteTimeRef.current = 0
       setRoomInfo(prev => prev ? { ...prev, status: 'playing' } : null)
     })
 
@@ -193,19 +220,32 @@ export const useOnlineGame = () => {
         ...prev,
         board: data.board,
         currentTurn: data.currentTurn,
-        lastMove: data.lastMove || null
+        lastMove: data.lastMove || null,
+        // 接收时间数据
+        blackTime: data.blackTime || 0,
+        whiteTime: data.whiteTime || 0,
+        gameTime: data.gameTime || 0
       }))
     })
 
     // 监听游戏结束
     socketInstance.on('game_over', (data) => {
       console.log('[Socket] 游戏结束:', data)
+      // 停止计时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
       setGameState(prev => ({
         ...prev,
         gameOver: true,
         winner: data.winner,
         isDraw: data.isDraw || false,
-        board: data.board
+        board: data.board,
+        // 接收最终时间数据
+        blackTime: data.blackTime || 0,
+        whiteTime: data.whiteTime || 0,
+        gameTime: data.gameTime || 0
       }))
     })
 
@@ -270,13 +310,21 @@ export const useOnlineGame = () => {
     // 监听游戏重新开始
     socketInstance.on('game_restarted', (data) => {
       console.log('[Socket] 游戏重新开始:', data)
+      // 重置计时器
+      gameStartTimeRef.current = Date.now()
+      turnStartTimeRef.current = Date.now()
+      accumulatedBlackTimeRef.current = 0
+      accumulatedWhiteTimeRef.current = 0
       setGameState(prev => ({
         ...prev,
         board: data.board,
         currentTurn: data.currentTurn,
         gameOver: false,
         winner: null,
-        isDraw: false
+        isDraw: false,
+        blackTime: 0,
+        whiteTime: 0,
+        gameTime: 0
       }))
     })
 
@@ -312,6 +360,92 @@ export const useOnlineGame = () => {
       socketInstance.disconnect()
     }
   }, [])
+
+  // 前端计时器：实时更新游戏时间显示
+  useEffect(() => {
+    // 清理之前的计时器
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    
+    // 只有在游戏进行中且房间存在时才启动计时器
+    const isPlaying = roomInfo && roomInfo.status === 'playing' && !gameState.gameOver
+    
+    if (isPlaying) {
+      // 首次启动计时器时，初始化时间
+      if (!gameStartTimeRef.current) {
+        gameStartTimeRef.current = Date.now()
+        turnStartTimeRef.current = Date.now()
+        // 如果有服务端同步过来的初始时间，使用它
+        if (gameState.blackTime > 0) {
+          accumulatedBlackTimeRef.current = gameState.blackTime * 1000
+        }
+        if (gameState.whiteTime > 0) {
+          accumulatedWhiteTimeRef.current = gameState.whiteTime * 1000
+        }
+      }
+      
+      // 启动每秒更新计时器
+      timerRef.current = setInterval(() => {
+        const now = Date.now()
+        const currentTurn = gameState.currentTurn
+        
+        // 计算游戏总时长
+        const totalGameTime = Math.floor((now - gameStartTimeRef.current) / 1000)
+        
+        // 计算当前玩家已用时间
+        let newBlackTime = accumulatedBlackTimeRef.current
+        let newWhiteTime = accumulatedWhiteTimeRef.current
+        
+        if (currentTurn === 'black') {
+          // 黑方回合，计算从上次落子到现在的时间
+          const currentTurnDuration = now - turnStartTimeRef.current
+          newBlackTime = accumulatedBlackTimeRef.current + currentTurnDuration
+        } else {
+          // 白方回合
+          const currentTurnDuration = now - turnStartTimeRef.current
+          newWhiteTime = accumulatedWhiteTimeRef.current + currentTurnDuration
+        }
+        
+        // 更新状态显示（转换为秒）
+        setGameState(prev => ({
+          ...prev,
+          gameTime: totalGameTime,
+          blackTime: Math.floor(newBlackTime / 1000),
+          whiteTime: Math.floor(newWhiteTime / 1000)
+        }))
+      }, 1000)
+    }
+    
+    // 组件卸载或游戏结束时清理计时器
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [roomInfo?.status, gameState.gameOver, gameState.currentTurn])
+
+  // 监听回合切换，更新回合开始时间
+  useEffect(() => {
+    if (roomInfo && roomInfo.status === 'playing' && !gameState.gameOver) {
+      const currentTurn = gameState.currentTurn
+      const now = Date.now()
+      
+      // 记录上回合的时间到累计时间
+      if (currentTurn === 'white') {
+        // 刚切换到白方，黑方时间停止
+        accumulatedBlackTimeRef.current += now - turnStartTimeRef.current
+      } else if (currentTurn === 'black') {
+        // 刚切换到黑方，白方时间停止
+        accumulatedWhiteTimeRef.current += now - turnStartTimeRef.current
+      }
+      
+      // 更新回合开始时间
+      turnStartTimeRef.current = now
+    }
+  }, [gameState.currentTurn, roomInfo?.status, gameState.gameOver])
 
   /**
    * 创建房间
@@ -471,6 +605,17 @@ export const useOnlineGame = () => {
    * 离开房间
    */
   const leaveRoom = useCallback(() => {
+    // 清除计时器
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    // 重置计时器 refs
+    gameStartTimeRef.current = null
+    turnStartTimeRef.current = null
+    accumulatedBlackTimeRef.current = 0
+    accumulatedWhiteTimeRef.current = 0
+    
     // 清除本地存储的房间信息
     localStorage.removeItem('wuziqi_current_room')
     setIsReconnecting(false)

@@ -209,12 +209,31 @@ function App() {
         </div>
         
         <div className="time-section">
-          <div className="time-info">
-            <span>游戏时间：{formatTime(gameTime)}</span>
-          </div>
+          {gameMode === GAME_MODES.ONLINE && roomInfo ? (
+            // 在线对战时间显示
+            <div className="time-info">
+              <span>游戏时间：{formatTime(gameState.gameTime || 0)}</span>
+            </div>
+          ) : (
+            // 本地游戏时间显示
+            <div className="time-info">
+              <span>游戏时间：{formatTime(gameTime)}</span>
+            </div>
+          )}
           <div className="player-times">
-            <span>黑棋时间：{formatTime(blackTime)}</span>
-            <span>白棋时间：{formatTime(whiteTime)}</span>
+            {gameMode === GAME_MODES.ONLINE && roomInfo ? (
+              // 在线对战玩家时间
+              <>
+                <span>黑棋时间：{formatTime(gameState.blackTime || 0)}</span>
+                <span>白棋时间：{formatTime(gameState.whiteTime || 0)}</span>
+              </>
+            ) : (
+              // 本地游戏玩家时间
+              <>
+                <span>黑棋时间：{formatTime(blackTime || 0)}</span>
+                <span>白棋时间：{formatTime(whiteTime || 0)}</span>
+              </>
+            )}
           </div>
         </div>
         
@@ -287,9 +306,9 @@ function App() {
         isOpen={showVictoryModal}
         isDraw={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.isDraw : isDraw}
         winner={gameMode === GAME_MODES.ONLINE && roomInfo ? gameState.winner : winner}
-        gameTime={gameTime}
-        blackTime={blackTime}
-        whiteTime={whiteTime}
+        gameTime={gameMode === GAME_MODES.ONLINE && roomInfo ? (gameState.gameTime || 0) : gameTime}
+        blackTime={gameMode === GAME_MODES.ONLINE && roomInfo ? (gameState.blackTime || 0) : blackTime}
+        whiteTime={gameMode === GAME_MODES.ONLINE && roomInfo ? (gameState.whiteTime || 0) : whiteTime}
         moveCount={gameMode === GAME_MODES.ONLINE && roomInfo ? (gameState.board?.flat().filter(c => c !== null).length || 0) : moveHistory.length}
         formatTime={formatTime}
         onRestart={handleRestart}

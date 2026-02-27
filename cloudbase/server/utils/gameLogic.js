@@ -120,7 +120,11 @@ export const createRoom = (roomId, hostId) => {
     winner: null,
     isDraw: false,
     startTime: null,
-    moveHistory: []
+    moveHistory: [],
+    // 计时器相关
+    blackTime: 0,     // 黑方累计耗时（毫秒）
+    whiteTime: 0,     // 白方累计耗时（毫秒）
+    lastMoveStartTime: null  // 当前玩家开始计时的时刻
   }
 }
 

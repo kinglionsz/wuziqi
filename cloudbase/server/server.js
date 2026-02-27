@@ -194,6 +194,8 @@ io.on('connection', (socket) => {
     // 更新房间状态为 playing
     room.status = 'playing'
     room.startTime = Date.now()
+    // 启动黑方计时器（先手）
+    room.lastMoveStartTime = Date.now()
 
     // 持久化到数据库
     try {
@@ -276,6 +278,23 @@ io.on('connection', (socket) => {
     room.board[row][col] = playerRole
     console.log(`[落子] ${Date.now() - startTime}ms - 棋盘更新完成`)
     
+    // 计算当前玩家落子花费的时间
+    const currentTime = Date.now()
+    if (room.lastMoveStartTime) {
+      const timeSpent = currentTime - room.lastMoveStartTime
+      // 添加边界检查：确保时间差为正数且合理（小于1小时）
+      if (timeSpent > 0 && timeSpent < 3600000) {
+        if (playerRole === 'black') {
+          room.blackTime += timeSpent
+        } else {
+          room.whiteTime += timeSpent
+        }
+        console.log(`[计时] ${playerRole} 花费 ${timeSpent}ms, 黑方累计: ${room.blackTime}ms, 白方累计: ${room.whiteTime}ms`)
+      } else {
+        console.warn(`[计时] 异常时间差: ${timeSpent}ms, 跳过记录`)
+      }
+    }
+
     // 记录落子历史
     room.moveHistory.push({
       player: playerRole,
@@ -305,7 +324,11 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('game_over', {
         winner: playerRole,
         lastMove: { row, col },
-        board: room.board
+        board: room.board,
+        // 传递最终时间数据（转换为秒）
+        blackTime: Math.floor(room.blackTime / 1000),
+        whiteTime: Math.floor(room.whiteTime / 1000),
+        gameTime: room.startTime ? Math.floor((Date.now() - room.startTime) / 1000) : 0
       })
 
       if (callback) {
@@ -336,7 +359,11 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('game_over', {
         winner: null,
         isDraw: true,
-        board: room.board
+        board: room.board,
+        // 传递最终时间数据（转换为秒）
+        blackTime: Math.floor(room.blackTime / 1000),
+        whiteTime: Math.floor(room.whiteTime / 1000),
+        gameTime: room.startTime ? Math.floor((Date.now() - room.startTime) / 1000) : 0
       })
 
       if (callback) {
@@ -351,15 +378,21 @@ io.on('connection', (socket) => {
 
     // 切换回合
     room.currentTurn = playerRole === 'black' ? 'white' : 'black'
+    // 启动下一个玩家的计时器
+    room.lastMoveStartTime = Date.now()
 
     // 后台保存到数据库（不阻塞游戏流程）
     saveRoomBackground(room)
 
-    // 广播棋盘更新
+    // 广播棋盘更新（包含时间数据）
     io.to(roomId).emit('sync_board', {
       board: room.board,
       lastMove: { row, col, player: playerRole },
-      currentTurn: room.currentTurn
+      currentTurn: room.currentTurn,
+      // 传递时间数据（转换为秒）
+      blackTime: Math.floor(room.blackTime / 1000),
+      whiteTime: Math.floor(room.whiteTime / 1000),
+      gameTime: room.startTime ? Math.floor((Date.now() - room.startTime) / 1000) : 0
     })
 
     if (callback) {
