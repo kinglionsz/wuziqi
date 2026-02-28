@@ -31,6 +31,17 @@ export const useOnlineGame = () => {
   const turnStartTimeRef = useRef(null)   // 当前回合开始时间
   const accumulatedBlackTimeRef = useRef(0)  // 黑方累计时间
   const accumulatedWhiteTimeRef = useRef(0)   // 白方累计时间
+  const prevTurnRef = useRef(null)  // 追踪上一回合，避免竞态条件
+  
+  // 重置计时器的辅助函数
+  const resetTimer = useCallback((serverBlackTime = 0, serverWhiteTime = 0) => {
+    gameStartTimeRef.current = Date.now()
+    turnStartTimeRef.current = Date.now()
+    prevTurnRef.current = 'black'  // 黑方先手
+    // 如果有服务端同步过来的初始时间，使用它（转换为毫秒）
+    accumulatedBlackTimeRef.current = serverBlackTime * 1000
+    accumulatedWhiteTimeRef.current = serverWhiteTime * 1000
+  }, [])
   
   const [socket, setSocket] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -154,10 +165,7 @@ export const useOnlineGame = () => {
     socketInstance.on('room_created', (data) => {
       console.log('[Socket] 房间创建成功:', data)
       // 重置计时器
-      gameStartTimeRef.current = Date.now()
-      turnStartTimeRef.current = Date.now()
-      accumulatedBlackTimeRef.current = 0
-      accumulatedWhiteTimeRef.current = 0
+      resetTimer()
       setRoomInfo({
         roomId: data.roomId,
         role: data.role,
@@ -177,10 +185,7 @@ export const useOnlineGame = () => {
     socketInstance.on('join_success', (data) => {
       console.log('[Socket] 加入房间成功:', data)
       // 重置计时器
-      gameStartTimeRef.current = Date.now()
-      turnStartTimeRef.current = Date.now()
-      accumulatedBlackTimeRef.current = 0
-      accumulatedWhiteTimeRef.current = 0
+      resetTimer()
       setRoomInfo({
         roomId: data.roomId,
         role: data.role,
@@ -206,10 +211,7 @@ export const useOnlineGame = () => {
     socketInstance.on('game_start', (data) => {
       console.log('[Socket] 游戏开始:', data)
       // 重置计时器
-      gameStartTimeRef.current = Date.now()
-      turnStartTimeRef.current = Date.now()
-      accumulatedBlackTimeRef.current = 0
-      accumulatedWhiteTimeRef.current = 0
+      resetTimer()
       setRoomInfo(prev => prev ? { ...prev, status: 'playing' } : null)
     })
 
@@ -311,10 +313,7 @@ export const useOnlineGame = () => {
     socketInstance.on('game_restarted', (data) => {
       console.log('[Socket] 游戏重新开始:', data)
       // 重置计时器
-      gameStartTimeRef.current = Date.now()
-      turnStartTimeRef.current = Date.now()
-      accumulatedBlackTimeRef.current = 0
-      accumulatedWhiteTimeRef.current = 0
+      resetTimer()
       setGameState(prev => ({
         ...prev,
         board: data.board,
@@ -361,7 +360,7 @@ export const useOnlineGame = () => {
     }
   }, [])
 
-  // 前端计时器：实时更新游戏时间显示
+  // 前端计时器：实时更新游戏时间显示（合并回合切换逻辑，消除竞态条件）
   useEffect(() => {
     // 清理之前的计时器
     if (timerRef.current) {
@@ -373,10 +372,31 @@ export const useOnlineGame = () => {
     const isPlaying = roomInfo && roomInfo.status === 'playing' && !gameState.gameOver
     
     if (isPlaying) {
-      // 首次启动计时器时，初始化时间
+      const currentTurn = gameState.currentTurn
+      const now = Date.now()
+      
+      // 处理回合切换（使用 ref 追踪上一回合，避免重复计算）
+      if (prevTurnRef.current && prevTurnRef.current !== currentTurn) {
+        // 回合已切换，累加上一回合的时间
+        const turnDuration = now - turnStartTimeRef.current
+        if (prevTurnRef.current === 'black') {
+          accumulatedBlackTimeRef.current += turnDuration
+        } else if (prevTurnRef.current === 'white') {
+          accumulatedWhiteTimeRef.current += turnDuration
+        }
+        // 更新回合开始时间
+        turnStartTimeRef.current = now
+      } else if (!prevTurnRef.current) {
+        // 首次启动，初始化
+        turnStartTimeRef.current = now
+      }
+      
+      // 更新当前回合追踪
+      prevTurnRef.current = currentTurn
+      
+      // 首次启动计时器时，初始化游戏开始时间
       if (!gameStartTimeRef.current) {
-        gameStartTimeRef.current = Date.now()
-        turnStartTimeRef.current = Date.now()
+        gameStartTimeRef.current = now
         // 如果有服务端同步过来的初始时间，使用它
         if (gameState.blackTime > 0) {
           accumulatedBlackTimeRef.current = gameState.blackTime * 1000
@@ -388,32 +408,29 @@ export const useOnlineGame = () => {
       
       // 启动每秒更新计时器
       timerRef.current = setInterval(() => {
-        const now = Date.now()
-        const currentTurn = gameState.currentTurn
+        const intervalNow = Date.now()
+        const intervalTurn = prevTurnRef.current
         
         // 计算游戏总时长
-        const totalGameTime = Math.floor((now - gameStartTimeRef.current) / 1000)
+        const totalGameTime = Math.floor((intervalNow - gameStartTimeRef.current) / 1000)
         
-        // 计算当前玩家已用时间
-        let newBlackTime = accumulatedBlackTimeRef.current
-        let newWhiteTime = accumulatedWhiteTimeRef.current
+        // 计算当前玩家已用时间（累计时间 + 当前回合已用时间）
+        const currentTurnDuration = intervalNow - turnStartTimeRef.current
+        let displayBlackTime = accumulatedBlackTimeRef.current
+        let displayWhiteTime = accumulatedWhiteTimeRef.current
         
-        if (currentTurn === 'black') {
-          // 黑方回合，计算从上次落子到现在的时间
-          const currentTurnDuration = now - turnStartTimeRef.current
-          newBlackTime = accumulatedBlackTimeRef.current + currentTurnDuration
-        } else {
-          // 白方回合
-          const currentTurnDuration = now - turnStartTimeRef.current
-          newWhiteTime = accumulatedWhiteTimeRef.current + currentTurnDuration
+        if (intervalTurn === 'black') {
+          displayBlackTime += currentTurnDuration
+        } else if (intervalTurn === 'white') {
+          displayWhiteTime += currentTurnDuration
         }
         
         // 更新状态显示（转换为秒）
         setGameState(prev => ({
           ...prev,
           gameTime: totalGameTime,
-          blackTime: Math.floor(newBlackTime / 1000),
-          whiteTime: Math.floor(newWhiteTime / 1000)
+          blackTime: Math.floor(displayBlackTime / 1000),
+          whiteTime: Math.floor(displayWhiteTime / 1000)
         }))
       }, 1000)
     }
@@ -425,27 +442,10 @@ export const useOnlineGame = () => {
         timerRef.current = null
       }
     }
+  // 注意：不要添加 gameState.blackTime 和 gameState.whiteTime 到依赖数组
+  // 它们每秒都会被更新，会导致计时器不断被重置，影响计时精度
+  // 使用 refs 来追踪时间，避免不必要的 effect 重新执行
   }, [roomInfo?.status, gameState.gameOver, gameState.currentTurn])
-
-  // 监听回合切换，更新回合开始时间
-  useEffect(() => {
-    if (roomInfo && roomInfo.status === 'playing' && !gameState.gameOver) {
-      const currentTurn = gameState.currentTurn
-      const now = Date.now()
-      
-      // 记录上回合的时间到累计时间
-      if (currentTurn === 'white') {
-        // 刚切换到白方，黑方时间停止
-        accumulatedBlackTimeRef.current += now - turnStartTimeRef.current
-      } else if (currentTurn === 'black') {
-        // 刚切换到黑方，白方时间停止
-        accumulatedWhiteTimeRef.current += now - turnStartTimeRef.current
-      }
-      
-      // 更新回合开始时间
-      turnStartTimeRef.current = now
-    }
-  }, [gameState.currentTurn, roomInfo?.status, gameState.gameOver])
 
   /**
    * 创建房间
