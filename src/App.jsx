@@ -195,7 +195,11 @@ function App() {
     if (gameMode === GAME_MODES.PVE && currentPlayer === AI_PLAYER) {
       return 'AI 思考中...'
     }
-    return `当前回合：${currentPlayer === 'black' ? '黑棋' : '白棋'}`
+    // 在线对战模式下使用 gameState.currentTurn，本地模式使用 currentPlayer
+    const activePlayer = gameMode === GAME_MODES.ONLINE && roomInfo
+      ? gameState.currentTurn
+      : currentPlayer
+    return `当前回合：${activePlayer === 'black' ? '黑棋' : '白棋'}`
   }
 
   return (
