@@ -29,9 +29,11 @@ export const SettingsModal = ({
       // 加载本地记录
       const saved = localStorage.getItem('gomoku_records')
       if (saved) {
+        /* eslint-disable react-hooks/set-state-in-effect */
         setLocalRecords(JSON.parse(saved))
+        /* eslint-enable react-hooks/set-state-in-effect */
       }
-      
+
       // 加载 Supabase 记录
       const loadSupabaseRecords = async () => {
         const { data, error } = await getGameRecords(10)

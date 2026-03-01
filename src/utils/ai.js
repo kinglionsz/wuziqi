@@ -14,7 +14,6 @@ export const evaluatePosition = (board, row, col, player) => {
   for (const [dx, dy] of DIRECTIONS) {
     let count = 1
     let openEnds = 0
-    let blocked = 0
 
     // 正方向
     for (let i = 1; i < 5; i++) {
@@ -23,8 +22,8 @@ export const evaluatePosition = (board, row, col, player) => {
       if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
         if (board[newRow][newCol] === player) count++
         else if (board[newRow][newCol] === null) { openEnds++; break }
-        else { blocked++; break }
-      } else { blocked++; break }
+        else { break }
+      } else { break }
     }
 
     // 反方向
@@ -34,8 +33,8 @@ export const evaluatePosition = (board, row, col, player) => {
       if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
         if (board[newRow][newCol] === player) count++
         else if (board[newRow][newCol] === null) { openEnds++; break }
-        else { blocked++; break }
-      } else { blocked++; break }
+        else { break }
+      } else { break }
     }
 
     // 评分
@@ -192,10 +191,11 @@ const minimax = (board, depth, alpha, beta, isMaximizing, aiPlayer, humanPlayer)
  * 简单难度：随机选择或只考虑进攻
  * @param {Array} board - 棋盘数据
  * @param {string} aiPlayer - AI 玩家颜色
- * @param {string} humanPlayer - 人类玩家颜色
+ * @param {string} humanPlayer - 人类玩家颜色（简单难度不使用）
  * @returns {Object} - 落子位置 {row, col}
  */
 const findEasyMove = (board, aiPlayer, humanPlayer) => {
+  void humanPlayer // 简单难度不使用人类玩家参数
   const candidates = getCandidateMoves(board)
   
   // 30% 概率完全随机（有潜力的位置中）

@@ -23,8 +23,10 @@ export const RoomModal = ({
 
   useEffect(() => {
     if (isOpen) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setJoinRoomId('')
       setActiveTab('create')
+      /* eslint-enable react-hooks/set-state-in-effect */
       onClearError()
     }
   }, [isOpen, onClearError])

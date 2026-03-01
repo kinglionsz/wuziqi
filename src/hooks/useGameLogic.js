@@ -75,6 +75,7 @@ export const useGameLogic = ({
       }, 500)
       return () => clearTimeout(timer)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPlayer, gameMode, gameOver, board, aiLevel])
 
   // 保存游戏记录

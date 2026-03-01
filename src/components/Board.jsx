@@ -32,7 +32,19 @@ const THEMES = {
     lineColor: '#DB7093',
     lastMoveColor: 'rgba(255, 0, 0, 0.5)'
   }
-};
+}
+
+// 找到最后一步（提取到组件外部，避免 useMemo 依赖问题）
+const getLastMoveFromBoard = (board) => {
+  for (let i = board.length - 1; i >= 0; i--) {
+    for (let j = board[i].length - 1; j >= 0; j--) {
+      if (board[i][j]) {
+        return { row: i, col: j }
+      }
+    }
+  }
+  return null
+}
 
 const Board = ({ board, onCellClick, currentPlayer, gameOver, theme = 'default', lastMove: propLastMove }) => {
   const [hoverPosition, setHoverPosition] = useState(null);
@@ -48,21 +60,9 @@ const Board = ({ board, onCellClick, currentPlayer, gameOver, theme = 'default',
     setHoverPosition(null);
   };
 
-  // 找到最后一步（如果没有从 props 传递）
-  const getLastMove = () => {
-    for (let i = board.length - 1; i >= 0; i--) {
-      for (let j = board[i].length - 1; j >= 0; j--) {
-        if (board[i][j]) {
-          return { row: i, col: j };
-        }
-      }
-    }
-    return null;
-  };
-
   // 优先使用 props 传递的 lastMove，否则通过遍历计算
   const lastMove = useMemo(() => {
-    return propLastMove || getLastMove();
+    return propLastMove || getLastMoveFromBoard(board);
   }, [propLastMove, board]);
 
   return (

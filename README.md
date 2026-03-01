@@ -551,6 +551,21 @@ netsh advfirewall firewall add rule name="Node Server Port 3000" dir=in action=a
 2. 在其他设备上访问 `http://[本机IP地址]:5173`
    - 例如：`http://192.168.1.9:5173`
 
+## 线上部署信息
 
+### 部署地址
+
+| 服务 | 地址 |
+|------|------|
+| 前端（静态网站） | https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ |
+| 后端（云托管） | https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com |
+
+### 部署时间
+- 2026-03-01
+
+### CloudBase 资源
+- 环境 ID：codebuddy-9gu42kpn62ead2e2
+- 云托管服务：wuziqi-server（容器型，端口 3000）
+- 静态网站托管：codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com
 
 © 2026 狮王李

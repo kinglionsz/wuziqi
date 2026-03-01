@@ -358,6 +358,7 @@ export const useOnlineGame = () => {
     return () => {
       socketInstance.disconnect()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // 前端计时器：实时更新游戏时间显示（合并回合切换逻辑，消除竞态条件）
@@ -445,6 +446,7 @@ export const useOnlineGame = () => {
   // 注意：不要添加 gameState.blackTime 和 gameState.whiteTime 到依赖数组
   // 它们每秒都会被更新，会导致计时器不断被重置，影响计时精度
   // 使用 refs 来追踪时间，避免不必要的 effect 重新执行
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomInfo?.status, gameState.gameOver, gameState.currentTurn])
 
   /**

@@ -3,7 +3,7 @@ import Board from './components/Board'
 import { VictoryModal, RulesModal, ReplayModal, SettingsModal, RoomModal } from './components/Modals'
 import { useGameLogic } from './hooks/useGameLogic'
 import { useOnlineGame } from './hooks/useOnlineGame'
-import { THEMES, GAME_MODES, AI_PLAYER, AI_LEVELS } from './utils/constants'
+import { THEMES, GAME_MODES, AI_PLAYER, AI_LEVELS, BOARD_SIZE } from './utils/constants'
 import { playSound } from './utils/sound'
 import './App.css'
 
@@ -25,7 +25,6 @@ function App() {
   
   // 在线游戏状态
   const {
-    socket,
     roomInfo,
     isConnected,
     gameState,
@@ -89,6 +88,7 @@ function App() {
   useEffect(() => {
     // 当从在线模式离开房间后，自动切换到人机对战模式
     if (gameMode === GAME_MODES.ONLINE && !roomInfo && !showRoomModal) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGameMode(GAME_MODES.PVE)
       resetGame()
     }
@@ -151,7 +151,6 @@ function App() {
   }, [moveHistory.length])
 
   const replayStep = useCallback((step) => {
-    const { BOARD_SIZE } = require('./utils/constants')
     if (step < 0) {
       setBoard(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)))
     } else if (step < moveHistory.length) {
