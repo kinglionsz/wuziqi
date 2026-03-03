@@ -5,9 +5,7 @@ import { playSound } from '../utils/sound'
 import { saveGameRecord as saveToSupabase } from '../lib/supabase'
 
 /**
- * 游戏逻辑 Hook
- * @param {Object} options - 配置选项
- * @returns {Object} 游戏状态和操作函数
+ * 游戏逻辑 Hook - 简化版，修复 AI 落子问题
  */
 export const useGameLogic = ({ 
   gameMode, 
@@ -31,7 +29,7 @@ export const useGameLogic = ({
   
   // 历史记录
   const [moveHistory, setMoveHistory] = useState([])
-  
+
   // Refs
   const gameStartTime = useRef(null)
   const turnStartTime = useRef(null)
@@ -62,25 +60,8 @@ export const useGameLogic = ({
     }
   }, [gameOver])
 
-  // AI 落子
-  useEffect(() => {
-    if (gameMode === GAME_MODES.PVE && currentPlayer === AI_PLAYER && !gameOver && !aiMoveRef.current) {
-      aiMoveRef.current = true
-      const timer = setTimeout(() => {
-        const bestMove = findBestMove(board, AI_PLAYER, aiLevel)
-        if (bestMove) {
-          handleCellClick(bestMove.row, bestMove.col)
-        }
-        aiMoveRef.current = false
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPlayer, gameMode, gameOver, board, aiLevel])
-
   // 保存游戏记录
   const saveGameRecord = useCallback(async (winnerValue) => {
-    // 本地存储记录
     const record = {
       id: Date.now(),
       date: new Date().toLocaleString(),
@@ -96,14 +77,13 @@ export const useGameLogic = ({
     const newRecords = [record, ...records].slice(0, 50)
     localStorage.setItem('gomoku_records', JSON.stringify(newRecords))
     
-    // 保存到 Supabase
     try {
       await saveToSupabase({
         winner: winnerValue || 'draw',
-        gameMode: gameMode,
+        gameMode,
         moves: moveHistory.length,
         durationSeconds: gameTime,
-        theme: theme,
+        theme,
         playerBlack: '玩家1',
         playerWhite: gameMode === GAME_MODES.PVE ? 'AI' : '玩家2',
         moveHistory: moveHistory.map(m => ({
@@ -119,9 +99,16 @@ export const useGameLogic = ({
     return newRecords
   }, [gameMode, gameTime, moveHistory, theme, formatTime])
 
-  // 处理落子
+  // 处理落子 - 用户点击
   const handleCellClick = useCallback((row, col) => {
     if (gameOver || board[row][col]) return
+
+    // 【关键修复】人机模式下，阻止用户在 AI 回合落子
+    // 使用 currentPlayer 状态，而不是 ref
+    if (gameMode === GAME_MODES.PVE && currentPlayer === AI_PLAYER) {
+      console.log('阻止用户落子：当前是 AI 回合')
+      return
+    }
 
     playSound('place', soundEnabled)
 
@@ -147,7 +134,7 @@ export const useGameLogic = ({
       : 0
       
     setMoveHistory(prev => [...prev, {
-      board: board.map(row => [...row]), // 深拷贝当前棋盘
+      board: board.map(row => [...row]),
       player: currentPlayer,
       position: { row, col },
       blackTime: currentPlayer === 'black' ? blackTime + currentTurnTime : blackTime,
@@ -161,23 +148,84 @@ export const useGameLogic = ({
       setWinner(currentPlayer)
       setIsDraw(false)
       playSound('win', soundEnabled)
-      return { gameOver: true, winner: currentPlayer, isDraw: false }
-    } 
-    
-    // 检查平局
-    if (checkDraw(newBoard)) {
+    } else if (checkDraw(newBoard)) {
       setGameOver(true)
       setIsDraw(true)
       setWinner(null)
-      return { gameOver: true, winner: null, isDraw: true }
+    } else {
+      // 切换玩家
+      setCurrentPlayer(prev => prev === 'black' ? 'white' : 'black')
+      turnStartTime.current = Date.now()
+      // 【关键】重置 AI 落子标记，允许 AI 落子
+      aiMoveRef.current = false
+    }
+  }, [board, currentPlayer, gameOver, blackTime, whiteTime, gameTime, soundEnabled, gameMode])
+
+  // 【关键修复】AI 落子 - 简化版
+  // 只依赖 currentPlayer 变化，不依赖 board
+  useEffect(() => {
+    // 条件检查
+    if (gameMode !== GAME_MODES.PVE) return
+    if (currentPlayer !== AI_PLAYER) return
+    if (gameOver) return
+    if (aiMoveRef.current) return // 防止重复触发
+
+    aiMoveRef.current = true
+
+    // 【去掉延时】AI 落子应该立即执行，不要延时
+    // 计算最佳落子
+    const bestMove = findBestMove(board, AI_PLAYER, aiLevel)
+    
+    if (bestMove) {
+      console.log('AI 落子:', bestMove)
+      playSound('place', soundEnabled)
+
+      // 更新棋盘
+      const newBoard = board.map((r, i) =>
+        i === bestMove.row ? r.map((c, j) => j === bestMove.col ? AI_PLAYER : c) : r
+      )
+      setBoard(newBoard)
+
+      // 更新计时
+      if (turnStartTime.current) {
+        const turnTime = Math.floor((Date.now() - turnStartTime.current) / 1000)
+        setWhiteTime(prev => prev + turnTime)
+      }
+
+      // 保存历史
+      const currentTurnTime = turnStartTime.current 
+        ? Math.floor((Date.now() - turnStartTime.current) / 1000) 
+        : 0
+
+      setMoveHistory(prev => [...prev, {
+        board: board.map(row => [...row]),
+        player: AI_PLAYER,
+        position: { row: bestMove.row, col: bestMove.col },
+        blackTime,
+        whiteTime: whiteTime + currentTurnTime,
+        gameTime
+      }])
+
+      // 检查胜负
+      if (checkWinner(newBoard, bestMove.row, bestMove.col, AI_PLAYER)) {
+        setGameOver(true)
+        setWinner(AI_PLAYER)
+        setIsDraw(false)
+        playSound('win', soundEnabled)
+      } else if (checkDraw(newBoard)) {
+        setGameOver(true)
+        setIsDraw(true)
+        setWinner(null)
+      } else {
+        // 切换到黑棋
+        setCurrentPlayer('black')
+        turnStartTime.current = Date.now()
+      }
     }
 
-    // 切换玩家
-    setCurrentPlayer(prev => prev === 'black' ? 'white' : 'black')
-    turnStartTime.current = Date.now()
-    
-    return { gameOver: false }
-  }, [board, currentPlayer, gameOver, blackTime, whiteTime, gameTime, soundEnabled])
+    aiMoveRef.current = false
+
+  }, [gameMode, currentPlayer, gameOver, aiLevel, board, blackTime, whiteTime, gameTime, soundEnabled])
 
   // 重置游戏
   const resetGame = useCallback(() => {
@@ -199,7 +247,6 @@ export const useGameLogic = ({
   const undoMove = useCallback(() => {
     if (moveHistory.length === 0 || gameOver) return false
     
-    // 人机模式下只能撤销两步
     if (gameMode === GAME_MODES.PVE && moveHistory.length < 2) return false
 
     const lastMove = moveHistory[moveHistory.length - 1]
@@ -213,12 +260,24 @@ export const useGameLogic = ({
     setWinner(null)
     setIsDraw(false)
     turnStartTime.current = Date.now()
+    aiMoveRef.current = false
     
     return true
   }, [moveHistory, gameOver, gameMode])
 
+  // 重置 AI 移动状态（用于退出回放等场景）
+  const resetAiMove = useCallback(() => {
+    aiMoveRef.current = false
+  }, [])
+
+  // 触发 AI 落子（用于退出回放等场景）
+  const triggerAiMove = useCallback(() => {
+    aiMoveRef.current = false
+    // 强制更新 currentPlayer 触发 useEffect
+    setCurrentPlayer(prev => prev)
+  }, [])
+
   return {
-    // 状态
     board,
     currentPlayer,
     gameOver,
@@ -228,19 +287,20 @@ export const useGameLogic = ({
     blackTime,
     whiteTime,
     moveHistory,
-    
-    // 操作
     handleCellClick,
     resetGame,
     undoMove,
     saveGameRecord,
     formatTime,
-    
-    // 用于回放的设置函数
+    resetAiMove,
+    triggerAiMove,
     setBoard,
     setCurrentPlayer,
     setBlackTime,
     setWhiteTime,
-    setGameTime
+    setGameTime,
+    setGameOver,
+    setWinner,
+    setIsDraw
   }
 }

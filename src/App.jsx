@@ -53,7 +53,16 @@ function App() {
     undoMove,
     saveGameRecord,
     formatTime,
-    setBoard
+    resetAiMove,
+    triggerAiMove,
+    setBoard,
+    setCurrentPlayer,
+    setBlackTime,
+    setWhiteTime,
+    setGameTime,
+    setGameOver,
+    setWinner,
+    setIsDraw
   } = useGameLogic({ gameMode, soundEnabled, theme, aiLevel })
 
   // 背景音乐引用
@@ -151,19 +160,35 @@ function App() {
   }, [moveHistory.length])
 
   const replayStep = useCallback((step) => {
+    // 回放时需要重置游戏状态
+    setGameOver(false)
+    setWinner(null)
+    setIsDraw(false)
+    
     if (step < 0) {
+      // 回放开始：清空棋盘，重置状态
       setBoard(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)))
+      setCurrentPlayer('black')
+      setBlackTime(0)
+      setWhiteTime(0)
+      setGameTime(0)
     } else if (step < moveHistory.length) {
+      const targetMove = moveHistory[step]
       // 重建到该步骤的棋盘
-      const history = moveHistory.slice(0, step + 1)
       const newBoard = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null))
-      history.forEach(move => {
+      moveHistory.slice(0, step + 1).forEach(move => {
         newBoard[move.position.row][move.position.col] = move.player
       })
       setBoard(newBoard)
+      // 恢复该步的玩家（下一步应该是对方）
+      setCurrentPlayer(targetMove.player === 'black' ? 'white' : 'black')
+      // 恢复时间状态
+      setBlackTime(targetMove.blackTime)
+      setWhiteTime(targetMove.whiteTime)
+      setGameTime(targetMove.gameTime)
     }
     setReplayIndex(step)
-  }, [moveHistory, setBoard])
+  }, [moveHistory, setBoard, setCurrentPlayer, setBlackTime, setWhiteTime, setGameTime, setGameOver, setWinner, setIsDraw])
 
   const nextReplayStep = useCallback(() => {
     if (replayIndex < moveHistory.length - 1) {
@@ -177,11 +202,51 @@ function App() {
     }
   }, [replayIndex, replayStep])
 
-  // 退出回放
+  // 退出回放 - 恢复到回放结束时的状态，而不是重置游戏
   const exitReplay = useCallback(() => {
+    // 先保存回放结束时的状态
+    const lastMove = replayIndex >= 0 && replayIndex < moveHistory.length
+      ? moveHistory[replayIndex]
+      : null
+
     setShowReplayModal(false)
-    resetGame()
-  }, [resetGame])
+    // 重置游戏状态，确保退出回放后可以继续游戏
+    setGameOver(false)
+    setWinner(null)
+    setIsDraw(false)
+
+    // 恢复到回放结束时的棋盘状态
+    if (lastMove) {
+      // 重建棋盘
+      const newBoard = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null))
+      moveHistory.slice(0, replayIndex + 1).forEach(move => {
+        newBoard[move.position.row][move.position.col] = move.player
+      })
+      setBoard(newBoard)
+
+      // 恢复玩家状态（下一步是对方）
+      const nextPlayer = lastMove.player === 'black' ? 'white' : 'black'
+      setCurrentPlayer(nextPlayer)
+
+      // 恢复时间
+      setBlackTime(lastMove.blackTime)
+      setWhiteTime(lastMove.whiteTime)
+      setGameTime(lastMove.gameTime)
+    }
+    setReplayIndex(-1)
+
+    // 重置 AI 移动状态
+    resetAiMove()
+
+    // 如果下一步是 AI（白棋），则触发 AI 落子
+    // AI 是白棋，当黑棋落子后下一步应该是白棋(AI)落子
+    if (lastMove && lastMove.player === 'black' && gameMode === GAME_MODES.PVE) {
+      // 延迟触发，确保状态更新完成
+      setTimeout(() => {
+        triggerAiMove()
+      }, 200)
+    }
+  }, [replayIndex, moveHistory, setBoard, setCurrentPlayer, setBlackTime, setWhiteTime, setGameTime, setGameOver, setWinner, setIsDraw, resetAiMove, triggerAiMove, gameMode])
 
   // 获取当前主题
   const currentTheme = THEMES[theme]
