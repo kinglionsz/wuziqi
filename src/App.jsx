@@ -179,6 +179,7 @@ function App() {
       moveHistory.slice(0, step + 1).forEach(move => {
         newBoard[move.position.row][move.position.col] = move.player
       })
+
       setBoard(newBoard)
       // 恢复该步的玩家（下一步应该是对方）
       setCurrentPlayer(targetMove.player === 'black' ? 'white' : 'black')
@@ -436,7 +437,7 @@ function App() {
       </audio>
 
       <div className="footer">
-        <p>©️狮王李 保留所有权利 2026 | 版本 v1.2.3</p>
+        <p>©️狮王李 保留所有权利 2026 | 版本 v1.2.4</p>
       </div>
     </div>
   )

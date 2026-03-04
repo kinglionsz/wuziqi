@@ -106,7 +106,6 @@ export const useGameLogic = ({
     // 【关键修复】人机模式下，阻止用户在 AI 回合落子
     // 使用 currentPlayer 状态，而不是 ref
     if (gameMode === GAME_MODES.PVE && currentPlayer === AI_PLAYER) {
-      console.log('阻止用户落子：当前是 AI 回合')
       return
     }
 
@@ -132,15 +131,16 @@ export const useGameLogic = ({
     const currentTurnTime = turnStartTime.current 
       ? Math.floor((Date.now() - turnStartTime.current) / 1000) 
       : 0
-      
-    setMoveHistory(prev => [...prev, {
+
+    const moveRecord = {
       board: board.map(row => [...row]),
       player: currentPlayer,
       position: { row, col },
       blackTime: currentPlayer === 'black' ? blackTime + currentTurnTime : blackTime,
       whiteTime: currentPlayer === 'white' ? whiteTime + currentTurnTime : whiteTime,
       gameTime
-    }])
+    }
+    setMoveHistory(prev => [...prev, moveRecord])
 
     // 检查胜负
     if (checkWinner(newBoard, row, col, currentPlayer)) {
@@ -161,57 +161,72 @@ export const useGameLogic = ({
     }
   }, [board, currentPlayer, gameOver, blackTime, whiteTime, gameTime, soundEnabled, gameMode])
 
-  // 【关键修复】AI 落子 - 简化版
-  // 只依赖 currentPlayer 变化，不依赖 board
+  // 【关键修复】AI 落子 - 只依赖 currentPlayer 变化，不依赖 board
+  // 使用 useRef 追踪最新状态，避免闭包问题
+  const boardRef = useRef(board)
+  const gameOverRef = useRef(gameOver)
+  const gameModeRef = useRef(gameMode)
+  const aiLevelRef = useRef(aiLevel)
+  const soundEnabledRef = useRef(soundEnabled)
+
+  // 同步 ref
+  useEffect(() => { boardRef.current = board }, [board])
+  useEffect(() => { gameOverRef.current = gameOver }, [gameOver])
+  useEffect(() => { gameModeRef.current = gameMode }, [gameMode])
+  useEffect(() => { aiLevelRef.current = aiLevel }, [aiLevel])
+  useEffect(() => { soundEnabledRef.current = soundEnabled }, [soundEnabled])
+
   useEffect(() => {
-    // 条件检查
-    if (gameMode !== GAME_MODES.PVE) return
+    // 使用 ref 获取最新状态
+    const currentGameMode = gameModeRef.current
+    const currentGameOver = gameOverRef.current
+    const currentAiLevel = aiLevelRef.current
+    const currentSoundEnabled = soundEnabledRef.current
+
+    // 条件检查 - 使用 currentPlayer 状态
+    if (currentGameMode !== GAME_MODES.PVE) return
     if (currentPlayer !== AI_PLAYER) return
-    if (gameOver) return
+    if (currentGameOver) return
     if (aiMoveRef.current) return // 防止重复触发
 
     aiMoveRef.current = true
 
-    // 【去掉延时】AI 落子应该立即执行，不要延时
+    // 使用 ref 获取最新 board
+    const currentBoard = boardRef.current
+
     // 计算最佳落子
-    const bestMove = findBestMove(board, AI_PLAYER, aiLevel)
-    
+    const bestMove = findBestMove(currentBoard, AI_PLAYER, currentAiLevel)
+
     if (bestMove) {
-      console.log('AI 落子:', bestMove)
-      playSound('place', soundEnabled)
+      playSound('place', currentSoundEnabled)
 
       // 更新棋盘
-      const newBoard = board.map((r, i) =>
+      const newBoard = currentBoard.map((r, i) =>
         i === bestMove.row ? r.map((c, j) => j === bestMove.col ? AI_PLAYER : c) : r
       )
       setBoard(newBoard)
 
-      // 更新计时
-      if (turnStartTime.current) {
-        const turnTime = Math.floor((Date.now() - turnStartTime.current) / 1000)
-        setWhiteTime(prev => prev + turnTime)
-      }
-
       // 保存历史
-      const currentTurnTime = turnStartTime.current 
-        ? Math.floor((Date.now() - turnStartTime.current) / 1000) 
+      const currentTurnTime = turnStartTime.current
+        ? Math.floor((Date.now() - turnStartTime.current) / 1000)
         : 0
 
-      setMoveHistory(prev => [...prev, {
-        board: board.map(row => [...row]),
+      const aiMoveRecord = {
+        board: currentBoard.map(row => [...row]),
         player: AI_PLAYER,
         position: { row: bestMove.row, col: bestMove.col },
         blackTime,
         whiteTime: whiteTime + currentTurnTime,
         gameTime
-      }])
+      }
+      setMoveHistory(prev => [...prev, aiMoveRecord])
 
       // 检查胜负
       if (checkWinner(newBoard, bestMove.row, bestMove.col, AI_PLAYER)) {
         setGameOver(true)
         setWinner(AI_PLAYER)
         setIsDraw(false)
-        playSound('win', soundEnabled)
+        playSound('win', currentSoundEnabled)
       } else if (checkDraw(newBoard)) {
         setGameOver(true)
         setIsDraw(true)
@@ -223,9 +238,7 @@ export const useGameLogic = ({
       }
     }
 
-    aiMoveRef.current = false
-
-  }, [gameMode, currentPlayer, gameOver, aiLevel, board, blackTime, whiteTime, gameTime, soundEnabled])
+  }, [currentPlayer]) // 只依赖 currentPlayer 变化
 
   // 重置游戏
   const resetGame = useCallback(() => {
