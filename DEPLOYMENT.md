@@ -1,4 +1,4 @@
-# 五子棋后端服务器部署配置指南
+# 五子棋部署配置指南
 
 ## 环境信息
 
@@ -7,18 +7,21 @@
 | 环境 ID | `codebuddy-9gu42kpn62ead2e2` |
 | 云托管服务名 | `wuziqi-server` |
 | 前端域名 | `https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com` |
+| 后端域名 | `https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com` |
 
 ---
 
-## 方法一：通过控制台设置（推荐）
+## 第一部分：后端服务器配置（云托管）
 
-### 步骤 1：登录腾讯云 CloudBase 控制台
+### 方法一：通过控制台设置（推荐）
+
+#### 步骤 1：登录腾讯云 CloudBase 控制台
 
 1. 访问：https://console.cloud.tencent.com/tcb
 2. 点击左侧菜单 **云托管** → **服务管理**
 3. 找到服务 `wuziqi-server`
 
-### 步骤 2：添加环境变量
+#### 步骤 2：添加环境变量
 
 1. 点击服务名称 `wuziqi-server` 进入详情页
 2. 选择 **版本管理** 标签
@@ -35,12 +38,59 @@
 6. 点击 **保存** 按钮
 7. 点击 **部署** 按钮使配置生效
 
-### 步骤 3：验证配置
+#### 步骤 3：验证配置
 
 部署完成后，访问后端服务查看日志：
 - 访问：https://console.cloud.tencent.com/tcb → 云托管 → 服务列表 → wuziqi-server → 日志
 - 确认日志中显示：`[配置] CORS origin: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com`
 - 确认 **没有** `[安全警告] 未配置 ALLOWED_ORIGIN` 警告
+
+---
+
+## 第二部分：前端静态托管配置
+
+### 前端环境变量设置
+
+前端需要配置 `VITE_SOCKET_URL` 来连接后端服务器。
+
+#### 方法一：本地构建时设置
+
+1. 在项目根目录创建 `.env.production` 文件（不要提交到 Git）：
+
+```
+VITE_SOCKET_URL=https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
+```
+
+2. 执行构建：
+
+```bash
+npm run build
+```
+
+3. 部署 `dist` 目录到 CloudBase 静态托管
+
+#### 方法二：在 CloudBase 控制台设置（推荐）
+
+1. 访问：https://console.cloud.tencent.com/tcb
+2. 选择 **静态托管** → **代码部署**
+3. 找到你的前端应用，点击 **设置**
+4. 在 **环境变量** 区域添加：
+
+| 变量名 | 值 | 说明 |
+|--------|-----|------|
+| `VITE_SOCKET_URL` | `https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com` | 后端 Socket.io 服务器地址 |
+
+5. 点击 **部署** 使配置生效
+
+### 验证前端配置
+
+部署完成后，访问前端网站：
+1. 打开浏览器开发者工具（F12）
+2. 查看 Console 控制台
+3. 应该看到类似日志：
+   ```
+   [Socket] 已连接到服务器：https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
+   ```
 
 ---
 
