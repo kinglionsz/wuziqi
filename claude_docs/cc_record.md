@@ -1865,3 +1865,151 @@ Conversation compacted (ctrl+o for history)
 
 3. 更新 DEPLOYMENT.md 文档，添加 VITE_SOCKET_URL 配置说明
 
+
+Update(.env)                                                                                         
+  ⎿  Error editing file                                                                                
+                                                                                                       ● 编辑失败了，可能是文件编码或行尾问题，先用 Write 工具直接写入完整的 .env 文件内容。                  
+                                                                                                       ● Write(.env)                                                                                            ⎿  Added 8 lines, removed 3 lines
+      1 -# Supabase 配置                                                                                     2 -VITE_SUPABASE_URL=https://pjnzmyvoucgmanoqvbav.supabase.co
+      3 -VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn        
+        -JlZiI6InBqbnpteXZvdWNnbWFub3F2YmF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NTQzNDgsImV4cCI6 
+        -MjA4NzMzMDM0OH0.wSaQNBG9nl8cgBtezhPdHeRTxXRaUyAGG8lZd2QMJvQ
+      1 +# Supabase 配置                                                                               
+      2 +# 请在 Supabase 控制台获取这些值                                                              
+      3 +VITE_SUPABASE_URL=https://pjnzmyvoucgmanoqvbav.supabase.co                                    
+      4 +VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn        
+        +JlZiI6InBqbnpteXZvdWNnbWFub3F2YmF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NTQzNDgsImV4cCI6        
+        +MjA4NzMzMDM0OH0.wSaQNBG9nl8cgBtezhPdHeRTxXRaUyAGG8lZd2QMJvQ                                   
+      5 +                                                                                              
+      6 +# Socket.io 后端服务器地址                                                                    
+      7 +# 腾讯云 CloudBase 云托管服务器                                                               
+      8 +VITE_SOCKET_URL=https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com               
+
+● 现在更新部署文档，添加前端环境变量配置说明：
+
+● Read 1 file (ctrl+o to expand)                                                                          
+● 用户在问后端服务器地址是否需要配置，以及前端如何获取后端地址。我已经读取了部署文档，现在需要更新它， 
+  添加前端 VITE_SOCKET_URL 环境变量的配置说明。
+                                                                                                         现在更新部署文档，添加前端环境变量配置说明：                                                         
+
+● Update(DEPLOYMENT.md)    
+  ⎿  Added 55 lines, removed 5 lines
+      1 -# 五子棋后端服务器部署配置指南                                                                      1 +# 五子棋部署配置指南
+      2                                                                                                
+      3  ## 环境信息
+      4  
+     ...
+       7  | 环境 ID | `codebuddy-9gu42kpn62ead2e2` |
+       8  | 云托管服务名 | `wuziqi-server` |
+       9  | 前端域名 | `https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com` |
+      10 +| 后端域名 | `https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com` |             
+      11
+      12  ---
+      13
+      14 -## 方法一：通过控制台设置（推荐）                                                            
+      14 +## 第一部分：后端服务器配置（云托管）                                                        
+      15
+      16 -### 步骤 1：登录腾讯云 CloudBase 控制台                                                      
+      16 +### 方法一：通过控制台设置（推荐）                                                           
+      17
+      18 +#### 步骤 1：登录腾讯云 CloudBase 控制台                                                     
+      19 +                                                                                             
+      20  1. 访问：https://console.cloud.tencent.com/tcb
+      21  2. 点击左侧菜单 **云托管** → **服务管理**
+      22  3. 找到服务 `wuziqi-server`
+      23
+      24 -### 步骤 2：添加环境变量                                                                     
+      24 +#### 步骤 2：添加环境变量                                                                    
+      25
+      26  1. 点击服务名称 `wuziqi-server` 进入详情页
+      27  2. 选择 **版本管理** 标签
+     ...
+      35  6. 点击 **保存** 按钮
+      36  7. 点击 **部署** 按钮使配置生效
+      37
+      38 -### 步骤 3：验证配置                                                                         
+      38 +#### 步骤 3：验证配置                                                                        
+      39
+      40  部署完成后，访问后端服务查看日志：
+      41  - 访问：https://console.cloud.tencent.com/tcb → 云托管 → 服务列表 → wuziqi-server →
+          日志
+     ...
+      44
+      45  ---
+      46
+      47 +## 第二部分：前端静态托管配置                                                                
+      48 +                                                                                             
+      49 +### 前端环境变量设置                                                                         
+      50 +                                                                                             
+      51 +前端需要配置 `VITE_SOCKET_URL` 来连接后端服务器。                                            
+      52 +                                                                                             
+      53 +#### 方法一：本地构建时设置                                                                  
+      54 +                                                                                             
+      55 +1. 在项目根目录创建 `.env.production` 文件（不要提交到 Git）：                               
+      56 +                                                                                             
+      57 +```                                                                                          
+      58 +VITE_SOCKET_URL=https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com              
+      59 +```                                                                                          
+      60 +                                                                                             
+      61 +2. 执行构建：                                                                                
+      62 +                                                                                             
+      63 +```bash                                                                                      
+      64 +npm run build                                                                                
+      65 +```                                                                                          
+      66 +                                                                                             
+      67 +3. 部署 `dist` 目录到 CloudBase 静态托管                                                     
+      68 +                                                                                             
+      69 +#### 方法二：在 CloudBase 控制台设置（推荐）                                                 
+      70 +                                                                                             
+      71 +1. 访问：https://console.cloud.tencent.com/tcb                                               
+      72 +2. 选择 **静态托管** → **代码部署**                                                          
+      73 +3. 找到你的前端应用，点击 **设置**                                                           
+      74 +4. 在 **环境变量** 区域添加：
+      75 +                                                                                             
+      76 +| 变量名 | 值 | 说明 |                                                                       
+      77 +|--------|-----|------|                                                                      
+      78 +| `VITE_SOCKET_URL` |                                                                        
+         +`https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com` | 后端 Socket.io           
+         +服务器地址 |                                                                                 
+      79 +                                                                                             
+      80 +5. 点击 **部署** 使配置生效                                                                  
+      81 +                                                                                             
+      82 +### 验证前端配置                                                                             
+      83 +                                                                                             
+      84 +部署完成后，访问前端网站：                                                                   
+      85 +1. 打开浏览器开发者工具（F12）                                                               
+      86 +2. 查看 Console 控制台                                                                       
+      87 +3. 应该看到类似日志：                                                                        
+      88 +   ```                                                                                       
+      89 +   [Socket]                                                                                  
+         +已连接到服务器：https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com              
+      90 +   ```                                                                                       
+      91 +                                                                                             
+      92 +---                                                                                          
+      93 +                                                                                             
+      94  ## 方法二：使用 CloudBase CLI 设置
+      95
+      96  ### 安装 CLI
+ Now I need to commit the changes for the .env file update and DEPLOYMENT.md update together.
+                           
+  现在提交这些更改，然后给你一个完整的总结：                                                                                                                                                                  
+● Bash(git add -A && git commit -m "docs: 完善部署配置文档…)                                             ⎿  Running in the background (↓ to manage)                                                                                                                                                                  
+● Task Output b0365f9
+  ⎿  (No output)
+
+● Bash(git status)
+  ⎿  On branch at_home
+     Your branch is ahead of 'origin/at_home' by 8 commits.
+       (use "git push" to publish your local commits)
+     … +2 lines (ctrl+o to expand)
+
+● Bash(git log --oneline -5)
+  ⎿  56ffc41 docs: 完善部署配置文档
+     4df94dc docs: 添加部署配置指南                                                                         0fac786 docs: 添加后端服务器环境变量配置模板                                                      
+     … +2 lines (ctrl+o to expand)                                                                                                                                                                            
+· Slithering… (31m 19s · ↓ 2.1k tokens)                                                                
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+>  
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ accept edits on (shift+tab to cycle) · esc to interrupt

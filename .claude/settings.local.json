@@ -3,7 +3,12 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(head:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(tcb framework:*)",
+      "Bash(cd cloudbase/server && tcb cloudrun deploy -s wuziqi-server --port 3000 --force 2>&1)",
+      "Bash(cd cloudbase/server && tcb cloudrun deploy -s wuziqi-server --port 3000 --force -y 2>&1)",
+      "Bash(cd cloudbase/server && echo n | tcb cloudrun deploy -s wuziqi-server --port 3000 --force 2>&1)",
+      "Bash(tcb cloudrun:*)"
     ]
   }
 }
