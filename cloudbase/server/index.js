@@ -108,14 +108,21 @@ const httpServer = http.createServer(app)
 
 // 获取端口
 const PORT = process.env.PORT || 3000
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*'
+// 生产环境默认禁止跨域，开发环境可通过 ALLOWED_ORIGIN 环境变量配置
+// 如果未设置 ALLOWED_ORIGIN，生产环境默认为空（禁止跨域），开发环境允许本地开发
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || (process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : '')
+
+// 警告：如果生产环境未配置 ALLOWED_ORIGIN，输出警告日志
+if (process.env.NODE_ENV !== 'development' && !process.env.ALLOWED_ORIGIN) {
+  console.warn('[安全警告] 未配置 ALLOWED_ORIGIN，CORS 将禁止所有跨域请求。如需要跨域请设置环境变量 ALLOWED_ORIGIN')
+}
 
 // 创建 Socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: ALLOWED_ORIGIN,
+    origin: ALLOWED_ORIGIN || false,  // 空字符串时设为 false，禁止所有跨域
     methods: ['GET', 'POST'],
-    credentials: ALLOWED_ORIGIN !== '*'
+    credentials: true  // 始终允许 credentials，实际跨域由 origin 控制
   }
 })
 
