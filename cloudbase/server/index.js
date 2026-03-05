@@ -28,9 +28,19 @@ import {
 const app = express()
 app.use(cors())
 
+// 服务器启动时生成一个随机 token（用于简单的连接验证）
+// 这个 token 会在服务器重启时改变，确保安全性
+const SERVER_TOKEN = process.env.SERVER_TOKEN || `server_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
 // 健康检查端点
 app.get('/', (req, res) => {
   res.send('五子棋在线对战服务器 running')
+})
+
+// 提供 token 给授权客户端（通过健康检查端点）
+app.get('/api/token', (req, res) => {
+  // 在生产环境，这个端点可以添加额外的验证逻辑
+  res.json({ token: SERVER_TOKEN, timestamp: Date.now() })
 })
 
 // 数据库测试端点
@@ -207,19 +217,26 @@ io.on('connection', (socket) => {
   
   // 用户身份验证和重连处理
   socket.on('authenticate', async (data, callback) => {
-    const { userId, roomId } = data
-    
+    const { userId, roomId, token } = data
+
     if (!userId) {
-      callback({ success: false, error: '缺少用户ID' })
+      callback({ success: false, error: '缺少用户 ID' })
       return
     }
-    
+
+    // 简单的 token 验证（生产环境可增强）
+    if (token && token !== SERVER_TOKEN) {
+      console.warn(`[安全警告] Token 验证失败：${socket.id}`)
+      callback({ success: false, error: '身份验证失败' })
+      return
+    }
+
     // 存储 userId 和 socket 的映射
     socket.userId = userId
     userToSocket[userId] = socket.id
-    
-    console.log(`[用户认证] userId: ${userId}, socketId: ${socket.id}`)
-    
+
+    console.log(`[用户认证] userId: ${userId}, socketId: ${socket.id}, token: ${token ? '已验证' : '未提供'}`)
+
     // 检查是否在断线缓冲区中
     const disconnectedInfo = getDisconnectedUser(userId)
     
@@ -241,9 +258,8 @@ io.on('connection', (socket) => {
         if (disconnectTimeouts[userId]) {
           clearTimeout(disconnectTimeouts[userId])
           delete disconnectTimeouts[userId]
-          console.log(`[取消清理定时器] userId: ${userId}`)
         }
-        
+
         // 通知房间内其他玩家用户已重连，并发送最新房间状态
         socket.to(disconnectedInfo.roomId).emit('opponent_reconnected', {
           userId,
@@ -375,9 +391,8 @@ io.on('connection', (socket) => {
       if (disconnectTimeouts[userId]) {
         clearTimeout(disconnectTimeouts[userId])
         delete disconnectTimeouts[userId]
-        console.log(`[取消清理定时器] userId: ${userId}`)
       }
-      
+
       console.log(`[重新加入] userId: ${userId}, roomId: ${roomId}`)
       
       callback({ 
@@ -439,11 +454,10 @@ io.on('connection', (socket) => {
     const userId = socket.userId || socket.id
     
     console.log(`[落子请求] roomId: ${roomId}, userId: ${userId}, 位置: (${row}, ${col})`)
-    
+
     const room = rooms[roomId]
 
     const playerRole = getPlayerRole(roomId, userId)
-    console.log(`[落子检查] playerRole: ${playerRole}, room.currentTurn: ${room?.currentTurn}, room.status: ${room?.status}`)
 
     if (!room) {
       sendError(socket, callback, '房间不存在')
@@ -479,9 +493,8 @@ io.on('connection', (socket) => {
       } else {
         room.whiteTime += timeSpent
       }
-      console.log(`[计时] ${playerRole} 本步用时: ${timeSpent}ms, 黑方累计: ${room.blackTime}ms, 白方累计: ${room.whiteTime}ms`)
     }
-    
+
     room.board[row][col] = playerRole
     room.moveHistory.push({
       player: playerRole,

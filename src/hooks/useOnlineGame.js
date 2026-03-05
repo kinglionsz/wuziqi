@@ -3,8 +3,20 @@ import { io } from 'socket.io-client'
 
 // Socket.io 服务器地址
 // 生产环境使用 VITE_SOCKET_URL 环境变量，开发环境默认 localhost:3000
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||
   (import.meta.env.PROD ? window.location.origin : 'http://localhost:3000')
+
+// 获取服务器 token（用于身份验证）
+const getServerToken = async () => {
+  try {
+    const response = await fetch(`${SOCKET_URL}/api/token`)
+    const data = await response.json()
+    return data.token
+  } catch (error) {
+    console.warn('[Token] 获取失败，使用空 token:', error)
+    return null
+  }
+}
 
 // 生成或获取唯一用户 ID
 const getUserId = () => {
@@ -89,15 +101,19 @@ export const useOnlineGame = () => {
     socketRef.current = socketInstance
     setSocket(socketInstance)
 
-    socketInstance.on('connect', () => {
+    socketInstance.on('connect', async () => {
       console.log('[Socket] 已连接到服务器:', SOCKET_URL)
       setIsConnected(true)
       setError(null)
-      
+
+      // 获取服务器 token 进行身份验证
+      const token = await getServerToken()
+
       // 连接成功后立即进行身份认证
-      socketInstance.emit('authenticate', { 
-        userId, 
-        roomId: savedRoomId 
+      socketInstance.emit('authenticate', {
+        userId,
+        roomId: savedRoomId,
+        token
       }, (response) => {
         console.log('[Socket] 认证响应:', response)
         if (response.success && response.reconnected) {
