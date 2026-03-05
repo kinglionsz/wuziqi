@@ -60,6 +60,19 @@ export const useOnlineGame = () => {
     gameTime: 0
   })
 
+  // 使用 refs 存储最新的 roomInfo 和 gameState，避免闭包问题
+  const roomInfoRef = useRef(roomInfo)
+  const gameStateRef = useRef(gameState)
+
+  // 更新 refs
+  useEffect(() => {
+    roomInfoRef.current = roomInfo
+  }, [roomInfo])
+
+  useEffect(() => {
+    gameStateRef.current = gameState
+  }, [gameState])
+
   // 初始化 Socket 连接
   useEffect(() => {
     const userId = userIdRef.current
@@ -126,14 +139,18 @@ export const useOnlineGame = () => {
     socketInstance.on('disconnect', (reason) => {
       console.log('[Socket] 已断开连接，原因:', reason)
       setIsConnected(false)
-      
+
+      // 使用 refs 获取最新状态，避免闭包问题
+      const currentRoomInfo = roomInfoRef.current
+      const currentGameState = gameStateRef.current
+
       // 如果正在游戏中，标记为重连状态
-      if (roomInfo && roomInfo.status === 'playing' && !gameState.gameOver) {
+      if (currentRoomInfo && currentRoomInfo.status === 'playing' && !currentGameState.gameOver) {
         setIsReconnecting(true)
         setError('连接断开，正在尝试重连...')
-        
+
         // 保存当前房间号以便重连
-        localStorage.setItem('wuziqi_current_room', roomInfo.roomId)
+        localStorage.setItem('wuziqi_current_room', currentRoomInfo.roomId)
       }
     })
 

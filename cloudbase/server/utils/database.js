@@ -66,11 +66,19 @@ function getDb() {
     printEnvInfo()
     
     try {
-      // 使用 cloudbaserc.json 中的 envId，或者让 SDK 自动从环境变量获取凭证
+      // 强制使用环境变量 TCB_ENV_ID，不再提供默认值
       // 在 CloudRun 环境中，环境变量会自动提供 TCB_ENV_ID 等信息
-      const envId = process.env.TCB_ENV_ID || 'codebuddy-9gu42kpn62ead2e2'
+      const envId = process.env.TCB_ENV_ID
+
+      if (!envId) {
+        console.warn('[数据库] 警告：TCB_ENV_ID 未设置，将尝试使用内存存储')
+        // 不初始化数据库，使用内存存储作为后备
+        dbInitFailed = true
+        return null
+      }
+
       console.log('[数据库] 使用 envId:', envId)
-      
+
       // 在 CloudBase 环境中，不需要传入 secretId/secretKey
       // SDK 会自动从环境变量 TCB_SECRET_ID, TCB_SECRET_KEY 获取凭证
       app = cloudbase.init({
