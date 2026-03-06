@@ -31,9 +31,11 @@ function App() {
     error: onlineError,
     createRoom: onlineCreateRoom,
     joinRoom: onlineJoinRoom,
+    joinSpectator,
     placePiece: onlinePlacePiece,
     restartGame: onlineRestartGame,
     leaveRoom: onlineLeaveRoom,
+    leaveSpectator,
     clearError: clearOnlineError
   } = useOnlineGame()
   
@@ -427,7 +429,9 @@ function App() {
         onClose={() => setShowRoomModal(false)}
         onCreateRoom={onlineCreateRoom}
         onJoinRoom={onlineJoinRoom}
+        onJoinSpectator={joinSpectator}
         onLeaveRoom={onlineLeaveRoom}
+        onLeaveSpectator={leaveSpectator}
         onClearError={clearOnlineError}
       />
 
@@ -437,7 +441,7 @@ function App() {
       </audio>
 
       <div className="footer">
-        <p>©️狮王李 保留所有权利 2026 | 版本 v1.2.4</p>
+        <p>©️狮王李 保留所有权利 2026 | 版本 v1.2.5</p>
       </div>
     </div>
   )

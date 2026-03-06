@@ -168,6 +168,75 @@
   color: #666;
 }
 
+/* 观众角色样式 */
+.spectator-role {
+  margin-bottom: 20px;
+}
+
+.spectator-role .label {
+  font-size: 16px;
+  color: #666;
+}
+
+.spectator-role .role.spectator {
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 8px;
+  color: #6a5acd;
+}
+
+/* 观众人数显示 */
+.spectator-count {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #e8e8ff;
+  border-radius: 8px;
+}
+
+.spectator-count .label {
+  font-size: 14px;
+  color: #666;
+}
+
+.spectator-count .count {
+  font-size: 16px;
+  font-weight: bold;
+  color: #6a5acd;
+  margin-left: 8px;
+}
+
+/* 观战区域样式 */
+.spectate-room-section {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.spectate-room-section p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.spectate-room-button {
+  width: 100%;
+  padding: 14px;
+  background: #6a5acd;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.spectate-room-button:hover:not(:disabled) {
+  background: #5848b5;
+}
+
+.spectate-room-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 .host-badge {
   background: #ffd700;
   color: #333;

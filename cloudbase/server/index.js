@@ -449,6 +449,124 @@ io.on('connection', (socket) => {
     })
   })
 
+  // 观众加入房间（观战）
+  socket.on('join_spectator', (data, callback) => {
+    const { roomId } = data
+    const userId = socket.userId || socket.id
+    const room = rooms[roomId]
+
+    if (!room) {
+      if (callback) callback({ success: false, error: '房间不存在' })
+      return
+    }
+
+    // 检查是否已经是玩家
+    if (room.players[userId]) {
+      if (callback) callback({ success: false, error: '您已经是玩家，无法以观众身份加入' })
+      return
+    }
+
+    // 检查是否已经是观众
+    const existingSpectator = room.spectators.find(s => s.userId === userId)
+    if (existingSpectator) {
+      // 观众重连
+      existingSpectator.socketId = socket.id
+      socket.join(roomId)
+      socketToRoom[socket.id] = roomId
+
+      if (callback) callback({
+        success: true,
+        roomId,
+        role: 'spectator',
+        room: {
+          roomId: room.roomId,
+          status: room.status,
+          currentTurn: room.currentTurn,
+          board: room.board,
+          players: getRoomPlayers(roomId),
+          spectators: room.spectators,
+          winner: room.winner,
+          isDraw: room.isDraw,
+          blackTime: Math.floor(room.blackTime / 1000),
+          whiteTime: Math.floor(room.whiteTime / 1000),
+          gameTime: room.startTime ? Math.floor((Date.now() - room.startTime) / 1000) : 0
+        }
+      })
+      return
+    }
+
+    // 添加新观众
+    room.spectators.push({
+      userId,
+      socketId: socket.id,
+      joinTime: Date.now()
+    })
+
+    socket.join(roomId)
+    socketToRoom[socket.id] = roomId
+
+    console.log(`[观众加入] roomId: ${roomId}, 观众: ${userId}, 当前观众数: ${room.spectators.length}`)
+
+    // 返回房间信息
+    if (callback) callback({
+      success: true,
+      roomId,
+      role: 'spectator',
+      room: {
+        roomId: room.roomId,
+        status: room.status,
+        currentTurn: room.currentTurn,
+        board: room.board,
+        players: getRoomPlayers(roomId),
+        spectators: room.spectators,
+        winner: room.winner,
+        isDraw: room.isDraw,
+        blackTime: Math.floor(room.blackTime / 1000),
+        whiteTime: Math.floor(room.whiteTime / 1000),
+        gameTime: room.startTime ? Math.floor((Date.now() - room.startTime) / 1000) : 0
+      }
+    })
+
+    // 通知房间内所有人有观众加入
+    io.to(roomId).emit('spectator_joined', {
+      userId,
+      spectatorCount: room.spectators.length
+    })
+  })
+
+  // 观众离开房间
+  socket.on('leave_spectator', (data, callback) => {
+    const { roomId } = data
+    const userId = socket.userId || socket.id
+    const room = rooms[roomId]
+
+    if (!room) {
+      if (callback) callback({ success: false, error: '房间不存在' })
+      return
+    }
+
+    // 查找并移除观众
+    const spectatorIndex = room.spectators.findIndex(s => s.userId === userId)
+    if (spectatorIndex === -1) {
+      if (callback) callback({ success: false, error: '您不是该房间的观众' })
+      return
+    }
+
+    room.spectators.splice(spectatorIndex, 1)
+    socket.leave(roomId)
+    delete socketToRoom[socket.id]
+
+    console.log(`[观众离开] roomId: ${roomId}, 观众: ${userId}, 剩余观众数: ${room.spectators.length}`)
+
+    if (callback) callback({ success: true })
+
+    // 通知房间内所有人有观众离开
+    io.to(roomId).emit('spectator_left', {
+      userId,
+      spectatorCount: room.spectators.length
+    })
+  })
+
   socket.on('place_piece', (data, callback) => {
     const { roomId, row, col } = data
     const userId = socket.userId || socket.id
@@ -673,7 +791,7 @@ io.on('connection', (socket) => {
   socket.on('get_room_info', (data, callback) => {
     const { roomId } = data
     const room = rooms[roomId]
-    
+
     if (!room) {
       if (callback) callback({ success: false, error: '房间不存在' })
       return
@@ -688,6 +806,7 @@ io.on('connection', (socket) => {
           currentTurn: room.currentTurn,
           board: room.board,
           players: getRoomPlayers(roomId),
+          spectators: room.spectators,
           winner: room.winner,
           moveHistory: room.moveHistory
         }
@@ -802,9 +921,9 @@ export async function main(event, context) {
 // 如果不是 CloudBase 函数型环境，则直接启动服务器（容器型部署或本地开发）
 if (typeof process.env.TCB_FUNCTION_NAME === 'undefined') {
   httpServer.listen(PORT, '0.0.0.0', async () => {
-    console.log(`🎮 五子棋在线对战服务器已启动`)
+    console.log(`🎮 五子棋在线对战服务器 v1.2.5 已启动`)
     console.log(`📡 监听端口: ${PORT}`)
-    
+
     // 初始化数据库
     await initDatabase()
   })

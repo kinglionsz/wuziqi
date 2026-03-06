@@ -360,6 +360,24 @@ export const useOnlineGame = () => {
       }))
     })
 
+    // 监听观众加入
+    socketInstance.on('spectator_joined', (data) => {
+      console.log('[Socket] 观众加入:', data)
+      setRoomInfo(prev => prev ? {
+        ...prev,
+        spectators: [...(prev.spectators || []), { userId: data.userId }]
+      } : null)
+    })
+
+    // 监听观众离开
+    socketInstance.on('spectator_left', (data) => {
+      console.log('[Socket] 观众离开:', data)
+      setRoomInfo(prev => prev ? {
+        ...prev,
+        spectators: (prev.spectators || []).filter(s => s.userId !== data.userId)
+      } : null)
+    })
+
     // 监听错误
     socketInstance.on('error', (data) => {
       console.error('[Socket] 错误:', data.error)
@@ -710,6 +728,74 @@ export const useOnlineGame = () => {
     setError(null)
   }, [])
 
+  /**
+   * 以观众身份加入房间
+   */
+  const joinSpectator = useCallback((roomId) => {
+    if (!socketRef.current) {
+      setError('未连接到服务器')
+      return
+    }
+    if (!roomId || roomId.length !== 6) {
+      setError('请输入有效的 6 位房间号')
+      return
+    }
+    setError(null)
+    socketRef.current.emit('join_spectator', { roomId: roomId.toUpperCase() }, (response) => {
+      console.log('[Socket] 加入观战响应:', response)
+      if (!response.success) {
+        setError(response.error || '加入观战失败')
+        return
+      }
+      // 保存房间号
+      localStorage.setItem('wuziqi_current_room', response.roomId)
+
+      // 处理回调返回的数据
+      setRoomInfo({
+        roomId: response.roomId,
+        role: 'spectator',
+        status: response.room.status,
+        isHost: false,
+        spectators: response.room.spectators || []
+      })
+      setGameState({
+        board: response.room.board,
+        currentTurn: response.room.currentTurn,
+        gameOver: response.room.status === 'finished',
+        winner: response.room.winner,
+        isDraw: response.room.isDraw || false,
+        blackTime: response.room.blackTime || 0,
+        whiteTime: response.room.whiteTime || 0,
+        gameTime: response.room.gameTime || 0
+      })
+    })
+  }, [])
+
+  /**
+   * 离开观众身份
+   */
+  const leaveSpectator = useCallback(() => {
+    if (!socketRef.current || !roomInfo) {
+      return
+    }
+    socketRef.current.emit('leave_spectator', { roomId: roomInfo.roomId }, (response) => {
+      console.log('[Socket] 离开观战响应:', response)
+      localStorage.removeItem('wuziqi_current_room')
+      setRoomInfo(null)
+      setGameState({
+        board: null,
+        currentTurn: 'black',
+        gameOver: false,
+        winner: null,
+        isDraw: false,
+        blackTime: 0,
+        whiteTime: 0,
+        gameTime: 0
+      })
+      setError(null)
+    })
+  }, [roomInfo])
+
   return {
     socket,
     isConnected,
@@ -719,6 +805,8 @@ export const useOnlineGame = () => {
     error,
     createRoom,
     joinRoom,
+    joinSpectator,
+    leaveSpectator,
     placePiece,
     restartGame,
     leaveRoom,

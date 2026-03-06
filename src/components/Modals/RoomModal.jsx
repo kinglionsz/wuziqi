@@ -15,7 +15,9 @@ export const RoomModal = ({
   onClose,
   onCreateRoom,
   onJoinRoom,
+  onJoinSpectator,
   onLeaveRoom,
+  onLeaveSpectator,
   onClearError
 }) => {
   const [joinRoomId, setJoinRoomId] = useState('')
@@ -48,6 +50,18 @@ export const RoomModal = ({
     playSound('click', soundEnabled)
     onLeaveRoom()
     // 离开房间后关闭模态框
+    onClose()
+  }
+
+  const handleJoinSpectator = () => {
+    if (!joinRoomId.trim()) return
+    playSound('click', soundEnabled)
+    onJoinSpectator(joinRoomId.trim())
+  }
+
+  const handleLeaveSpectator = () => {
+    playSound('click', soundEnabled)
+    onLeaveSpectator()
     onClose()
   }
 
@@ -85,14 +99,30 @@ export const RoomModal = ({
               <span className="label">房间号：</span>
               <span className="room-id">{roomInfo.roomId}</span>
             </div>
-            
-            <div className="player-role">
-              <span className="label">您的角色：</span>
-              <span className={`role ${roomInfo.role}`}>
-                {roomInfo.role === 'black' ? '黑棋' : '白棋'}
-              </span>
-              {roomInfo.isHost && <span className="host-badge">房主</span>}
-            </div>
+
+            {/* 观众模式显示 */}
+            {roomInfo.role === 'spectator' ? (
+              <div className="spectator-role">
+                <span className="label">您的角色：</span>
+                <span className="role spectator">观众</span>
+              </div>
+            ) : (
+              <div className="player-role">
+                <span className="label">您的角色：</span>
+                <span className={`role ${roomInfo.role}`}>
+                  {roomInfo.role === 'black' ? '黑棋' : '白棋'}
+                </span>
+                {roomInfo.isHost && <span className="host-badge">房主</span>}
+              </div>
+            )}
+
+            {/* 观众人数显示 */}
+            {roomInfo.spectators && roomInfo.spectators.length > 0 && (
+              <div className="spectator-count">
+                <span className="label">观众：</span>
+                <span className="count">{roomInfo.spectators.length} 人在线</span>
+              </div>
+            )}
 
             <div className="room-status">
               {isWaiting && <p className="waiting-text">等待对手加入...</p>}
@@ -105,16 +135,19 @@ export const RoomModal = ({
                 <p>当前回合：{gameState.currentTurn === 'black' ? '黑棋' : '白棋'}</p>
                 {gameState.gameOver && (
                   <p className="game-over">
-                    {gameState.isDraw 
-                      ? '平局！' 
+                    {gameState.isDraw
+                      ? '平局！'
                       : `${gameState.winner === 'black' ? '黑棋' : '白棋'}获胜！`}
                   </p>
                 )}
               </div>
             )}
 
-            <button onClick={handleLeaveRoom} className="leave-room-button">
-              离开房间
+            <button
+              onClick={roomInfo.role === 'spectator' ? handleLeaveSpectator : handleLeaveRoom}
+              className="leave-room-button"
+            >
+              {roomInfo.role === 'spectator' ? '退出观战' : '离开房间'}
             </button>
           </div>
         ) : (
@@ -122,17 +155,23 @@ export const RoomModal = ({
           <div className="room-actions">
             {/* Tab 切换 */}
             <div className="room-tabs">
-              <button 
+              <button
                 className={activeTab === 'create' ? 'active' : ''}
                 onClick={() => setActiveTab('create')}
               >
                 创建房间
               </button>
-              <button 
+              <button
                 className={activeTab === 'join' ? 'active' : ''}
                 onClick={() => setActiveTab('join')}
               >
                 加入房间
+              </button>
+              <button
+                className={activeTab === 'spectate' ? 'active' : ''}
+                onClick={() => setActiveTab('spectate')}
+              >
+                观战
               </button>
             </div>
 
@@ -140,7 +179,7 @@ export const RoomModal = ({
             {activeTab === 'create' && (
               <div className="create-room-section">
                 <p>创建一个新房间，邀请朋友加入对战</p>
-                <button 
+                <button
                   onClick={handleCreateRoom}
                   disabled={!isConnected}
                   className="create-room-button"
@@ -162,12 +201,34 @@ export const RoomModal = ({
                   maxLength={6}
                   className="room-input"
                 />
-                <button 
+                <button
                   onClick={handleJoinRoom}
                   disabled={!isConnected || joinRoomId.length !== 6}
                   className="join-room-button"
                 >
                   加入房间
+                </button>
+              </div>
+            )}
+
+            {/* 观战 */}
+            {activeTab === 'spectate' && (
+              <div className="spectate-room-section">
+                <p>输入房间号观看对战（无需加入）</p>
+                <input
+                  type="text"
+                  value={joinRoomId}
+                  onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
+                  placeholder="请输入6位房间号"
+                  maxLength={6}
+                  className="room-input"
+                />
+                <button
+                  onClick={handleJoinSpectator}
+                  disabled={!isConnected || joinRoomId.length !== 6}
+                  className="spectate-room-button"
+                >
+                  进入观战
                 </button>
               </div>
             )}
