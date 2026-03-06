@@ -20,7 +20,7 @@ echo.
 REM 部署后端
 echo [2/3] 正在部署后端...
 cd /d D:\ampa_migra\G\CodeSources\ai_project\codebuddy_project\wuziqi\cloudbase\server
-tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force
+echo n | tcb cloudrun deploy -s wuziqi-server --port 3000 --source .
 if errorlevel 1 (
     echo 后端部署失败！
     pause
@@ -32,7 +32,7 @@ echo.
 REM 部署前端
 echo [3/3] 正在部署前端...
 cd /d D:\ampa_migra\G\CodeSources\ai_project\codebuddy_project\wuziqi
-tcb hosting deploy dist -e codebuddy-9gu42kpn62ead2e2 --force
+tcb hosting deploy dist -e codebuddy-9gu42kpn62ead2e2
 echo 前端部署完成！
 echo.
 
