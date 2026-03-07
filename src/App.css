@@ -95,6 +95,23 @@ h1 {
 .settings-button { background-color: #9C27B0; color: white; }
 .settings-button:hover { background-color: #7B1FA2; transform: translateY(-2px); }
 
+.ranking-button {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.ranking-button:hover { transform: translateY(-2px); }
+
+.rating-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
 /* 游戏模式栏 */
 .game-mode-bar {
   display: flex;

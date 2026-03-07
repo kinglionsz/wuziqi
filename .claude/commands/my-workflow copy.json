@@ -1,0 +1,408 @@
+{
+  "id": "my-workflow",
+  "name": "五子棋项目开发工作流",
+  "description": "包含任务接收、代码修改、测试、代码审查、提交部署等完整流程",
+  "version": "1.0.0",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "label": "开始工作流",
+      "data": {},
+      "visual": { "x": 100, "y": 50 }
+    },
+    {
+      "id": "task_receive",
+      "type": "default",
+      "label": "接收任务",
+      "data": {
+        "description": "询问用户具体需求，明确任务目标和范围"
+      },
+      "visual": { "x": 100, "y": 150 }
+    },
+    {
+      "id": "task_clarify",
+      "type": "switch",
+      "label": "任务是否清晰?",
+      "data": {},
+      "visual": { "x": 100, "y": 250 }
+    },
+    {
+      "id": "clarify_ask",
+      "type": "default",
+      "label": "详细询问需求",
+      "data": {
+        "description": "向用户询问更多细节以明确任务"
+      },
+      "visual": { "x": 350, "y": 250 }
+    },
+    {
+      "id": "check_backup",
+      "type": "default",
+      "label": "检查备份文件",
+      "data": {
+        "description": "查找并清理 copy, 副本, backup 等备份文件"
+      },
+      "visual": { "x": 100, "y": 350 }
+    },
+    {
+      "id": "backup_check",
+      "type": "switch",
+      "label": "存在备份文件?",
+      "data": {},
+      "visual": { "x": 350, "y": 350 }
+    },
+    {
+      "id": "clean_backup",
+      "type": "default",
+      "label": "删除备份文件",
+      "data": {
+        "description": "删除所有备份、副本文件"
+      },
+      "visual": { "x": 600, "y": 350 }
+    },
+    {
+      "id": "code_understand",
+      "type": "default",
+      "label": "理解现有代码结构",
+      "data": {
+        "description": "分析项目结构和现有代码"
+      },
+      "visual": { "x": 100, "y": 450 }
+    },
+    {
+      "id": "do_code",
+      "type": "default",
+      "label": "代码修改",
+      "data": {
+        "description": "按照需求修改代码，遵循命名规范"
+      },
+      "visual": { "x": 100, "y": 550 }
+    },
+    {
+      "id": "test_phase",
+      "type": "default",
+      "label": "测试阶段",
+      "data": {
+        "description": "启动开发环境进行测试"
+      },
+      "visual": { "x": 100, "y": 650 }
+    },
+    {
+      "id": "run_dev",
+      "type": "default",
+      "label": "启动开发环境",
+      "data": {
+        "description": "npm start 同时启动前后端"
+      },
+      "visual": { "x": 100, "y": 750 }
+    },
+    {
+      "id": "backend_start",
+      "type": "switch",
+      "label": "后端启动成功?",
+      "data": {},
+      "visual": { "x": 100, "y": 850 }
+    },
+    {
+      "id": "fix_backend",
+      "type": "default",
+      "label": "解决后端问题",
+      "data": {
+        "description": "检查端口占用、CORS配置等问题"
+      },
+      "visual": { "x": 350, "y": 850 }
+    },
+    {
+      "id": "frontend_start",
+      "type": "default",
+      "label": "启动前端",
+      "data": {
+        "description": "确保前端正常启动"
+      },
+      "visual": { "x": 100, "y": 950 }
+    },
+    {
+      "id": "run_test",
+      "type": "default",
+      "label": "运行自动化测试",
+      "data": {
+        "description": "执行 npm test 运行单元测试"
+      },
+      "visual": { "x": 100, "y": 1050 }
+    },
+    {
+      "id": "test_pass",
+      "type": "switch",
+      "label": "测试通过?",
+      "data": {},
+      "visual": { "x": 100, "y": 1150 }
+    },
+    {
+      "id": "fix_test",
+      "type": "default",
+      "label": "修复测试问题",
+      "data": {
+        "description": "修复失败的测试用例"
+      },
+      "visual": { "x": 350, "y": 1150 }
+    },
+    {
+      "id": "e2e_test",
+      "type": "default",
+      "label": "E2E 测试阶段",
+      "data": {
+        "description": "执行端到端测试"
+      },
+      "visual": { "x": 100, "y": 1250 }
+    },
+    {
+      "id": "db_test",
+      "type": "default",
+      "label": "数据库测试",
+      "data": {
+        "description": "运行 test_ranking_db.js 测试数据库功能"
+      },
+      "visual": { "x": 100, "y": 1350 }
+    },
+    {
+      "id": "db_result",
+      "type": "switch",
+      "label": "数据库测试通过?",
+      "data": {},
+      "visual": { "x": 100, "y": 1450 }
+    },
+    {
+      "id": "fix_db",
+      "type": "default",
+      "label": "修复数据库问题",
+      "data": {
+        "description": "修复 Supabase 连接、RLS 策略等问题"
+      },
+      "visual": { "x": 350, "y": 1450 }
+    },
+    {
+      "id": "playwright_test",
+      "type": "default",
+      "label": "Playwright 测试",
+      "data": {
+        "description": "运行 test_ranking_playwright.js 进行浏览器测试"
+      },
+      "visual": { "x": 100, "y": 1550 }
+    },
+    {
+      "id": "playwright_result",
+      "type": "switch",
+      "label": "Playwright 通过?",
+      "data": {},
+      "visual": { "x": 100, "y": 1650 }
+    },
+    {
+      "id": "fix_e2e",
+      "type": "default",
+      "label": "修复 E2E 问题",
+      "data": {
+        "description": "修复 Playwright 测试发现的问题"
+      },
+      "visual": { "x": 350, "y": 1650 }
+    },
+    {
+      "id": "code_review",
+      "type": "default",
+      "label": "代码审查",
+      "data": {
+        "description": "进行安全和代码质量检查"
+      },
+      "visual": { "x": 100, "y": 1750 }
+    },
+    {
+      "id": "review_security",
+      "type": "switch",
+      "label": "安全检查通过?",
+      "data": {},
+      "visual": { "x": 100, "y": 1850 }
+    },
+    {
+      "id": "fix_security",
+      "type": "default",
+      "label": "修复安全问题",
+      "data": {
+        "description": "移除敏感信息，修复 CORS 等安全问题"
+      },
+      "visual": { "x": 350, "y": 1850 }
+    },
+    {
+      "id": "review_quality",
+      "type": "switch",
+      "label": "代码质量通过?",
+      "data": {},
+      "visual": { "x": 100, "y": 1950 }
+    },
+    {
+      "id": "fix_quality",
+      "type": "default",
+      "label": "修复代码质量问题",
+      "data": {
+        "description": "修复 ESLint 错误，优化代码结构"
+      },
+      "visual": { "x": 350, "y": 1950 }
+    },
+    {
+      "id": "update_docs",
+      "type": "default",
+      "label": "更新文档",
+      "data": {
+        "description": "更新 README、CHANGELOG 等文档"
+      },
+      "visual": { "x": 100, "y": 2050 }
+    },
+    {
+      "id": "commit_phase",
+      "type": "default",
+      "label": "提交代码",
+      "data": {
+        "description": "使用约定式提交规范提交代码"
+      },
+      "visual": { "x": 100, "y": 2150 }
+    },
+    {
+      "id": "commit_msg",
+      "type": "default",
+      "label": "编写提交信息",
+      "data": {
+        "description": "编写符合规范的 commit message"
+      },
+      "visual": { "x": 100, "y": 2250 }
+    },
+    {
+      "id": "git_add",
+      "type": "default",
+      "label": "git add 文件",
+      "data": {
+        "description": "添加修改的文件到暂存区"
+      },
+      "visual": { "x": 100, "y": 2350 }
+    },
+    {
+      "id": "git_commit",
+      "type": "default",
+      "label": "git commit",
+      "data": {
+        "description": "提交代码到本地仓库"
+      },
+      "visual": { "x": 100, "y": 2450 }
+    },
+    {
+      "id": "push_remote",
+      "type": "default",
+      "label": "推送到远程",
+      "data": {
+        "description": "git push 到远程仓库"
+      },
+      "visual": { "x": 100, "y": 2550 }
+    },
+    {
+      "id": "deploy_phase",
+      "type": "default",
+      "label": "部署阶段",
+      "data": {
+        "description": "部署到 CloudBase 生产环境"
+      },
+      "visual": { "x": 100, "y": 2650 }
+    },
+    {
+      "id": "build",
+      "type": "default",
+      "label": "构建生产版本",
+      "data": {
+        "description": "npm run build 构建前端"
+      },
+      "visual": { "x": 100, "y": 2750 }
+    },
+    {
+      "id": "deploy_frontend",
+      "type": "default",
+      "label": "部署前端",
+      "data": {
+        "description": "使用 cloudbase hosting:deploy 部署前端"
+      },
+      "visual": { "x": 100, "y": 2850 }
+    },
+    {
+      "id": "deploy_backend",
+      "type": "default",
+      "label": "部署后端",
+      "data": {
+        "description": "使用 tcb cloudrun deploy 部署后端"
+      },
+      "visual": { "x": 100, "y": 2950 }
+    },
+    {
+      "id": "deploy_docs",
+      "type": "default",
+      "label": "部署文档",
+      "data": {
+        "description": "部署文档到静态托管"
+      },
+      "visual": { "x": 100, "y": 3050 }
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "工作流完成",
+      "data": {},
+      "visual": { "x": 100, "y": 3150 }
+    }
+  ],
+  "connections": [
+    { "from": "start", "to": "task_receive", "condition": "" },
+    { "from": "task_receive", "to": "task_clarify", "condition": "" },
+    { "from": "task_clarify", "to": "clarify_ask", "condition": "否" },
+    { "from": "clarify_ask", "to": "task_receive", "condition": "" },
+    { "from": "task_clarify", "to": "check_backup", "condition": "是" },
+    { "from": "check_backup", "to": "backup_check", "condition": "" },
+    { "from": "backup_check", "to": "clean_backup", "condition": "有" },
+    { "from": "clean_backup", "to": "code_understand", "condition": "" },
+    { "from": "backup_check", "to": "code_understand", "condition": "无" },
+    { "from": "code_understand", "to": "do_code", "condition": "" },
+    { "from": "do_code", "to": "test_phase", "condition": "" },
+    { "from": "test_phase", "to": "run_dev", "condition": "" },
+    { "from": "run_dev", "to": "backend_start", "condition": "" },
+    { "from": "backend_start", "to": "fix_backend", "condition": "失败" },
+    { "from": "fix_backend", "to": "backend_start", "condition": "" },
+    { "from": "backend_start", "to": "frontend_start", "condition": "成功" },
+    { "from": "frontend_start", "to": "run_test", "condition": "" },
+    { "from": "run_test", "to": "test_pass", "condition": "" },
+    { "from": "test_pass", "to": "fix_test", "condition": "否" },
+    { "from": "fix_test", "to": "run_test", "condition": "" },
+    { "from": "test_pass", "to": "e2e_test", "condition": "是" },
+    { "from": "e2e_test", "to": "db_test", "condition": "" },
+    { "from": "db_test", "to": "db_result", "condition": "" },
+    { "from": "db_result", "to": "fix_db", "condition": "否" },
+    { "from": "fix_db", "to": "db_test", "condition": "" },
+    { "from": "db_result", "to": "playwright_test", "condition": "是" },
+    { "from": "playwright_test", "to": "playwright_result", "condition": "" },
+    { "from": "playwright_result", "to": "fix_e2e", "condition": "否" },
+    { "from": "fix_e2e", "to": "playwright_test", "condition": "" },
+    { "from": "playwright_result", "to": "code_review", "condition": "是" },
+    { "from": "code_review", "to": "review_security", "condition": "" },
+    { "from": "review_security", "to": "fix_security", "condition": "需要" },
+    { "from": "fix_security", "to": "review_security", "condition": "" },
+    { "from": "review_security", "to": "review_quality", "condition": "通过" },
+    { "from": "review_quality", "to": "fix_quality", "condition": "需要" },
+    { "from": "fix_quality", "to": "review_quality", "condition": "" },
+    { "from": "review_quality", "to": "update_docs", "condition": "通过" },
+    { "from": "update_docs", "to": "commit_phase", "condition": "" },
+    { "from": "commit_phase", "to": "commit_msg", "condition": "" },
+    { "from": "commit_msg", "to": "git_add", "condition": "" },
+    { "from": "git_add", "to": "git_commit", "condition": "" },
+    { "from": "git_commit", "to": "push_remote", "condition": "" },
+    { "from": "push_remote", "to": "deploy_phase", "condition": "" },
+    { "from": "deploy_phase", "to": "build", "condition": "" },
+    { "from": "build", "to": "deploy_frontend", "condition": "" },
+    { "from": "deploy_frontend", "to": "deploy_backend", "condition": "" },
+    { "from": "deploy_backend", "to": "deploy_docs", "condition": "" },
+    { "from": "deploy_docs", "to": "end", "condition": "" }
+  ]
+}

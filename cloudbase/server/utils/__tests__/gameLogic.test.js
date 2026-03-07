@@ -7,7 +7,7 @@ import {
   checkDraw,
   validateMove,
   generateRoomId
-} from '../../tests/utils/testHelpers.js'
+} from '../../../../tests/utils/testHelpers.js'
 
 describe('gameLogic checkWinner', () => {
   it('empty board should return false', () => {

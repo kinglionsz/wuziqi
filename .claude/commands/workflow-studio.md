@@ -1,9 +1,5 @@
 ---
-description: 五子棋项目开发工作流 - 包含任务接收、代码修改、测试、代码审查、提交部署等完整流程
----
-
----
-description: my-workflow-from-studio
+description: workflow-studio
 ---
 ```mermaid
 flowchart TD

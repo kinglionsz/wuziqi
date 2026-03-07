@@ -17,7 +17,27 @@
       "Bash(cd:*)",
       "Bash(sleep 3:*)",
       "Bash(netstat:*)",
-      "Bash(ipconfig)"
+      "Bash(ipconfig)",
+      "Bash(curl:*)",
+      "Bash(tail:*)",
+      "Bash(cd D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi && node test_ranking_playwright.js 2>&1)",
+      "Bash(cd \"D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi\" && node fix_supabase_rls.js 2>&1)",
+      "Bash(echo Supabase CLI not found:*)",
+      "Bash(sleep 8 && cd \"D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi\" && node test_ranking_playwright.js 2>&1)",
+      "Bash(true:*)",
+      "Bash(cd \"D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi\" && npm run build 2>&1)",
+      "Bash(cd \"D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi\" && npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2 2>&1)",
+      "Bash(cd \"D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi/cloudbase/server\" && npx tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force 2>&1)",
+      "Bash(cd \"D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi/cloudbase/server\" && echo n | npx tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force 2>&1)",
+      "Bash(cd \"D:/ampa_migra/G/CodeSources/ai_project/codebuddy_project/wuziqi/cloudbase/server\" && printf \"n\\\\n\" | npx tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force 2>&1)",
+      "mcp__cloudbase__envQuery",
+      "mcp__cloudbase__manageCloudRun",
+      "mcp__cloudbase__uploadFiles",
+      "mcp__cloudbase__queryCloudRun",
+      "Bash(node:*)",
+      "Bash(npm test:*)",
+      "Bash(npx playwright:*)",
+      "Bash(npx eslint:*)"
     ]
   }
 }
