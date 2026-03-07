@@ -1,0 +1,360 @@
+/* 排名模态框样式 */
+
+.ranking-modal {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ranking-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.ranking-tabs {
+  display: flex;
+  padding: 0 24px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.tab-btn {
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.tab-btn:hover {
+  color: #333;
+}
+
+.tab-btn.active {
+  color: #2563eb;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #2563eb;
+  border-radius: 2px 2px 0 0;
+}
+
+.ranking-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+/* 排行榜样式 */
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-title-bar {
+  display: flex;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: background 0.2s;
+}
+
+.ranking-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.ranking-item.current-player {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.rank-num {
+  width: 50px;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+}
+
+.medal {
+  font-size: 18px;
+}
+
+.player-name-col {
+  flex: 1;
+  padding: 0 12px;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rating-col {
+  width: 80px;
+  text-align: right;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.win-rate-col {
+  width: 60px;
+  text-align: right;
+  color: #666;
+  font-size: 14px;
+}
+
+/* 战绩面板样式 */
+.stats-panel {
+  padding: 8px 0;
+}
+
+.player-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-info h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+}
+
+.player-info h3:hover {
+  color: #2563eb;
+}
+
+.edit-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.name-edit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.name-edit input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.name-edit button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.name-edit button:first-of-type {
+  background: #2563eb;
+  color: white;
+}
+
+.name-edit button:last-of-type {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-card.main-stat {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card.main-stat .stat-value {
+  color: white;
+  font-size: 36px;
+}
+
+.stat-card.main-stat .stat-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-card .stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.stats-details {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-name {
+  color: #666;
+  font-size: 14px;
+}
+
+.stat-row .stat-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.stat-row .stat-value.win {
+  color: #10b981;
+}
+
+.stat-row .stat-value.loss {
+  color: #ef4444;
+}
+
+.stat-row .stat-value.draw {
+  color: #f59e0b;
+}
+
+.stat-row .stat-value.streak {
+  color: #8b5cf6;
+}
+
+/* 段位显示 */
+.rank-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.rank-icon {
+  font-size: 28px;
+}
+
+.rank-name {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.rank-range {
+  font-size: 12px;
+  opacity: 0.9;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+}

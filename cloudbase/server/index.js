@@ -114,6 +114,198 @@ app.get('/test-db', async (req, res) => {
   res.json(results)
 })
 
+// ============================================
+// 排名系统 API 端点
+// 说明: 这些端点代理 Supabase 请求，用于不想在前端直接暴露 Supabase 的场景
+// ============================================
+
+// 排行榜端点 (通过环境变量配置 Supabase 基础 URL 和 Key)
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY // 使用 Service Key 进行服务端操作
+
+// 排行榜端点
+app.get('/api/rankings', async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(503).json({ error: '排名服务未配置' })
+  }
+
+  try {
+    const limit = parseInt(req.query.limit) || 100
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/player_stats?select=*&order=rating.desc&limit=${limit}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    })
+    const data = await response.json()
+    res.json(data)
+  } catch (error) {
+    console.error('[排名API] 获取排行榜失败:', error)
+    res.status(500).json({ error: '获取排行榜失败' })
+  }
+})
+
+// 获取玩家积分
+app.get('/api/players/:userId/stats', async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(503).json({ error: '排名服务未配置' })
+  }
+
+  const { userId } = req.params
+
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/player_stats?user_id=eq.${encodeURIComponent(userId)}&select=*`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      }
+    )
+    const data = await response.json()
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: '玩家不存在' })
+    }
+
+    res.json(data[0])
+  } catch (error) {
+    console.error('[排名API] 获取玩家积分失败:', error)
+    res.status(500).json({ error: '获取玩家积分失败' })
+  }
+})
+
+// 创建或更新玩家
+app.post('/api/players', express.json(), async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(503).json({ error: '排名服务未配置' })
+  }
+
+  const { userId, playerName } = req.body
+
+  if (!userId) {
+    return res.status(400).json({ error: '缺少 userId' })
+  }
+
+  try {
+    // 先尝试获取现有玩家
+    const getResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/player_stats?user_id=eq.${encodeURIComponent(userId)}&select=*`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      }
+    )
+    const existing = await getResponse.json()
+
+    if (existing && existing.length > 0) {
+      return res.json(existing[0])
+    }
+
+    // 创建新玩家
+    const name = playerName || `玩家_${userId.slice(0, 6)}`
+    const createResponse = await fetch(`${SUPABASE_URL}/rest/v1/player_stats`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        player_name: name,
+        rating: 1000,
+        games_played: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        win_streak: 0,
+        max_streak: 0
+      })
+    })
+
+    const newPlayer = await createResponse.json()
+    res.status(201).json(newPlayer[0] || newPlayer)
+  } catch (error) {
+    console.error('[排名API] 创建玩家失败:', error)
+    res.status(500).json({ error: '创建玩家失败' })
+  }
+})
+
+// 更新玩家战绩 (游戏结束时调用)
+app.put('/api/players/:userId/result', express.json(), async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(503).json({ error: '排名服务未配置' })
+  }
+
+  const { userId } = req.params
+  const { result, ratingChange } = req.body // result: 'win' | 'loss' | 'draw'
+
+  if (!result || ratingChange === undefined) {
+    return res.status(400).json({ error: '缺少必要参数' })
+  }
+
+  try {
+    // 先获取当前玩家数据
+    const getResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/player_stats?user_id=eq.${encodeURIComponent(userId)}&select=*`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      }
+    )
+    const player = await getResponse.json()
+
+    if (!player || player.length === 0) {
+      return res.status(404).json({ error: '玩家不存在' })
+    }
+
+    const p = player[0]
+    const updates = {
+      rating: (p.rating || 1000) + ratingChange,
+      games_played: (p.games_played || 0) + 1,
+      updated_at: new Date().toISOString()
+    }
+
+    if (result === 'win') {
+      updates.wins = (p.wins || 0) + 1
+      updates.win_streak = (p.win_streak || 0) + 1
+      updates.max_streak = Math.max(p.max_streak || 0, updates.win_streak)
+    } else if (result === 'loss') {
+      updates.losses = (p.losses || 0) + 1
+      updates.win_streak = 0
+    } else if (result === 'draw') {
+      updates.draws = (p.draws || 0) + 1
+    }
+
+    const updateResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/player_stats?user_id=eq.${encodeURIComponent(userId)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(updates)
+      }
+    )
+
+    const updated = await updateResponse.json()
+    res.json(updated[0] || updated)
+  } catch (error) {
+    console.error('[排名API] 更新战绩失败:', error)
+    res.status(500).json({ error: '更新战绩失败' })
+  }
+})
+
 const httpServer = http.createServer(app)
 
 // 获取端口

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Board from './components/Board'
-import { VictoryModal, RulesModal, ReplayModal, SettingsModal, RoomModal } from './components/Modals'
+import { VictoryModal, RulesModal, ReplayModal, SettingsModal, RoomModal, RankingModal } from './components/Modals'
 import { useGameLogic } from './hooks/useGameLogic'
 import { useOnlineGame } from './hooks/useOnlineGame'
-import { THEMES, GAME_MODES, AI_PLAYER, AI_LEVELS, BOARD_SIZE } from './utils/constants'
+import { THEMES, GAME_MODES, AI_PLAYER, AI_LEVELS, BOARD_SIZE, getRankByRating } from './utils/constants'
 import { playSound } from './utils/sound'
+import { getDeviceId } from './utils/device'
+import { getPlayerStats } from './lib/supabase'
 import './App.css'
 
 function App() {
@@ -21,6 +23,7 @@ function App() {
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [showReplayModal, setShowReplayModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
+  const [showRankingModal, setShowRankingModal] = useState(false)
   const [replayIndex, setReplayIndex] = useState(-1)
   
   // 在线游戏状态
@@ -38,7 +41,23 @@ function App() {
     leaveSpectator,
     clearError: clearOnlineError
   } = useOnlineGame()
-  
+
+  // 排名系统状态
+  const [playerRating, setPlayerRating] = useState(1000)
+  const [playerRank, setPlayerRank] = useState(null)
+
+  // 加载玩家积分
+  useEffect(() => {
+    const loadPlayerStats = async () => {
+      const deviceId = getDeviceId()
+      const { data } = await getPlayerStats(deviceId)
+      if (data) {
+        setPlayerRating(data.rating || 1000)
+      }
+    }
+    loadPlayerStats()
+  }, [])
+
   // 使用游戏逻辑 Hook
   const {
     board,
@@ -323,6 +342,10 @@ function App() {
           ) : (
             <button onClick={() => setShowSettingsModal(true)} className="settings-button">设置</button>
           )}
+          <button onClick={() => setShowRankingModal(true)} className="ranking-button">
+            {playerRating > 0 && <span className="rank-icon">{getRankByRating(playerRating).icon}</span>}
+            排名 {playerRating > 0 && <span className="rating-badge">{playerRating}</span>}
+          </button>
           <button onClick={() => setShowRulesModal(true)} className="rules-button">规则</button>
         </div>
       </div>
@@ -435,13 +458,19 @@ function App() {
         onClearError={clearOnlineError}
       />
 
+      {/* 排名模态框 */}
+      <RankingModal
+        isOpen={showRankingModal}
+        onClose={() => setShowRankingModal(false)}
+      />
+
       {/* 隐藏的背景音乐音频元素 */}
       <audio ref={bgMusicRef} loop>
         <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav" />
       </audio>
 
       <div className="footer">
-        <p>©️狮王李 保留所有权利 2026 | 版本 v1.2.5</p>
+        <p>©️狮王李 保留所有权利 2026 | 版本 v1.2.6</p>
       </div>
     </div>
   )

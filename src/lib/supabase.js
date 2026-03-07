@@ -82,7 +82,7 @@ export const getGameRoom = async (roomCode) => {
     .from('game_rooms')
     .select('*')
     .eq('room_code', roomCode)
-    .single()
+    .maybeSingle()
   
   return { data, error }
 }
@@ -140,6 +140,173 @@ export const deleteGameRoom = async (roomId) => {
     .from('game_rooms')
     .delete()
     .eq('id', roomId)
-  
+
   return { error }
+}
+
+// ============================================
+// 排名系统 - Player Stats
+// ============================================
+
+/**
+ * 获取或创建玩家
+ * @param {string} userId - 用户ID (设备ID)
+ * @param {string} playerName - 玩家名称
+ * @returns {Promise<{data, error}>}
+ */
+export const getOrCreatePlayer = async (userId, playerName = null) => {
+  // 先尝试获取现有玩家
+  const { data: existing, error: getError } = await supabase
+    .from('player_stats')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (existing) {
+    return { data: existing, error: null }
+  }
+
+  // 如果不存在，创建新玩家
+  const { data, error } = await supabase
+    .from('player_stats')
+    .insert([{
+      user_id: userId,
+      player_name: playerName || `玩家_${userId.slice(0, 6)}`,
+      rating: 1000,
+      games_played: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      win_streak: 0,
+      max_streak: 0
+    }])
+    .select()
+    .maybeSingle()
+
+  return { data, error }
+}
+
+/**
+ * 获取玩家积分信息
+ * @param {string} userId - 用户ID
+ * @returns {Promise<{data, error}>}
+ */
+export const getPlayerStats = async (userId) => {
+  const { data, error } = await supabase
+    .from('player_stats')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle() // 使用 maybeSingle 替代 single，避免无数据时返回 406
+
+  return { data, error }
+}
+
+/**
+ * 更新玩家积分
+ * @param {string} userId - 用户ID
+ * @param {Object} updates - 更新内容
+ * @returns {Promise<{data, error}>}
+ */
+export const updatePlayerStats = async (userId, updates) => {
+  const { data, error } = await supabase
+    .from('player_stats')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
+    .eq('user_id', userId)
+    .select()
+    .maybeSingle()
+
+  return { data, error }
+}
+
+/**
+ * 更新玩家战绩 (胜/负/平)
+ * @param {string} userId - 用户ID
+ * @param {string} result - 结果 ('win', 'loss', 'draw')
+ * @param {number} ratingChange - 积分变化
+ * @returns {Promise<{data, error}>}
+ */
+export const updatePlayerGameResult = async (userId, result, ratingChange) => {
+  // 先获取当前数据
+  const { data: current, error: getError } = await supabase
+    .from('player_stats')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (getError) return { data: null, error: getError }
+
+  const updates = {
+    rating: (current.rating || 1000) + ratingChange,
+    games_played: (current.games_played || 0) + 1
+  }
+
+  if (result === 'win') {
+    updates.wins = (current.wins || 0) + 1
+    updates.win_streak = (current.win_streak || 0) + 1
+    updates.max_streak = Math.max(current.max_streak || 0, updates.win_streak)
+  } else if (result === 'loss') {
+    updates.losses = (current.losses || 0) + 1
+    updates.win_streak = 0
+  } else if (result === 'draw') {
+    updates.draws = (current.draws || 0) + 1
+  }
+
+  return updatePlayerStats(userId, updates)
+}
+
+/**
+ * 获取排行榜
+ * @param {number} limit - 返回数量
+ * @returns {Promise<{data, error}>}
+ */
+export const getRankings = async (limit = 100) => {
+  const { data, error } = await supabase
+    .from('player_stats')
+    .select('*')
+    .order('rating', { ascending: false })
+    .limit(limit)
+
+  return { data, error }
+}
+
+/**
+ * 获取玩家排名
+ * @param {string} userId - 用户ID
+ * @returns {Promise<{rank, error}>}
+ */
+export const getPlayerRank = async (userId) => {
+  // 获取所有高于当前玩家积分的玩家数量
+  const { data: player, error: playerError } = await supabase
+    .from('player_stats')
+    .select('rating')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (playerError || !player) {
+    return { rank: null, error: playerError }
+  }
+
+  const { count, error: countError } = await supabase
+    .from('player_stats')
+    .select('*', { count: 'exact', head: true })
+    .gt('rating', player.rating)
+
+  if (countError) {
+    return { rank: null, error: countError }
+  }
+
+  return { rank: count + 1, error: null }
+}
+
+/**
+ * 更新玩家名称
+ * @param {string} userId - 用户ID
+ * @param {string} playerName - 新名称
+ * @returns {Promise<{data, error}>}
+ */
+export const updatePlayerName = async (userId, playerName) => {
+  return updatePlayerStats(userId, { player_name: playerName })
 }

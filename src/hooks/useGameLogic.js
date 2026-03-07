@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { BOARD_SIZE, AI_PLAYER, GAME_MODES, THEMES, AI_LEVELS } from '../utils/constants'
 import { checkWinner, checkDraw, findBestMove } from '../utils/ai'
 import { playSound } from '../utils/sound'
-import { saveGameRecord as saveToSupabase } from '../lib/supabase'
+import { saveGameRecord as saveToSupabase, updatePlayerGameResult, getOrCreatePlayer } from '../lib/supabase'
+import { getDeviceId } from '../utils/device'
 
 /**
  * 游戏逻辑 Hook - 简化版，修复 AI 落子问题
@@ -71,12 +72,40 @@ export const useGameLogic = ({
       duration: formatTime(gameTime),
       theme: THEMES[theme]?.name || '默认'
     }
-    
+
     const saved = localStorage.getItem('gomoku_records')
     const records = saved ? JSON.parse(saved) : []
     const newRecords = [record, ...records].slice(0, 50)
     localStorage.setItem('gomoku_records', JSON.stringify(newRecords))
-    
+
+    // 获取玩家设备ID
+    const deviceId = getDeviceId()
+
+    // 计算积分变化
+    let ratingChange = 0
+    let playerResult = 'draw' // 'win', 'loss', 'draw'
+
+    if (gameMode === GAME_MODES.PVP) {
+      // PVP 模式: 区分黑棋和白棋
+      // 假设当前玩家是黑棋 (先手)
+      if (winnerValue === 'black') {
+        ratingChange = 25
+        playerResult = 'win'
+      } else if (winnerValue === 'white') {
+        ratingChange = -25
+        playerResult = 'loss'
+      }
+    } else if (gameMode === GAME_MODES.PVE) {
+      // PVE 模式: 玩家是黑棋
+      if (winnerValue === 'black') {
+        ratingChange = 20 // 赢AI给少点
+        playerResult = 'win'
+      } else if (winnerValue === 'white') { // 白棋是AI
+        ratingChange = -20
+        playerResult = 'loss'
+      }
+    }
+
     try {
       await saveToSupabase({
         winner: winnerValue || 'draw',
@@ -92,10 +121,22 @@ export const useGameLogic = ({
           time: Date.now()
         }))
       })
+
+      // 更新玩家积分 (仅本地模式)
+      if (gameMode !== GAME_MODES.ONLINE) {
+        // 确保玩家存在
+        await getOrCreatePlayer(deviceId, null)
+
+        // 更新战绩和积分
+        if (ratingChange !== 0 || playerResult !== 'draw') {
+          await updatePlayerGameResult(deviceId, playerResult, ratingChange)
+          console.log(`[排名] 更新积分: ${playerResult}, 变化: ${ratingChange}`)
+        }
+      }
     } catch (error) {
       console.error('保存到 Supabase 失败:', error)
     }
-    
+
     return newRecords
   }, [gameMode, gameTime, moveHistory, theme, formatTime])
 

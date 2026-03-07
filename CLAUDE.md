@@ -125,3 +125,28 @@ tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force
 - Prettier 配置 (使用 `.prettierrc`)
 - 组件按功能模块组织
 - Hooks 封装可复用逻辑
+
+## 📚 项目知识库
+
+详细开发记录和历史对话保存在 Obsidian 知识库：
+- **路径**: `D:\ObsidianVault\五子棋游戏\`
+- **索引**: `D:\ObsidianVault\五子棋游戏\索引.md`
+
+包含内容：
+- 开发规范和文件管理习惯
+- 完整的对话记录和代码审核
+- 版本功能和更新日志
+
+## ⚡ 知识库调用规则
+
+**重要**：回答项目相关问题时，优先从本地知识库获取信息：
+
+1. **优先读取** `D:\ampa_migra\G\CodeSources\ai_project\codebuddy_project\wuziqi\claude_docs\`
+2. **其次读取** `D:\ObsidianVault\五子棋游戏\` (Obsidian 知识库)
+3. 只有本地知识库没有合适答案时才调用模型获取
+
+知识库包含：
+- 开发命令和快速启动流程
+- 部署命令和配置
+- 完整的对话记录和代码审核
+- 版本功能和更新日志

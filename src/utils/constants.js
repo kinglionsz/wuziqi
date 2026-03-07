@@ -70,3 +70,47 @@ export const DIRECTIONS = [
   [1, 1],   // 对角线 \
   [1, -1]   // 对角线 /
 ]
+
+// 段位系统
+export const RANKS = {
+  BRONZE: {
+    name: '青铜',
+    minRating: 0,
+    maxRating: 1199,
+    color: '#CD7F32',
+    icon: '🥉'
+  },
+  SILVER: {
+    name: '白银',
+    minRating: 1200,
+    maxRating: 1399,
+    color: '#C0C0C0',
+    icon: '🥈'
+  },
+  GOLD: {
+    name: '黄金',
+    minRating: 1400,
+    maxRating: 1599,
+    color: '#FFD700',
+    icon: '🥇'
+  },
+  DIAMOND: {
+    name: '钻石',
+    minRating: 1600,
+    maxRating: Infinity,
+    color: '#B9F2FF',
+    icon: '💎'
+  }
+}
+
+/**
+ * 根据积分获取段位
+ * @param {number} rating - 玩家积分
+ * @returns {Object} 段位信息
+ */
+export function getRankByRating(rating) {
+  if (rating >= RANKS.DIAMOND.minRating) return RANKS.DIAMOND
+  if (rating >= RANKS.GOLD.minRating) return RANKS.GOLD
+  if (rating >= RANKS.SILVER.minRating) return RANKS.SILVER
+  return RANKS.BRONZE
+}
