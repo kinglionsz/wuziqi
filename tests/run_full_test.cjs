@@ -193,7 +193,7 @@ async function runTests() {
       console.log('   ⚠️ 创建房间按钮不可见');
     }
 
-    // 离开房间
+    // 离开房间 - 使用正确的关闭方式
     const leaveBtn = page.locator('button:has-text("离开房间"), button:has-text("退出")').first();
     if (await leaveBtn.isVisible().catch(() => false)) {
       await leaveBtn.click();
@@ -201,24 +201,31 @@ async function runTests() {
       console.log('   ✅ 离开房间功能正常');
     }
 
-    // 强制关闭房间模态框 - 点击页面空白处
-    await page.evaluate(() => {
-      const overlay = document.querySelector('.modal-overlay, [class*="modal-overlay"]');
-      if (overlay) overlay.remove();
-    });
+    // 按Escape关闭模态框
+    await page.keyboard.press('Escape');
     await page.waitForTimeout(1000);
+
+    // 刷新页面确保状态重置
+    await page.reload({ timeout: 30000 });
+    await page.waitForTimeout(5000);
+
+    // 处理安全验证
+    const continueBtn2 = page.locator('text=继续访问, text=继续, button:has-text("继续")').first();
+    if (await continueBtn2.isVisible().catch(() => false)) {
+      console.log('🔐 点击继续访问...');
+      await continueBtn2.click();
+      await page.waitForTimeout(5000);
+    }
+
     passCount++;
 
     // ========== 测试12: 在线对战 - 加入房间 ==========
     console.log('\n📋 测试12: 在线对战-加入房间...');
 
-    // 强制关闭所有模态框
-    await page.evaluate(() => {
-      const overlays = document.querySelectorAll('.modal-overlay, [class*="modal-overlay"]');
-      overlays.forEach(el => el.remove());
-    });
-    await page.waitForTimeout(1000);
+    // 等待页面稳定
+    await page.waitForTimeout(2000);
 
+    // 点击在线对战按钮重新打开模态框
     await page.click('button:has-text("在线对战")');
     await page.waitForSelector('[class*="modal"], .room-modal', { timeout: 5000 });
 
