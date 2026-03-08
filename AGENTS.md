@@ -6,7 +6,7 @@
 
 ### 项目信息
 - **项目名称**: xiaochidian
-- **版本**: v1.2.3
+- **版本**: v1.2.6
 - **类型**: Web 应用（React + Node.js）
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
 
@@ -59,6 +59,12 @@ npm run test:run   # 运行测试
 npm run test:coverage  # 测试覆盖率
 ```
 
+### 排名数据库测试
+```bash
+node test_ranking_db.js    # 数据库功能测试
+node test_ranking_playwright.js  # Playwright E2E测试
+```
+
 ---
 
 ## 项目结构
@@ -76,7 +82,8 @@ wuziqi/
 │   │       ├── RulesModal.jsx      # 规则弹窗
 │   │       ├── SettingsModal.jsx  # 设置弹窗
 │   │       ├── ReplayModal.jsx     # 回放弹窗
-│   │       └── RoomModal.jsx       # 房间弹窗
+│   │       ├── RoomModal.jsx       # 房间弹窗
+│   │       └── RankingModal.jsx    # 排名弹窗
 │   ├── hooks/               # React Hooks
 │   │   ├── useGameLogic.js  # 游戏逻辑（核心）
 │   │   └── useOnlineGame.js # 在线对战逻辑
@@ -159,8 +166,21 @@ wuziqi/
 - `placePiece(row, col)` - 落子
 - `restartGame()` - 重新开始
 - `leaveRoom()` - 离开房间
+- `joinAsSpectator(code)` - 以观众身份加入观战
 
-### 4. 常量配置 (constants.js)
+### 4. 排名系统
+
+**主要功能**:
+- 玩家排行榜 (积分、胜率、段位)
+- 段位系统: 青铜、白银、黄金、钻石、王者
+- 战绩统计 (总场次、胜率、连胜数)
+
+**核心模块**:
+- `RankingModal.jsx` - 排名 UI 组件
+- `src/utils/device.js` - 设备 ID 管理
+- `src/utils/constants.js` - 段位定义 (RANKS)
+
+### 5. 常量配置 (constants.js)
 
 ```javascript
 AI_PLAYER = 'white'     // AI 始终执白棋
@@ -251,5 +271,5 @@ tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force
 ## 维护者
 
 - **开发者**: 狮王李
-- **版本**: v1.2.3
-- **更新日期**: 2026-03-03
+- **版本**: v1.2.6
+- **更新日期**: 2026-03-07

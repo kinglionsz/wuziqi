@@ -37,7 +37,10 @@
       "Bash(node:*)",
       "Bash(npm test:*)",
       "Bash(npx playwright:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(TEST_URL=https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ npx playwright:*)",
+      "Bash(mv:*)",
+      "Bash(TEST_URL=https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ node:*)"
     ]
   }
 }
