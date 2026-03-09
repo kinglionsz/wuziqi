@@ -1,10 +1,9 @@
 {
   "$schema": "https://railway.com/railway.json",
+  "name": "wuziqi-frontend",
   "build": {
-    "builder": "NIXPACKS",
-    "node": "20",
-    "buildCommand": "npm run build",
-    "outputDir": "dist"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "numReplicas": 1,
