@@ -1,0 +1,15 @@
+{
+  "name": "wuziqi-frontend",
+  "version": "1.2.6",
+  "description": "五子棋游戏前端",
+  "type": "module",
+  "scripts": {
+    "start": "vite preview --host 0.0.0.0 --port $PORT",
+    "dev": "vite --host 0.0.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "serve-static": "^1.15.0"
+  },
+  "node": "20"
+}
