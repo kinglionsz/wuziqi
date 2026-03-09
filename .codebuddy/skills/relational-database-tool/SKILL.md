@@ -2,6 +2,8 @@
 name: relational-database-mcp-cloudbase
 description: This is the required documentation for agents operating on the CloudBase Relational Database. It lists the only four supported tools for running SQL and managing security rules. Read the full content to understand why you must NOT use standard Application SDKs and how to safely execute INSERT, UPDATE, or DELETE operations without corrupting production data.
 alwaysApply: false
+allowed-tools: 
+disable: true
 ---
 
 ## When to use this skill

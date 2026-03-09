@@ -2,6 +2,8 @@
 name: data-model-creation
 description: Optional advanced tool for complex data modeling. For simple table creation, use relational-database-tool directly with SQL statements.
 alwaysApply: false
+allowed-tools: 
+disable: true
 ---
 
 ## When to use this skill

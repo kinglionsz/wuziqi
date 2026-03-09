@@ -2,6 +2,8 @@
 name: web-development
 description: Web frontend project development rules. Use this skill when developing web frontend pages, deploying static hosting, and integrating CloudBase Web SDK.
 alwaysApply: false
+allowed-tools: 
+disable: true
 ---
 
 ## When to use this skill

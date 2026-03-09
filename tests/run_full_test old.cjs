@@ -7,71 +7,6 @@ const { chromium } = require('playwright');
 
 const BASE_URL = process.env.TEST_URL || 'https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/';
 
-// 常量定义
-const TIMEOUTS = {
-  SECURITY_VERIFY: 5000,
-  MODAL_CLOSE: 1000,
-  ROOM_CREATE: 3000,
-  RANKING_LOAD: 3000,
-  PAGE_STABLE: 2000,
-  SHORT: 500,
-  MODAL_OPEN: 500
-};
-
-const GAME_MODES = ['双人对战', '人机对战', '在线对战'];
-const CONTROL_BTNS = ['重新开始', '悔棋', '设置', '排名', '规则'];
-const ROOM_TABS = { CREATE: ['创建房间', '新建'], JOIN: ['加入房间'], SPECTATE: ['观众', '观战'] };
-
-// 辅助函数：处理安全验证
-async function handleSecurityCheck(page, logPrefix = '🔐') {
-  const continueBtn = page.locator('text=继续访问, text=继续, button:has-text("继续")').first();
-  if (await continueBtn.isVisible().catch(() => false)) {
-    console.log(`${logPrefix} 点击继续访问...`);
-    await continueBtn.click();
-    await page.waitForTimeout(TIMEOUTS.SECURITY_VERIFY);
-    return true;
-  }
-  // 也检查可能的其他安全验证按钮
-  const anyContinueBtn = page.locator('button, a').filter({ hasText: /继续|访问|确认/i }).first();
-  if (await anyContinueBtn.isVisible().catch(() => false)) {
-    console.log(`${logPrefix} 点击安全验证按钮...`);
-    await anyContinueBtn.click();
-    await page.waitForTimeout(TIMEOUTS.SECURITY_VERIFY);
-    return true;
-  }
-  return false;
-}
-
-// 辅助函数：安全检查元素可见性
-async function isVisible(page, selector) {
-  return await page.locator(selector).first().isVisible().catch(() => false);
-}
-
-// 辅助函数：点击按钮
-async function clickButton(page, text) {
-  const btn = page.locator(`button:has-text("${text}")`);
-  if (await isVisible(page, `button:has-text("${text}")`)) {
-    await btn.click();
-    return true;
-  }
-  return false;
-}
-
-// 辅助函数：关闭模态框
-async function closeModal(page, method = 'escape') {
-  if (method === 'escape') {
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(TIMEOUTS.SHORT);
-  }
-
-  // 强制关闭 - 删除模态框覆盖层
-  await page.evaluate(() => {
-    const overlays = document.querySelectorAll('.modal-overlay, [class*="modal-overlay"]');
-    overlays.forEach(el => el.remove());
-  });
-  await page.waitForTimeout(TIMEOUTS.SHORT);
-}
-
 async function runTests() {
   console.log('🎮 五子棋游戏全站测试');
   console.log(`📍 测试地址: ${BASE_URL}\n`);
@@ -90,7 +25,20 @@ async function runTests() {
   await page.waitForTimeout(5000); // 等待5秒安全验证
 
   // 检查是否有安全验证页面
-  await handleSecurityCheck(page, '🔐');
+  const continueBtn = page.locator('text=继续访问, text=继续, button:has-text("继续")').first();
+  if (await continueBtn.isVisible().catch(() => false)) {
+    console.log('🔐 点击继续访问...');
+    await continueBtn.click();
+    await page.waitForTimeout(5000); // 等待验证
+  } else {
+    // 也检查可能的其他安全验证按钮
+    const anyContinueBtn = page.locator('button, a').filter({ hasText: /继续|访问|确认/i }).first();
+    if (await anyContinueBtn.isVisible().catch(() => false)) {
+      console.log('🔐 点击安全验证按钮...');
+      await anyContinueBtn.click();
+      await page.waitForTimeout(5000);
+    }
+  }
 
   try {
     // 测试1: 首页加载
@@ -249,40 +197,36 @@ async function runTests() {
     const leaveBtn = page.locator('button:has-text("离开房间"), button:has-text("退出")').first();
     if (await leaveBtn.isVisible().catch(() => false)) {
       await leaveBtn.click();
-      await page.waitForTimeout(TIMEOUTS.MODAL_CLOSE);
+      await page.waitForTimeout(1000);
       console.log('   ✅ 离开房间功能正常');
     }
 
-    // 强制关闭模态框
-    await closeModal(page);
+    // 按Escape关闭模态框
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(1000);
 
-    // 等待页面稳定后进入下一个测试
-    await page.waitForTimeout(TIMEOUTS.PAGE_STABLE);
+    // 刷新页面确保状态重置
+    await page.reload({ timeout: 30000 });
+    await page.waitForTimeout(5000);
+
+    // 处理安全验证
+    const continueBtn2 = page.locator('text=继续访问, text=继续, button:has-text("继续")').first();
+    if (await continueBtn2.isVisible().catch(() => false)) {
+      console.log('🔐 点击继续访问...');
+      await continueBtn2.click();
+      await page.waitForTimeout(5000);
+    }
 
     passCount++;
 
     // ========== 测试12: 在线对战 - 加入房间 ==========
     console.log('\n📋 测试12: 在线对战-加入房间...');
 
-    // 等待页面稳定，确保之前的状态已清理
-    await page.waitForTimeout(TIMEOUTS.PAGE_STABLE);
+    // 等待页面稳定
+    await page.waitForTimeout(2000);
 
     // 点击在线对战按钮重新打开模态框
     await page.click('button:has-text("在线对战")');
-    await page.waitForTimeout(TIMEOUTS.MODAL_OPEN);
-
-    // 等待模态框出现
-    const modalVisible = await page.locator('[class*="modal"], .room-modal').first().isVisible().catch(() => false);
-    if (!modalVisible) {
-      // 如果模态框没有打开，刷新页面后重试
-      console.log('   ⚠️ 模态框未打开，刷新页面重试...');
-      await page.reload({ timeout: 30000 });
-      await handleSecurityCheck(page, '🔐');
-      await page.waitForTimeout(TIMEOUTS.PAGE_STABLE);
-      await page.click('button:has-text("在线对战")');
-      await page.waitForTimeout(TIMEOUTS.MODAL_OPEN);
-    }
-
     await page.waitForSelector('[class*="modal"], .room-modal', { timeout: 5000 });
 
     // 切换到加入房间标签

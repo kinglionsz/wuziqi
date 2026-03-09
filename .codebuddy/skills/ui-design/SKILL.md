@@ -2,6 +2,8 @@
 name: ui-design
 description: Professional UI design and frontend interface guidelines. Use this skill when creating web pages, mini-program interfaces, prototypes, or any frontend UI components that require distinctive, production-grade design with exceptional aesthetic quality.
 alwaysApply: false
+allowed-tools: 
+disable: true
 ---
 
 ## When to use this skill

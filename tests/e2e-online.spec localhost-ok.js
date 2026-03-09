@@ -14,7 +14,7 @@ async function handleSecurityCheck(page) {
   try {
     // 等待页面初始加载
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
-    await page.waitForTimeout(5000); // 增加等待时间
+    await page.waitForTimeout(3000);
 
     // 尝试多种选择器来查找"继续访问"按钮
     const selectors = [
@@ -50,8 +50,10 @@ async function handleSecurityCheck(page) {
     }
 
     if (clicked) {
-      // 等待页面跳转 - 增加等待时间
-      await page.waitForTimeout(8000);
+      // 等待页面跳转
+      await page.waitForTimeout(5000);
+      // 等待网络空闲
+      await page.waitForLoadState('networkidle', { timeout: 20000 });
     }
 
     // 检查是否还有安全验证遮罩
@@ -68,7 +70,7 @@ async function handleSecurityCheck(page) {
         const overlay = page.locator(selector).first();
         if (await overlay.isVisible({ timeout: 2000 })) {
           console.log(`⚠️ 检测到安全验证遮罩: ${selector}`);
-          await page.waitForTimeout(5000);
+          await page.waitForTimeout(3000);
         }
       } catch (e) {
         // 继续
@@ -76,12 +78,12 @@ async function handleSecurityCheck(page) {
     }
 
     // 最终等待页面加载完成
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
     console.log('✅ 安全验证页面处理完成');
 
   } catch (error) {
     console.log('⚠️ 安全验证处理出错:', error.message);
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(3000);
   }
 }
 
@@ -92,12 +94,12 @@ test.describe('五子棋游戏 E2E 测试', () => {
     await page.goto(BASE_URL, { timeout: 60000, waitUntil: 'domcontentloaded' });
     await handleSecurityCheck(page);
 
-    // 验证页面加载成功 - 使用更宽松的选择器
-    await page.waitForSelector('button, .board, [class*="board"], [class*="game"]', { timeout: 30000 });
+    // 验证页面加载成功
+    await page.waitForSelector('h1, .board, [class*="board"], button', { timeout: 30000 });
   });
 
   test('首页加载', async ({ page }) => {
-    await page.waitForSelector('button, .board, [class*="board"]', { timeout: 15000 });
+    await page.waitForSelector('h1, .board, [class*="board"]', { timeout: 10000 });
 
     // 验证游戏模式按钮
     await expect(page.locator('button:has-text("双人对战")')).toBeVisible();

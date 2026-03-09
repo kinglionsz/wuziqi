@@ -40,7 +40,8 @@
       "Bash(npx eslint:*)",
       "Bash(TEST_URL=https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ npx playwright:*)",
       "Bash(mv:*)",
-      "Bash(TEST_URL=https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ node:*)"
+      "Bash(TEST_URL=https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ node:*)",
+      "WebSearch"
     ]
   }
 }
