@@ -30,7 +30,7 @@ dist-ssr
 # Environment variables
 .env.local
 .env
-.env.production
+# .env.production 需要提交到仓库用于部署
 
 # Claude Code 配置（包含敏感信息）
 .env.claude-code
