@@ -35,3 +35,11 @@ start-claude.bat
 # Claude Code 本地配置
 .claude/settings.local.json
 .claude-state.json
+
+# Playwright 测试报告和截图
+playwright-report/
+playwright-report-advanced/
+e2e-report/
+test-results/
+test-screenshots/
+test-error.png
