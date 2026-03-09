@@ -47,3 +47,9 @@ e2e-report/
 test-results/
 test-screenshots/
 test-error.png
+
+# MiniMax CLI 配置（包含敏感信息）
+.minimax/
+
+# Agent 历史记录
+.agent_history/
