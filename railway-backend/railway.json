@@ -1,8 +1,8 @@
 {
   "$schema": "https://railway.com/railway.json",
   "build": {
-    "builder": "NIXPACKS",
-    "node": "20"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "numReplicas": 1,
