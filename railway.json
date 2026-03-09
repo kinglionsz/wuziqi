@@ -1,0 +1,8 @@
+{
+  "$schema": "https://railway.com/railway.json",
+  "projects": {
+    "wuziqi-backend": {
+      "root": "railway-backend"
+    }
+  }
+}

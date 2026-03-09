@@ -1,5 +1,6 @@
 {
   "$schema": "https://railway.com/railway.json",
+  "name": "wuziqi-backend",
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "Dockerfile"
