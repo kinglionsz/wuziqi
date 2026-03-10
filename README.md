@@ -184,16 +184,24 @@ wuziqi/
 
 ## 部署信息
 
-- **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
-- **当前版本**: v1.2.6
-- **部署时间**: 2026-03-10
-- **后端服务**: wuziqi-server (容器型云托管) - 运行正常
-- **后端版本**: wuziqi-server-001
+### Railway 部署（当前使用）
+
+- **后端地址**: https://wuziqi-railway-production.up.railway.app
+- **部署平台**: Railway（后端）+ CloudBase（前端静态托管）
+- **状态**: ✅ 运行正常
+- **优势**: 免费、自动部署、支持 WebSocket
+
+### CloudBase 部署（备选）
+
+- **前端地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
+- **后端服务**: wuziqi-server (容器型云托管)
 - **后端地址**: wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
 - **部署平台**: 腾讯云 CloudBase 静态网站托管 + 云托管
 
 ### 当前状态
 
+- **当前版本**: v1.2.6
+- **部署时间**: 2026-03-10
 - ✅ **游戏功能**: 在线对战完全正常
 - ✅ **WebSocket**: 实时通信正常
 - ⚠️ **数据库**: 使用内存存储（容器重启后数据丢失）
