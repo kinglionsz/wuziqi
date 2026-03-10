@@ -185,8 +185,8 @@ wuziqi/
 ## 部署信息
 
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
-- **当前版本**: v1.2.5
-- **部署时间**: 2026-03-06
+- **当前版本**: v1.2.6
+- **部署时间**: 2026-03-10
 - **后端服务**: wuziqi-server (容器型云托管) - 运行正常
 - **后端版本**: wuziqi-server-001
 - **后端地址**: wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
@@ -526,6 +526,7 @@ npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --target
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
+| **v1.2.6** | 2026-03-10 | 恢复 CloudBase 规则文件，更新 EdgeOne 部署配置 |
 | **v1.2.5** | 2026-03-06 | 新增观众模式功能，实时显示观众人数；添加 WebSocket Token 身份验证机制 |
 | **v1.2.4** | 2026-03-04 | 修复回放模式棋子位置错误问题 |
 | **v1.2.3** | 2026-03-03 | 回放模式优化（毛玻璃+拖拽），修复回放后AI不落子 |
