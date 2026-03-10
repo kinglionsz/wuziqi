@@ -186,10 +186,155 @@ wuziqi/
 
 ### Railway 部署（当前使用）
 
-- **后端地址**: https://wuziqi-railway-production.up.railway.app
-- **部署平台**: Railway（后端）+ CloudBase（前端静态托管）
-- **状态**: ✅ 运行正常
-- **优势**: 免费、自动部署、支持 WebSocket
+| 服务 | 地址 |
+|------|------|
+| 前端 | https://vfsmt568wm0q.space.minimaxi.com/ |
+| 后端 | https://wuziqi-railway-production.up.railway.app |
+
+#### Railway 部署配置详情
+
+**问题描述**：
+首次部署 Railway 后端时遇到错误：
+```
+/bin/bash: line 1: npm: command not found
+Build Failed: build daemon returned an error
+```
+
+这是因为 Railway 的 Nixpacks 构建系统无法正确识别 Node.js 环境。
+
+**解决方案**：
+创建 Dockerfile 明确指定 Node.js 20 环境，强制使用 Docker 构建。
+
+**创建的配置文件**：
+
+1. `railway-backend/Dockerfile` - Docker 构建文件：
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+2. `railway-backend/railway.json` - Railway 配置：
+```json
+{
+  "$schema": "https://railway.com/railway.json",
+  "name": "wuziqi-backend",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  }
+}
+```
+
+3. `railway.json` - 项目配置：
+```json
+{
+  "$schema": "https://railway.com/railway.json",
+  "projects": {
+    "wuziqi-backend": {
+      "root": "railway-backend"
+    },
+    "wuziqi-frontend": {
+      "root": "railway-frontend"
+    }
+  }
+}
+```
+
+#### Railway 部署步骤
+
+1. **后端部署**：
+   - 在 Railway Dashboard 创建新服务
+   - 连接 GitHub 仓库
+   - 设置 Root Directory 为 `railway-backend`
+   - 设置 Build 为 "Dockerfile"
+   - 部署后获得后端 URL
+
+2. **前端部署**：
+   - 构建前端：`npm run build`
+   - 将 dist 目录上传到 MiniMax 平台
+   - 设置环境变量 `VITE_SOCKET_URL` 为 Railway 后端地址
+
+#### 前端环境变量配置
+
+在 `.env.production` 中配置：
+```
+VITE_SOCKET_URL=https://wuziqi-railway-production.up.railway.app
+VITE_SUPABASE_URL=https://pjnzmyvoucgmanoqvbav.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+#### Railway 前端配置 (备选方案)
+
+如果要在 Railway 上部署前端，需要创建 `railway-frontend` 目录，包含以下配置文件：
+
+1. `railway-frontend/Dockerfile` - 多阶段构建：
+```dockerfile
+# 多阶段构建：第一阶段构建前端
+FROM node:20-alpine as builder
+
+# 设置环境变量
+ENV VITE_SUPABASE_URL=https://pjnzmyvoucgmanoqvbav.supabase.co
+ENV VITE_SUPABASE_ANON_KEY=your_anon_key
+ENV VITE_SOCKET_URL=wuziqi-railway-production.up.railway.app
+
+WORKDIR /app
+
+# 复制配置文件
+COPY package*.json ./
+COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY tsconfig.json ./
+COPY jsconfig.json ./
+COPY index.html ./
+COPY src ./src
+COPY public ./public
+
+# 安装依赖并构建
+RUN npm install
+RUN npm run build
+
+# 第二阶段：运行静态服务器
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install -g serve
+COPY --from=builder /app/dist ./dist
+EXPOSE 3000
+CMD ["serve", "-s", "dist", "-l", "3000"]
+```
+
+2. `railway-frontend/railway.json` - Railway 配置：
+```json
+{
+  "$schema": "https://railway.com/railway.json",
+  "name": "wuziqi-frontend",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
+
+> ⚠️ **注意**: 前端配置文件包含敏感的环境变量，实际部署时请使用 Railway 的环境变量功能或创建 `.env` 文件（已添加到 `.gitignore`）。
+
+#### 部署结果
+
+- ✅ 后端服务器成功运行
+- ✅ 在线对战功能完全正常
+- ✅ WebSocket 实时通信正常
+- ⚠️ 使用内存存储（容器重启后数据丢失）
+
+---
 
 ### CloudBase 部署（备选）
 
@@ -534,6 +679,7 @@ npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --target
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
+| **v1.2.7** | 2026-03-10 | Railway 后端部署成功，添加 Dockerfile 配置解决构建问题；前端部署到 MiniMax |
 | **v1.2.6** | 2026-03-10 | 恢复 CloudBase 规则文件，更新 EdgeOne 部署配置 |
 | **v1.2.5** | 2026-03-06 | 新增观众模式功能，实时显示观众人数；添加 WebSocket Token 身份验证机制 |
 | **v1.2.4** | 2026-03-04 | 修复回放模式棋子位置错误问题 |
