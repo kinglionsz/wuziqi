@@ -1,0 +1,545 @@
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+h1 {
+  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-info {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.info-section {
+  flex: 1;
+  min-width: 200px;
+}
+
+.game-status {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin: 0;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.time-section {
+  flex: 2;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.time-info {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.player-times {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.button-section {
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.reset-button, .undo-button, .rules-button, .settings-button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.reset-button { background-color: #4CAF50; color: white; }
+.reset-button:hover { background-color: #45a049; transform: translateY(-2px); }
+
+.undo-button { background-color: #ff9800; color: white; }
+.undo-button:hover:not(:disabled) { background-color: #f57c00; transform: translateY(-2px); }
+.undo-button:disabled { background-color: #cccccc; color: #666666; cursor: not-allowed; box-shadow: none; }
+
+.rules-button { background-color: #2196F3; color: white; }
+.rules-button:hover { background-color: #1976D2; transform: translateY(-2px); }
+
+.settings-button { background-color: #9C27B0; color: white; }
+.settings-button:hover { background-color: #7B1FA2; transform: translateY(-2px); }
+
+.ranking-button {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.ranking-button:hover { transform: translateY(-2px); }
+
+.rating-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+/* 游戏模式栏 */
+.game-mode-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.game-mode-bar button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #333333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.game-mode-bar button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+}
+
+.game-mode-bar button.active {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+.replay-button {
+  background: #FF5722 !important;
+  color: white !important;
+  border-color: #FF5722 !important;
+}
+
+.game-board {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+/* 模态框 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 90%;
+  width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-content h2 {
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.winner-text {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #4CAF50;
+  margin-bottom: 1.5rem;
+  animation: celebrate 0.5s ease infinite alternate;
+}
+
+@keyframes celebrate {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
+.game-stats {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+.modal-button {
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-button:hover {
+  background-color: #1976D2;
+  transform: translateY(-2px);
+}
+
+/* 设置模态框 */
+.settings-section {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.settings-section h3 {
+  color: #333;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.mode-buttons, .ai-level-buttons, .theme-buttons, .toggle-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mode-buttons button, .ai-level-buttons button {
+  flex: 1;
+  min-width: 80px;
+  padding: 0.6rem 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #333333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mode-buttons button.active, .ai-level-buttons button.active {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+.theme-buttons button {
+  padding: 0.5rem 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  min-width: 60px;
+  color: #333333;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.theme-buttons button.active {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}
+
+.toggle-buttons button {
+  padding: 0.5rem 1.2rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  background: white;
+  color: #333333;
+}
+
+.toggle-buttons button.active {
+  background: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+}
+
+/* 在线对战 */
+.online-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.create-room-btn {
+  padding: 0.8rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.join-room {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.join-room input {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.join-room button {
+  padding: 0.6rem 1.2rem;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.room-info {
+  text-align: center;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.room-info p {
+  margin: 0.5rem 0;
+}
+
+.leave-room-btn {
+  margin-top: 0.8rem;
+  padding: 0.5rem 1.5rem;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* 游戏记录 */
+.record-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.record-tabs button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.record-tabs button.active {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+.record-tabs button:hover:not(.active) {
+  background: #f5f5f5;
+}
+
+.records-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.no-records {
+  text-align: center;
+  color: #999;
+  padding: 1rem;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.6rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.record-item:hover {
+  background: #f5f5f5;
+}
+
+.record-item span {
+  flex: 1;
+  text-align: center;
+}
+
+/* 回放模态框 */
+.replay-modal {
+  max-width: 400px;
+}
+
+.replay-modal .modal-drag-handle {
+  cursor: move;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  position: relative;
+}
+
+.replay-modal .modal-drag-handle::after {
+  content: '⋮⋮';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.replay-modal .modal-drag-handle h2 {
+  margin: 0;
+  cursor: move;
+  padding-right: 30px;
+}
+
+.replay-info {
+  margin-bottom: 1.5rem;
+}
+
+.replay-info p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.replay-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.replay-controls button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #333333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.replay-controls button:hover:not(:disabled) {
+  background: #2196F3;
+  color: white;
+}
+
+.replay-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 页脚 */
+.footer {
+  margin-top: 2rem;
+  padding: 1rem;
+  text-align: center;
+  opacity: 0.8;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.footer p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .app { padding: 1rem; }
+  h1 { font-size: 1.8rem; }
+  
+  .game-info {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .info-section, .time-section, .button-section {
+    width: 100%;
+  }
+  
+  .player-times {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  
+  .button-section {
+    justify-content: center;
+  }
+  
+  .modal-content {
+    padding: 1.5rem;
+  }
+  
+  .modal-content h2 {
+    font-size: 1.5rem;
+  }
+}

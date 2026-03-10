@@ -6,7 +6,7 @@
 
 ### 项目信息
 - **项目名称**: xiaochidian
-- **版本**: v1.2.6
+- **版本**: v1.2.7
 - **类型**: Web 应用（React + Node.js）
 - **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
 
@@ -271,5 +271,5 @@ tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force
 ## 维护者
 
 - **开发者**: 狮王李
-- **版本**: v1.2.6
+- **版本**: v1.2.7
 - **更新日期**: 2026-03-07

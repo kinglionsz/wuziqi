@@ -1,0 +1,213 @@
+.board {
+  display: inline-block;
+  border: 8px solid #8b5a2b;
+  background-color: var(--board-color, #DEB887);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  max-width: 90vw;
+  position: relative;
+}
+
+.board-row {
+  display: flex;
+}
+
+.board-cell {
+  width: 30px;
+  height: 30px;
+  border-right: 1px solid var(--line-color);
+  border-bottom: 1px solid var(--line-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease;
+  touch-action: manipulation;
+}
+
+/* 第一列左边框 */
+.board-cell:first-child {
+  border-left: 1px solid var(--line-color);
+}
+
+/* 第一行上边框 */
+.board-row:first-child .board-cell {
+  border-top: 1px solid var(--line-color);
+}
+
+.board-cell:hover {
+  background-color: rgba(230, 200, 156, 0.5);
+}
+
+.board-cell:active {
+  background-color: rgba(230, 200, 156, 0.7);
+}
+
+/* 星位点 - 定位在交叉点 */
+.star-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-color);
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.star-point.center-star {
+  width: 10px;
+  height: 10px;
+}
+
+/* 棋子 */
+.stone {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  position: absolute;
+  transform: scale(0.8);
+  animation: stoneAppear 0.3s ease-out forwards;
+  z-index: 2;
+  /* GPU加速 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+@keyframes stoneAppear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  80% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.stone.black {
+  background: radial-gradient(circle at 30% 30%, #333, #000);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+.stone.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #e0e0e0);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+}
+
+/* 最后一步标记 */
+.stone.last-move {
+  box-shadow: 
+    0 0 0 3px var(--last-move-color),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1);
+  /* 移动端强制重绘 */
+  transform: translateZ(0) scale(1);
+}
+
+.stone.white.last-move {
+  box-shadow: 
+    0 0 0 3px var(--last-move-color),
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* 移动端强制重绘 */
+  transform: translateZ(0) scale(1);
+}
+
+.last-move-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4444;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* 预览 */
+.preview-stone {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  position: absolute;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+  z-index: 3;
+}
+
+.preview-stone.black {
+  background: radial-gradient(circle at 30% 30%, #333, #000);
+}
+
+.preview-stone.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #e0e0e0);
+  border: 1px solid #ddd;
+}
+
+/* 响应式调整 */
+@media (max-width: 600px) {
+  .board {
+    padding: 8px;
+    border-width: 6px;
+  }
+  
+  .board-cell {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .stone {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .preview-stone {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .star-point {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@media (max-width: 400px) {
+  .board {
+    padding: 6px;
+    border-width: 4px;
+  }
+  
+  .board-cell {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .stone {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .preview-stone {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .star-point {
+    width: 5px;
+    height: 5px;
+  }
+}

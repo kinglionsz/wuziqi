@@ -1,0 +1,6 @@
+export { VictoryModal } from './VictoryModal'
+export { RulesModal } from './RulesModal'
+export { ReplayModal } from './ReplayModal'
+export { SettingsModal } from './SettingsModal'
+export { RoomModal } from './RoomModal'
+export { RankingModal } from './RankingModal'
