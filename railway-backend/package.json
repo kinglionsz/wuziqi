@@ -1,7 +1,7 @@
 {
-  "name": "wuziqi-server",
-  "version": "1.2.7",
-  "description": "五子棋在线对战服务器",
+  "name": "wuziqi-server-railway",
+  "version": "2.0.0",
+  "description": "五子棋在线对战服务器 - Railway 容器版本（完整功能：断线重连、观众、计时器、排名）",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -12,9 +12,5 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "socket.io": "^4.7.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "node": "20"
+  }
 }

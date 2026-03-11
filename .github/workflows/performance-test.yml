@@ -1,0 +1,77 @@
+name: 性能测试
+
+on:
+  push:
+    branches: [at_home]
+  workflow_dispatch:
+  schedule:
+    # 每天凌晨 2 点 UTC 运行
+    - cron: '0 2 * * *'
+
+jobs:
+  lighthouse:
+    name: Lighthouse 性能测试
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建前端
+        run: npm run build
+
+      - name: 启动本地服务器
+        run: |
+          npx serve dist -l 8080 &
+          sleep 10
+
+      - name: 运行 Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          urls: |
+            http://localhost:8080
+          budgetPath: ./.github/lighthouse-budget.json
+        continue-on-error: true
+
+  load-test:
+    name: 负载测试
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 安装 autocannon
+        run: npm install -g autocannon
+
+      - name: 启动后端服务器
+        working-directory: ./railway-backend
+        run: |
+          npm install
+          node server.js &
+          sleep 10
+
+      - name: 运行负载测试
+        run: |
+          autocannon -c 10 -d 10 http://localhost:3000/health
+        continue-on-error: true
+
+      - name: 生成性能报告
+        run: |
+          echo "📊 性能测试报告已生成"

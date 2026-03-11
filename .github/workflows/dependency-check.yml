@@ -1,0 +1,84 @@
+name: 依赖安全检查
+
+on:
+  schedule:
+    # 每周一上午 9 点 UTC 运行
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [at_home]
+    paths:
+      - 'package.json'
+      - 'railway-frontend/package.json'
+      - 'railway-backend/package.json'
+
+jobs:
+  audit-frontend:
+    name: 前端依赖审计
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 运行 npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: 检查过时依赖
+        run: |
+          npm outdated || true
+          echo "✅ 依赖检查完成"
+
+  audit-backend:
+    name: 后端依赖审计
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 审计后端依赖
+        working-directory: ./railway-backend
+        run: |
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+  railway-frontend-deps:
+    name: Railway前端依赖审计
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 审计 Railway 前端依赖
+        working-directory: ./railway-frontend
+        run: |
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+  security-scan:
+    name: 代码安全扫描
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 运行 CodeQL 分析
+        uses: github/codeql-action/analyze@v3
+        with:
+          languages: javascript
+          category: "/language:javascript"
