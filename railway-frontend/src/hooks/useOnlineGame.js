@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { io } from 'socket.io-client'
 
-// Socket.io 服务器地址
-// 生产环境使用 VITE_SOCKET_URL 环境变量，开发环境默认 localhost:3000
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||
-  (import.meta.env.PROD ? window.location.origin : 'http://localhost:3000')
+// Socket.io 服务器地址 - 直接硬编码 Railway 后端
+const SOCKET_URL = 'https://wuziqi-railway-production.up.railway.app'
 
 // 获取服务器 token（用于身份验证）
 const getServerToken = async () => {

@@ -345,10 +345,11 @@ CMD ["serve", "-s", "dist", "-l", "3000"]
 
 ### 当前状态
 
-- **当前版本**: v1.2.7
-- **部署时间**: 2026-03-10
+- **当前版本**: v1.2.8
+- **部署时间**: 2026-03-11
 - ✅ **游戏功能**: 在线对战完全正常
 - ✅ **WebSocket**: 实时通信正常
+- ✅ **项目文档**: 已更新并部署
 - ⚠️ **数据库**: 使用内存存储（容器重启后数据丢失）
 
 ### 数据库配置说明
@@ -679,6 +680,7 @@ npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --target
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
+| **v1.2.8** | 2026-03-11 | 文档更新：修正在线试玩地址，部署到 CloudBase 静态托管 |
 | **v1.2.7** | 2026-03-10 | Railway 后端部署成功，添加 Dockerfile 配置解决构建问题；前端部署到 MiniMax |
 | **v1.2.7** | 2026-03-10 | 恢复 CloudBase 规则文件，更新 EdgeOne 部署配置 |
 | **v1.2.5** | 2026-03-06 | 新增观众模式功能，实时显示观众人数；添加 WebSocket Token 身份验证机制 |
@@ -824,9 +826,10 @@ netsh advfirewall firewall add rule name="Node Server Port 3000" dir=in action=a
 |------|------|
 | 前端（静态网站） | https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ |
 | 后端（云托管） | https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com |
+| 项目文档 | https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/docs.html |
 
 ### 部署时间
-- 2026-03-01
+- 2026-03-11 (文档更新 v1.2.8)
 
 ### CloudBase 资源
 - 环境 ID：codebuddy-9gu42kpn62ead2e2

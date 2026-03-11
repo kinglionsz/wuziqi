@@ -1113,7 +1113,7 @@ export async function main(event, context) {
 // 如果不是 CloudBase 函数型环境，则直接启动服务器（容器型部署或本地开发）
 if (typeof process.env.TCB_FUNCTION_NAME === 'undefined') {
   httpServer.listen(PORT, '0.0.0.0', async () => {
-    console.log(`🎮 五子棋在线对战服务器 v1.2.5 已启动`)
+    console.log(`🎮 五子棋在线对战服务器 v1.2.7 已启动`)
     console.log(`📡 监听端口: ${PORT}`)
 
     // 初始化数据库
