@@ -1,25 +1,42 @@
-/**
- * 五子棋前端服务器
- * 用于 Railway 静态网站托管
- */
-import express from 'express'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
+const express = require('express');
+const path = require('path');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const app = express()
-const PORT = process.env.PORT || 3000
+// 后端地址
+const BACKEND_URL = process.env.BACKEND_URL || 'https://wuziqi-railway-production.up.railway.app';
 
-// 提供静态文件服务
-app.use(express.static(join(__dirname, 'dist')))
+// 重要：代理必须放在静态文件服务之前！
 
-// SPA fallback - 返回 index.html
+// 代理 WebSocket 连接
+app.use('/socket.io', createProxyMiddleware({
+  target: BACKEND_URL,
+  changeOrigin: true,
+  ws: true,
+  logLevel: 'debug'
+}));
+
+// 代理 HTTP 请求到后端
+app.use('/api', createProxyMiddleware({
+  target: BACKEND_URL,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api': ''
+  }
+}));
+
+// 其他代理...
+
+// 放在代理之后
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Handle SPA routing
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist/index.html'))
-})
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎮 五子棋前端已启动: http://0.0.0.0:${PORT}`)
-})
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
