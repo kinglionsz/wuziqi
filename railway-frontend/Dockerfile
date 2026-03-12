@@ -7,17 +7,17 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# 复制依赖文件
-COPY package*.json ./
+# 复制依赖文件（从 railway-frontend 目录）
+COPY railway-frontend/package*.json ./
 
 # 安装生产依赖
 RUN npm install --production
 
-# 复制 Express 服务器
-COPY server.js ./
+# 复制 Express 服务器（从 railway-frontend 目录）
+COPY railway-frontend/server.js ./
 
-# 复制预构建的前端产物（CI/CD 会同步这里）
-COPY dist ./dist
+# 复制预构建的前端产物（从 railway-frontend/dist 目录）
+COPY railway-frontend/dist ./dist
 
 # 暴露端口（Railway 会通过 PORT 环境变量指定）
 EXPOSE 3000
