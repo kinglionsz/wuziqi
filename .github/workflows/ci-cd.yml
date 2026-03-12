@@ -296,18 +296,12 @@ jobs:
         run: |
           cd railway-backend
           railway up --ci
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_B_ID }}
-
+       
       - name: 部署前端到 Railway
         run: |
           cd railway-frontend
           railway up --ci
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-
+        
       - name: 等待部署完成
         run: |
           echo "⏳ 等待服务启动..."
