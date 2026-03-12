@@ -34,6 +34,15 @@ app.get('/', (req, res) => {
   res.send('五子棋在线对战服务器 (Railway) 运行中')
 })
 
+// 健康检查端点（用于 Railway 健康检查）
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: Date.now(),
+    uptime: process.uptime()
+  })
+})
+
 // 提供 token 给授权客户端
 app.get('/api/token', (req, res) => {
   res.json({ token: SERVER_TOKEN, timestamp: Date.now() })
