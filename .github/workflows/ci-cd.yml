@@ -164,7 +164,7 @@ jobs:
         run: |
           echo "准备后端服务文件..."
           mkdir -p /tmp/backend
-          cp railway-backend/* /tmp/backend/
+          cp -r railway-backend/* /tmp/backend/
           cp railway-backend/package*.json /tmp/backend/ || true
 
       - name: 启动后端服务
@@ -227,6 +227,7 @@ jobs:
 
       - name: 同步构建产物到 railway-frontend
         run: |
+          mkdir -p railway-frontend/dist
           rm -rf railway-frontend/dist/*
           cp -r dist/* railway-frontend/dist/
           echo "构建产物已同步到 railway-frontend/dist/"
@@ -297,6 +298,7 @@ jobs:
 
       - name: 同步构建产物到 railway-frontend
         run: |
+          mkdir -p railway-frontend/dist
           rm -rf railway-frontend/dist/*
           cp -r dist/* railway-frontend/dist/
           echo "构建产物已同步到 railway-frontend/dist/"
@@ -313,10 +315,11 @@ jobs:
         run: |
           npm install -g @railway/cli
 
-      - name: 验证 Railway 认证
+      - name: 登录 Railway
         run: |
-          echo "验证 Railway 环境变量配置..."
-          railway whoami
+          echo "调试: 开始执行Railway登录..."
+          echo "命令: railway login --browserless"
+          railway login --browserless
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
@@ -324,15 +327,11 @@ jobs:
         working-directory: ./railway-backend
         run: |
           railway up --service backend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: 部署前端服务
         working-directory: ./railway-frontend
         run: |
           railway up --service frontend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: 等待部署完成
         run: |
