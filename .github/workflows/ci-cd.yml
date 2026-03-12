@@ -9,7 +9,7 @@ on:
 
 env:
   NODE_VERSION: '24'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # ============================================
@@ -22,15 +22,15 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 安装依赖
         run: npm ci
@@ -50,15 +50,15 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 安装依赖
         run: npm ci
@@ -95,15 +95,15 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 安装依赖
         run: npm ci
@@ -133,7 +133,7 @@ jobs:
     needs: [build-frontend]
     services:
       backend:
-        image: node:20-slim
+        image: node:24-slim
         ports:
           - 3000:3000
         options: >-
@@ -156,15 +156,15 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 安装依赖
         run: npm ci
@@ -213,7 +213,7 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 下载前端构建产物
         uses: actions/download-artifact@v4
@@ -283,7 +283,7 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 下载前端构建产物
         uses: actions/download-artifact@v4
@@ -301,16 +301,16 @@ jobs:
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 安装 Railway CLI
         run: |
           npm install -g @railway/cli
 
       - name: 登录 Railway
-        run: railway login --headless ${{ secrets.RAILWAY_TOKEN }}
+        run: railway login --browserless
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
