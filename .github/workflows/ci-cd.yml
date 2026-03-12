@@ -160,6 +160,22 @@ jobs:
       - name: 安装 Playwright 浏览器
         run: npx playwright install --with-deps
 
+      - name: 准备后端服务
+        run: |
+          echo "准备后端服务文件..."
+          mkdir -p /tmp/backend
+          cp railway-backend/* /tmp/backend/
+          cp railway-backend/package*.json /tmp/backend/ || true
+
+      - name: 启动后端服务
+        run: |
+          echo "启动后端服务..."
+          cd /tmp/backend
+          npm install --production
+          npm start &
+          sleep 10
+          echo "后端服务启动完成"
+
       - name: 下载前端构建产物
         uses: actions/download-artifact@v4
         with:
