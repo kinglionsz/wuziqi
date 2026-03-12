@@ -292,19 +292,20 @@ jobs:
         run: |
           npm install -g @railway/cli
 
-      - name: 登录 Railway
-        run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: 设置 Railway Token
+        run: echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}" >> $GITHUB_ENV
 
-      - name: 部署后端到 Railway
-        run: |
-          cd railway-backend
-          railway up --ci
-       
+      - name: 验证 Railway 登录状态
+        run: railway whoami
+
       - name: 部署前端到 Railway
         run: |
           cd railway-frontend
+          railway up --ci
+ 
+      - name: 部署后端到 Railway
+        run: |
+          cd railway-backend
           railway up --ci
         
       - name: 等待部署完成
