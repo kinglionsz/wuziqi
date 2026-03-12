@@ -289,21 +289,21 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 安装 Railway CLI
-  run: |
-    npm install -g @railway/cli
+        run: |
+          npm install -g @railway/cli
 
-- name: 登录到 Railway
-  run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
+      - name: 登录到 Railway
+        run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
 
-- name: 部署后端到 Railway
-  run: |
-    cd railway-backend
-    railway deploy
+      - name: 部署后端到 Railway
+        run: |
+          cd railway-backend
+          railway deploy
 
-- name: 部署前端到 Railway
-  run: |
-    cd railway-frontend
-    railway deploy
+      - name: 部署前端到 Railway
+        run: |
+          cd railway-frontend
+          railway deploy
 
       - name: 等待部署完成
         run: |
