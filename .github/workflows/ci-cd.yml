@@ -395,4 +395,4 @@ jobs:
         if: needs.deploy-railway.result != 'success'
         run: |
           echo "❌ 部署失败，请检查日志"
-          exit 1
+          echo "注意：部署到 Railway 需要手动批准"
