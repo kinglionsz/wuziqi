@@ -139,18 +139,6 @@ jobs:
         options: >-
           --workdir /app
           --name backend-service
-        steps:
-          - uses: actions/checkout@v4
-          - name: 准备后端文件
-            run: |
-              mkdir -p /tmp/backend
-              cp railway-backend/* /tmp/backend/
-          - name: 启动后端
-            working-directory: /tmp/backend
-            run: |
-              npm install
-              npm start &
-              sleep 10
 
     steps:
       - name: 检出代码
@@ -310,7 +298,10 @@ jobs:
           npm install -g @railway/cli
 
       - name: 登录 Railway
-        run: railway login --browserless
+        run: |
+          echo "调试: 开始执行Railway登录..."
+          echo "命令: railway login --browserless"
+          railway login --browserless
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
