@@ -1,0 +1,6 @@
+fix: 修复 Railway 部署认证，使用 RAILWAY_TOKEN 替代 login --browserless
+
+- 删除错误的 railway login --browserless 命令
+- 使用 RAILWAY_TOKEN 环境变量直接认证
+- 修复 ci-cd.yml 和 deploy-dev.yml 工作流
+- 创建 railway-deploy Skill 记录正确配置
