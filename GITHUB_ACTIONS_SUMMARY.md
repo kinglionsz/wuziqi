@@ -71,6 +71,11 @@
 
 ## 🔧 配置详情
 
+### Node.js 版本配置
+- **当前版本**: Node.js 24 (从 2026-03-12 开始)
+- **弃用版本**: Node.js 20 (将在 2026-06-02 停止支持)
+- **环境变量**: `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` (强制使用 Node.js 24)
+
 ### 主 CI/CD 流水线 (`ci-cd.yml`)
 
 | Job 名称 | 功能 | 依赖 | 条件 |
@@ -231,6 +236,10 @@ railway logs
 ---
 
 ## 📝 更新日志
+
+### 2026-03-12
+- ✅ 升级所有工作流到 Node.js 24，解决 GitHub Actions Node.js 20 弃用问题
+- ✅ 添加 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` 环境变量
 
 ### 2024-03-11
 - ✅ 修改所有工作流触发分支为 `at_home`
