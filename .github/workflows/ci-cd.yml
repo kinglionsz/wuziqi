@@ -288,23 +288,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 安装 Railway CLI
-        run: |
-          npm install -g @railway/cli
+      - name: 部署到 Railway
+        uses: railwayapp/railway-github-action@v1
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: backend
+          root: railway-backend
 
-      - name: 部署后端服务
-        working-directory: ./railway-backend
-        run: |
-          railway up --service backend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-      - name: 部署前端服务
-        working-directory: ./railway-frontend
-        run: |
-          railway up --service frontend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: 部署前端到 Railway
+        uses: railwayapp/railway-github-action@v1
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: frontend
+          root: railway-frontend
 
       - name: 等待部署完成
         run: |
