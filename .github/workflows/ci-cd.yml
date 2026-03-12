@@ -292,20 +292,19 @@ jobs:
         run: |
           npm install -g @railway/cli
 
-      - name: 登录 Railway
-        run: railway login --browserless
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
       - name: 部署后端服务
         working-directory: ./railway-backend
         run: |
           railway up --service backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: 部署前端服务
         working-directory: ./railway-frontend
         run: |
           railway up --service frontend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: 等待部署完成
         run: |
