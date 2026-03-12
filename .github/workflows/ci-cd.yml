@@ -21,9 +21,13 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -45,10 +49,14 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
@@ -86,10 +94,14 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
@@ -143,10 +155,14 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
@@ -196,6 +212,8 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: 下载前端构建产物
         uses: actions/download-artifact@v4
@@ -264,6 +282,8 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: 下载前端构建产物
         uses: actions/download-artifact@v4
@@ -281,6 +301,8 @@ jobs:
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 安装 Railway CLI
