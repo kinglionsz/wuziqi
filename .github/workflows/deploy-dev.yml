@@ -41,23 +41,16 @@ jobs:
       - name: 安装 Railway CLI
         run: npm install -g @railway/cli
 
-      - name: 登录 Railway
-        run: |
-          echo "调试: 开始执行Railway登录..."
-          echo "命令: railway login --browserless"
-          railway login --browserless
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-      - name: 选择开发项目
-        run: railway project
-
       - name: 部署后端
         working-directory: ./railway-backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --service backend-dev
 
       - name: 部署前端
         working-directory: ./railway-frontend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --service frontend-dev
 
       - name: 等待部署

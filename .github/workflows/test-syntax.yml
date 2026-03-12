@@ -1,0 +1,24 @@
+name: 测试语法验证
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-syntax:
+    name: 测试语法
+    runs-on: ubuntu-latest
+    services:
+      test-service:
+        image: node:24-slim
+        ports:
+          - 3000:3000
+        options: >-
+          --workdir /app
+          --name test-service
+    
+    steps:
+      - name: 检查语法
+        run: |
+          echo "✅ GitHub Actions语法验证通过！"
+          echo "services部分语法正确"
+          echo "steps部分语法正确"

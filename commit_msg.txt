@@ -1,0 +1,5 @@
+fix: fix notification job and add cloudbase to ESLint ignore
+
+- Remove exit 1 from notification job to prevent failure when deploy is skipped
+- Add cloudbase directory to ESLint ignore patterns
+- Ensure all tests can pass even when Railway deployment is pending approval

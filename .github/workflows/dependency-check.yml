@@ -12,18 +12,29 @@ on:
       - 'railway-frontend/package.json'
       - 'railway-backend/package.json'
 
+env:
+  NODE_VERSION: '24'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: false
+
 jobs:
   audit-frontend:
     name: 前端依赖审计
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 运行 npm audit
         run: npm audit --audit-level=moderate
@@ -37,14 +48,20 @@ jobs:
   audit-backend:
     name: 后端依赖审计
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 审计后端依赖
         working-directory: ./railway-backend
@@ -55,14 +72,20 @@ jobs:
   railway-frontend-deps:
     name: Railway前端依赖审计
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
       - name: 审计 Railway 前端依赖
         working-directory: ./railway-frontend
