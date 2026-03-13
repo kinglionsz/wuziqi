@@ -38,8 +38,8 @@ jobs:
         env:
           NODE_ENV: development
 
-      - name: 安装 Railway CLI (3.9.x 版本)
-        run: npm install -g @railway/cli@3.9.2
+      - name: 安装 Railway CLI (3.8.x 版本)
+        run: npm install -g @railway/cli@3.8.2
 
       - name: 诊断 CLI 版本
         run: railway --version
