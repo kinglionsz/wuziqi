@@ -311,7 +311,18 @@ jobs:
           git config user.email "actions@github.com"
           git add railway-frontend/dist/
           git diff --staged --quiet || git commit -m "chore: 同步前端构建产物 [skip ci]"
-          git push
+          
+          echo "🔄 检查并拉取远程更改..."
+          git fetch origin at_home
+          LOCAL=$(git rev-parse HEAD)
+          REMOTE=$(git rev-parse origin/at_home)
+          if [ "$LOCAL" != "$REMOTE" ]; then
+            echo "远程有更新，需要合并..."
+            git pull --rebase origin at_home
+          fi
+          
+          echo "📤 推送到远程..."
+          git push origin at_home
 
       - name: 等待 Railway 自动部署
         run: |
