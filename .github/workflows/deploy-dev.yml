@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -38,21 +40,33 @@ jobs:
         env:
           NODE_ENV: development
 
-      - name: 同步构建产物到 railway-frontend
+      - name: 同步构建产物到 railway-frontend 并提交
         run: |
           echo "📦 同步构建产物到 railway-frontend/dist/..."
           rm -rf railway-frontend/dist
           cp -r dist railway-frontend/dist
           ls -la railway-frontend/dist/
+          
+          echo "📝 提交更改以触发 Railway 前端自动部署..."
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add railway-frontend/dist/
+          git diff --staged --quiet || git commit -m "chore: 同步前端构建产物 [skip ci]"
+          git push
 
       - name: 等待 Railway 自动部署
         run: |
           echo "⏳ 等待 Railway 自动部署完成..."
-          echo "Railway 已通过 GitHub 集成自动部署"
-          sleep 30
+          echo "后端: Railway 检测到代码更改后会自动部署"
+          echo "前端: Railway 检测到 railway-frontend/dist/ 更改后会自动部署"
+          sleep 45
 
       - name: 健康检查
         run: |
           echo "🔍 检查开发环境..."
+          echo "检查后端服务..."
           curl -f https://wuziqi-railway-production.up.railway.app/health || exit 1
-          echo "✅ 开发环境部署成功！"
+          echo "✅ 后端服务正常！"
+          echo ""
+          echo "前端服务 URL: https://wuziqi-frontend-production.up.railway.app"
+          echo "✅ 开发环境部署完成！"
