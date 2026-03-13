@@ -334,13 +334,9 @@ jobs:
       - name: 验证 Railway 登录状态
         run: railway whoami
 
-      - name: 调试 Token
-        run: |
-          echo "Token exists: ${{ secrets.RAILWAY_TOKEN != '' }}"
-          echo "Token prefix: ${{ secrets.RAILWAY_TOKEN }}"
-
       - name: 验证 Token 设置成功
-        run: echo "Token length: ${#RAILWAY_TOKEN}"
+        run: |
+          echo "Token length: ${#RAILWAY_TOKEN}"
 
       - name: 部署前端到 Railway
         run: |
