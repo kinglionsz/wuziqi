@@ -2,17 +2,7 @@
   "$schema": "https://railway.com/railway.json",
   "name": "wuziqi-frontend",
   "build": {
-    "builder": "NIXPACKS",
-    "nixpacksPlan": {
-      "phases": {
-        "setup": {
-          "nixPkgs": ["nodejs_20"]
-        },
-        "build": {
-          "cmds": ["npm install --production"]
-        }
-      }
-    }
+    "builder": "NIXPACKS"
   },
   "deploy": {
     "startCommand": "node server.js",
