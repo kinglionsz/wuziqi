@@ -70,10 +70,10 @@ jobs:
       - name: 检查构建产物
         run: |
           if [ ! -f dist/index.html ]; then
-            echo "❌ 构建失败：未找到 index.html"
+            echo "构建失败：未找到 index.html"
             exit 1
           fi
-          echo "✅ 构建成功！"
+          echo "构建成功！"
           ls -lh dist/
 
   # ============================================
@@ -292,64 +292,85 @@ jobs:
         run: |
           npm install -g @railway/cli
 
+      - name: 诊断 CLI 版本
+        run: railway --version
+
+      - name: 清除旧配置
+        run: |
+          rm -rf ~/.config/railway/
+          rm -rf ~/.railway/
+        continue-on-error: true
+
       - name: 设置 Railway Token
         run: echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}" >> $GITHUB_ENV
 
-      - name: 验证 Token 是否设置成功
-        run: echo "Token length: ${#RAILWAY_TOKEN}"
+      - name: 验证 Token 是否设置
+        run: |
+          echo "Token length: ${#RAILWAY_TOKEN}"
+          echo "Token prefix: ${RAILWAY_TOKEN:0:4}"
 
       - name: 验证 Railway 登录状态
         run: railway whoami
 
+      - name: 调试 Token
+        run: |
+          echo "Token exists: ${{ secrets.RAILWAY_TOKEN != '' }}"
+          echo "Token prefix: ${{ secrets.RAILWAY_TOKEN }}"
+
+      - name: 验证 Token 设置成功
+        run: echo "Token length: ${#RAILWAY_TOKEN}"
+
       - name: 部署前端到 Railway
         run: |
+          echo "部署前端到 Railway"
           cd railway-frontend
           railway up --ci
- 
+
       - name: 部署后端到 Railway
         run: |
+          echo "部署后端到 Railway"
           cd railway-backend
           railway up --ci
-        
+
       - name: 等待部署完成
         run: |
-          echo "⏳ 等待服务启动..."
+          echo "等待服务启动..."
           sleep 30
 
       - name: 健康检查
         run: |
-          echo "🔍 执行健康检查..."
-          
+          echo "执行健康检查..."
+
           # 检查后端健康状态
           BACKEND_URL="https://wuziqi-railway-production.up.railway.app/health"
           echo "检查后端: $BACKEND_URL"
-          
+
           MAX_RETRIES=5
           RETRY_COUNT=0
-          
+
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL)
             echo "尝试 $((RETRY_COUNT + 1))/$MAX_RETRIES - HTTP 状态码: $HTTP_CODE"
-            
+
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "✅ 后端健康检查通过！"
+              echo "后端健康检查通过！"
               break
             fi
-            
+
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
               sleep 10
             fi
           done
-          
+
           if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-            echo "❌ 后端健康检查失败"
+            echo "后端健康检查失败"
             exit 1
           fi
 
       - name: 获取部署信息
         run: |
-          echo "📊 部署信息："
+          echo "部署信息："
           railway status
           railway domain
 
@@ -365,12 +386,12 @@ jobs:
       - name: 发送成功通知
         if: needs.deploy-railway.result == 'success'
         run: |
-          echo "🎉 部署成功！"
+          echo "部署成功！"
           echo "前端地址: https://wuziqi-frontend-production.up.railway.app"
           echo "后端地址: https://wuziqi-railway-production.up.railway.app"
 
       - name: 发送失败通知
         if: needs.deploy-railway.result != 'success'
         run: |
-          echo "❌ 部署失败，请检查日志"
+          echo "部署失败，请检查日志"
           exit 1
