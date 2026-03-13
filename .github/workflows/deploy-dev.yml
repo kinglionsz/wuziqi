@@ -39,7 +39,7 @@ jobs:
           NODE_ENV: development
 
       - name: 安装 Railway CLI (3.x 版本支持旧版 Token)
-        run: npm install -g @railway/cli@3.24.1
+        run: npm install -g @railway/cli@3.5.2
 
       - name: 诊断 CLI 版本
         run: railway --version
