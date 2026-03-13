@@ -49,21 +49,21 @@ jobs:
           cp -r dist railway-frontend/dist
           ls -la railway-frontend/dist/
 
-      - name: 安装 Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: 部署前端到 Railway
+      - name: 提交构建产物触发 Railway 自动部署
         run: |
-          echo "🚀 部署前端到 Railway..."
-          cd railway-frontend
-          railway up --service=wuziqi-frontend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          echo "🚀 提交构建产物触发 Railway 自动部署..."
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add railway-frontend/dist/
+          git diff --staged --quiet || git commit -m "chore: 同步前端构建产物到开发环境"
+          git push origin at_home
+          echo "✅ 构建产物已提交，Railway 将自动部署"
 
-      - name: 等待部署完成
+      - name: 等待 Railway 自动部署
         run: |
-          echo "⏳ 等待部署完成..."
-          sleep 30
+          echo "⏳ 等待 Railway 自动部署完成..."
+          echo "Railway 检测到代码更改后会自动部署前端"
+          sleep 45
 
       - name: 健康检查
         run: |
