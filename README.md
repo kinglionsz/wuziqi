@@ -680,6 +680,7 @@ npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --target
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
+| **v2.1.0** | 2026-03-13 | Railway GitHub 自动部署优化：前后端统一使用 GitHub Actions 自动同步构建产物并触发 Railway 自动部署，修复前端部署配置 |
 | **v2.0.0** | 2026-03-11 | Railway 部署重大更新：完整功能后端（断线重连、观众、计时器、排名），CI/CD 自动部署，统一版本号 |
 | **v1.2.8** | 2026-03-11 | 文档更新：修正在线试玩地址，部署到 CloudBase 静态托管 |
 | **v1.2.7** | 2026-03-10 | Railway 后端部署成功，添加 Dockerfile 配置解决构建问题；前端部署到 MiniMax |

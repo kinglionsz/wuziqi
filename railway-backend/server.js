@@ -922,7 +922,7 @@ io.on('connection', (socket) => {
 
 // 启动服务器
 httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎮 五子棋在线对战服务器 (Railway) v2.0.0 已启动`)
+  console.log(`🎮 五子棋在线对战服务器 (Railway) v2.1.0 已启动`)
   console.log(`📡 监听端口: ${PORT}`)
   console.log(`💾 存储模式: 内存存储（适合 Railway 容器部署）`)
 })

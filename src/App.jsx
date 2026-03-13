@@ -1,6 +1,6 @@
-// 五子棋游戏 - App.jsx v2.0.0
-// 项目版本：xiaochidian v2.0.0
-// 更新日期：2026年3月12日
+// 五子棋游戏 - App.jsx v2.1.0
+// 项目版本：xiaochidian v2.1.0
+// 更新日期：2026年3月13日
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Board from './components/Board'
 import { VictoryModal, RulesModal, ReplayModal, SettingsModal, RoomModal, RankingModal } from './components/Modals'
@@ -473,7 +473,7 @@ function App() {
       </audio>
 
       <div className="footer">
-        <p>©️狮王李 保留所有权利 2026 | 版本 v2.0.0</p>
+        <p>©️狮王李 保留所有权利 2026 | 版本 v2.1.0</p>
       </div>
     </div>
   )
