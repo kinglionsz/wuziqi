@@ -42,31 +42,29 @@ jobs:
         env:
           NODE_ENV: development
 
-      - name: 同步构建产物到 railway-frontend 并提交
+      - name: 同步构建产物到 railway-frontend
         run: |
           echo "📦 同步构建产物到 railway-frontend/dist/..."
           rm -rf railway-frontend/dist
           cp -r dist railway-frontend/dist
           ls -la railway-frontend/dist/
-          
-          echo "📝 提交更改以触发 Railway 前端自动部署..."
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add railway-frontend/dist/
-          git diff --staged --quiet || git commit -m "chore: 同步前端构建产物"
-          
-          echo "🔄 获取远程更改..."
-          git fetch origin at_home
-          
-          echo "📤 强制推送到远程（覆盖构建产物）..."
-          git push origin at_home --force
 
-      - name: 等待 Railway 自动部署
+      - name: 安装 Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: 部署前端到 Railway
         run: |
-          echo "⏳ 等待 Railway 自动部署完成..."
-          echo "后端: Railway 检测到代码更改后会自动部署"
-          echo "前端: Railway 检测到 railway-frontend/dist/ 更改后会自动部署"
-          sleep 45
+          echo "🚀 部署前端到 Railway..."
+          cd railway-frontend
+          railway login --browserless
+          railway up --service=wuziqi-frontend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: 等待部署完成
+        run: |
+          echo "⏳ 等待部署完成..."
+          sleep 30
 
       - name: 健康检查
         run: |
