@@ -303,8 +303,11 @@ jobs:
         run: |
           echo "📦 同步构建产物到 railway-frontend/dist/..."
           rm -rf railway-frontend/dist
-          cp -r dist railway-frontend/dist
+          mkdir -p railway-frontend/dist
+          cp -r dist/* railway-frontend/dist/
           ls -la railway-frontend/dist/
+          echo "📁 检查 dist 目录结构..."
+          find railway-frontend/dist -type f | head -20
           
           echo "📝 提交更改以触发 Railway 前端自动部署..."
           git config user.name "GitHub Actions"
