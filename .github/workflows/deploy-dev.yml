@@ -41,16 +41,29 @@ jobs:
       - name: 安装 Railway CLI
         run: npm install -g @railway/cli
 
+      - name: 诊断 CLI 版本
+        run: railway --version
+
+      - name: 清除旧配置
+        run: |
+          rm -rf ~/.config/railway/
+          rm -rf ~/.railway/
+        continue-on-error: true
+
+      - name: 设置 Railway Token
+        run: echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}" >> $GITHUB_ENV
+
+      - name: 验证 Token 设置
+        run: |
+          echo "Token length: ${#RAILWAY_TOKEN}"
+          echo "Token prefix: ${RAILWAY_TOKEN:0:4}"
+
       - name: 部署后端
         working-directory: ./railway-backend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --service backend-dev
 
       - name: 部署前端
         working-directory: ./railway-frontend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --service frontend-dev
 
       - name: 等待部署
