@@ -19,8 +19,8 @@ COPY dist ./dist
 # 复制服务器入口文件
 COPY server.js ./
 
-# 暴露端口（Railway 会通过 PORT 环境变量指定）
-EXPOSE 3000
+# 暴露端口（Railway 会通过 PORT 环境变量指定，默认8080）
+EXPOSE 8080
 
 # 启动服务器
 CMD ["node", "server.js"]
