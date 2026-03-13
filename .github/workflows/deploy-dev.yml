@@ -13,6 +13,8 @@ jobs:
   deploy-dev:
     name: 部署到开发环境
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     environment:
       name: development
       url: https://wuziqi-dev.up.railway.app
