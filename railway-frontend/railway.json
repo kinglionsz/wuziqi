@@ -1,7 +1,9 @@
 {
-  "$schema": "https://railway.com/railway.schema.json",
+  "$schema": "https://railway.com/railway.json",
+  "name": "wuziqi-frontend",
   "build": {
-    "builder": "nixpacks"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "numReplicas": 1,
