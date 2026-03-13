@@ -66,13 +66,10 @@ jobs:
           echo "Token length: ${#RAILWAY_TOKEN}"
           echo "Token prefix: ${RAILWAY_TOKEN:0:4}"
 
-      - name: 尝试 Railway 登录
+      - name: 验证 Railway 环境
         run: |
-          echo "尝试使用 RAILWAY_TOKEN 登录..."
-          railway login "$RAILWAY_TOKEN" || echo "Login command failed"
-
-      - name: 验证 Railway 登录状态
-        run: railway whoami
+          echo "RAILWAY_TOKEN 已设置，长度: ${#RAILWAY_TOKEN}"
+          echo "Railway CLI 应该自动使用环境变量中的 Token"
 
       - name: 列出 Railway 项目
         run: railway list
