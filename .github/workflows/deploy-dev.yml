@@ -47,5 +47,5 @@ jobs:
       - name: 健康检查
         run: |
           echo "🔍 检查开发环境..."
-          curl -f https://wuziqi-dev.up.railway.app/health || exit 1
+          curl -f https://wuziqi-railway-production.up.railway.app/health || exit 1
           echo "✅ 开发环境部署成功！"
