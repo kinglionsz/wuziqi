@@ -335,9 +335,9 @@ jobs:
           git config user.email "actions@github.com"
           
           echo "📌 更新部署时间戳以强制触发 Railway 重新部署..."
-          echo "# Deployed at $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> railway-frontend/railway.json
+          date -u +"%Y-%m-%d %H:%M:%S UTC" > railway-frontend/.deploy-timestamp
           
-          git add railway-frontend/dist/ railway-frontend/railway.json
+          git add railway-frontend/dist/ railway-frontend/.deploy-timestamp
           git diff --staged --quiet || git commit -m "chore: 同步前端构建产物 [deploy-$(date -u +%s)]"
           
           echo "🔄 获取远程更改..."
