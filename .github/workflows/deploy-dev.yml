@@ -60,11 +60,11 @@ jobs:
 
       - name: 部署后端
         working-directory: ./railway-backend
-        run: railway up --service backend-dev
+        run: railway up --service wuziqi-backend
 
       - name: 部署前端
         working-directory: ./railway-frontend
-        run: railway up --service frontend-dev
+        run: railway up --service wuziqi-frontend
 
       - name: 等待部署
         run: sleep 20
