@@ -314,8 +314,12 @@ jobs:
           echo "📝 提交更改以触发 Railway 前端自动部署..."
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add railway-frontend/dist/
-          git diff --staged --quiet || git commit -m "chore: 同步前端构建产物"
+          
+          echo "📌 更新部署时间戳以强制触发 Railway 重新部署..."
+          echo "# Deployed at $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> railway-frontend/railway.json
+          
+          git add railway-frontend/dist/ railway-frontend/railway.json
+          git diff --staged --quiet || git commit -m "chore: 同步前端构建产物 [deploy-$(date -u +%s)]"
           
           echo "🔄 获取远程更改..."
           git fetch origin at_home
