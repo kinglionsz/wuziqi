@@ -280,12 +280,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push-docker, test-e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/at_home'
+    permissions:
+      contents: write
     environment:
       name: production
       url: https://wuziqi-frontend-production.up.railway.app
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -295,74 +299,33 @@ jobs:
           name: frontend-dist
           path: dist/
 
-      - name: 同步构建产物到 railway-frontend
+      - name: 同步构建产物到 railway-frontend 并提交
         run: |
-          mkdir -p railway-frontend/dist
-          rm -rf railway-frontend/dist/*
-          cp -r dist/* railway-frontend/dist/
-          echo "构建产物已同步到 railway-frontend/dist/"
+          echo "📦 同步构建产物到 railway-frontend/dist/..."
+          rm -rf railway-frontend/dist
+          cp -r dist railway-frontend/dist
           ls -la railway-frontend/dist/
+          
+          echo "📝 提交更改以触发 Railway 前端自动部署..."
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add railway-frontend/dist/
+          git diff --staged --quiet || git commit -m "chore: 同步前端构建产物 [skip ci]"
+          git push
 
-      - name: 设置 Node.js 环境
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
-      - name: 安装 Railway CLI
+      - name: 等待 Railway 自动部署
         run: |
-          npm install -g @railway/cli
-
-      - name: 诊断 CLI 版本
-        run: railway --version
-
-      - name: 清除旧配置
-        run: |
-          rm -rf ~/.config/railway/
-          rm -rf ~/.railway/
-        continue-on-error: true
-
-      - name: 设置 Railway Token
-        run: echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}" >> $GITHUB_ENV
-
-      - name: 验证 Token 是否设置
-        run: |
-          echo "Token length: ${#RAILWAY_TOKEN}"
-          echo "Token prefix: ${RAILWAY_TOKEN:0:4}"
-
-      - name: 验证 Railway 登录状态
-        run: railway whoami
-
-      - name: 验证 Token 设置成功
-        run: |
-          echo "Token length: ${#RAILWAY_TOKEN}"
-
-      - name: 部署前端到 Railway
-        run: |
-          echo "部署前端到 Railway"
-          cd railway-frontend
-          railway up --ci
-
-      - name: 部署后端到 Railway
-        run: |
-          echo "部署后端到 Railway"
-          cd railway-backend
-          railway up --ci
-
-      - name: 等待部署完成
-        run: |
-          echo "等待服务启动..."
-          sleep 30
+          echo "⏳ 等待 Railway 自动部署完成..."
+          echo "后端: Railway 检测到代码更改后会自动部署"
+          echo "前端: Railway 检测到 railway-frontend/dist/ 更改后会自动部署"
+          sleep 45
 
       - name: 健康检查
         run: |
-          echo "执行健康检查..."
-
-          # 检查后端健康状态
+          echo "🔍 检查部署环境..."
+          echo "检查后端服务..."
+          
           BACKEND_URL="https://wuziqi-railway-production.up.railway.app/health"
-          echo "检查后端: $BACKEND_URL"
-
           MAX_RETRIES=5
           RETRY_COUNT=0
 
@@ -371,7 +334,7 @@ jobs:
             echo "尝试 $((RETRY_COUNT + 1))/$MAX_RETRIES - HTTP 状态码: $HTTP_CODE"
 
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "后端健康检查通过！"
+              echo "✅ 后端健康检查通过！"
               break
             fi
 
@@ -382,15 +345,13 @@ jobs:
           done
 
           if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-            echo "后端健康检查失败"
+            echo "❌ 后端健康检查失败"
             exit 1
           fi
-
-      - name: 获取部署信息
-        run: |
-          echo "部署信息："
-          railway status
-          railway domain
+          
+          echo ""
+          echo "前端服务 URL: https://wuziqi-frontend-production.up.railway.app"
+          echo "✅ 部署完成！"
 
   # ============================================
   # Job 7: 部署通知
