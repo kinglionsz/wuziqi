@@ -1,8 +1,6 @@
 # Railway 部署配置 (需要提交)
 !railway-backend/
 !railway-frontend/
-!railway-frontend/dist/
-!railway-frontend/dist/**/
 
 # Logs
 logs
@@ -17,6 +15,10 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# 允许提交 railway-frontend/dist 用于部署
+!railway-frontend/dist/
+!railway-frontend/dist/**
 
 # Editor directories and files
 .vscode/*
