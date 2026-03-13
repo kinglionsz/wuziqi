@@ -69,7 +69,7 @@ jobs:
       - name: 尝试 Railway 登录
         run: |
           echo "尝试使用 RAILWAY_TOKEN 登录..."
-          railway login --token "$RAILWAY_TOKEN" || echo "Login command failed"
+          railway login "$RAILWAY_TOKEN" || echo "Login command failed"
 
       - name: 验证 Railway 登录状态
         run: railway whoami
