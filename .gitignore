@@ -1,6 +1,8 @@
 # Railway 部署配置 (需要提交)
 !railway-backend/
 !railway-frontend/
+!railway-frontend/dist/
+!railway-frontend/dist/**/
 
 # Logs
 logs
