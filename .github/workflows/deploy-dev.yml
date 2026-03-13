@@ -38,11 +38,19 @@ jobs:
         env:
           NODE_ENV: development
 
-      - name: 安装 Railway CLI
-        run: npm install -g @railway/cli
+      - name: 安装 Railway CLI (最新版)
+        run: npm install -g @railway/cli@latest
 
       - name: 诊断 CLI 版本
         run: railway --version
+
+      - name: 检查 Railway CLI 支持的 Token 格式
+        run: |
+          echo "Railway CLI 版本:"
+          railway --version
+          echo ""
+          echo "检查环境变量:"
+          env | grep -i railway || echo "No RAILWAY env vars found"
 
       - name: 清除旧配置
         run: |
@@ -57,6 +65,11 @@ jobs:
         run: |
           echo "Token length: ${#RAILWAY_TOKEN}"
           echo "Token prefix: ${RAILWAY_TOKEN:0:4}"
+
+      - name: 尝试 Railway 登录
+        run: |
+          echo "尝试使用 RAILWAY_TOKEN 登录..."
+          railway login --token "$RAILWAY_TOKEN" || echo "Login command failed"
 
       - name: 验证 Railway 登录状态
         run: railway whoami
