@@ -38,6 +38,13 @@ jobs:
         env:
           NODE_ENV: development
 
+      - name: 同步构建产物到 railway-frontend
+        run: |
+          echo "📦 同步构建产物到 railway-frontend/dist/..."
+          rm -rf railway-frontend/dist
+          cp -r dist railway-frontend/dist
+          ls -la railway-frontend/dist/
+
       - name: 等待 Railway 自动部署
         run: |
           echo "⏳ 等待 Railway 自动部署完成..."
