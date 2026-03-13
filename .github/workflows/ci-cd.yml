@@ -64,7 +64,21 @@ jobs:
         run: npm ci
 
       - name: 构建前端
-        run: npm run build
+        run: |
+          echo "🔍 检查环境变量..."
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ]; then
+            echo "❌ VITE_SUPABASE_URL 未设置"
+            exit 1
+          else
+            echo "✅ VITE_SUPABASE_URL 已设置"
+          fi
+          if [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
+            echo "❌ VITE_SUPABASE_ANON_KEY 未设置"
+            exit 1
+          else
+            echo "✅ VITE_SUPABASE_ANON_KEY 已设置"
+          fi
+          npm run build
         env:
           NODE_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
