@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋游戏项目技术文档</title>
+    <style>
+        /* ========================================
+           全局重置与基础样式 - 苹果毛玻璃风格
+        ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-bg-strong: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.22);
+            --glass-shadow: rgba(0, 0, 0, 0.35);
+            --accent-blue: #2997ff;
+            --accent-purple: #bf5af2;
+            --accent-green: #30d158;
+            --accent-orange: #ff9f0a;
+            --accent-yellow: #ffd60a;
+            --text-primary: rgba(255, 255, 255, 0.92);
+            --text-secondary: rgba(255, 255, 255, 0.55);
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --blur-amount: 20px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+            background: #000;
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ========================================
+           动态渐变背景 - 黑底灰白风格
+        ======================================== */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 15% 25%, rgba(200, 200, 210, 0.15) 0%, transparent 45%),
+                radial-gradient(ellipse at 85% 75%, rgba(180, 180, 195, 0.12) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 50%, rgba(160, 160, 175, 0.08) 0%, transparent 60%),
+                linear-gradient(180deg, #050505 0%, #0a0a0c 40%, #0d0d10 70%, #080808 100%);
+            animation: bgShift 25s ease-in-out infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { background-position: 0% 0%, 100% 75%, 50% 50%, 0% 0%; }
+            25% { background-position: 25% 35%, 75% 65%, 50% 50%, 0% 0%; }
+            50% { background-position: 45% 55%, 55% 45%, 50% 50%, 0% 50%; }
+            75% { background-position: 30% 40%, 70% 60%, 50% 50%, 50% 100%; }
+        }
+
+        /* 浮动光球效果 - 灰白银色调 */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.4;
+            animation: float 18s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(220, 220, 235, 0.25) 0%, transparent 70%);
+            top: 8%;
+            left: 15%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(200, 205, 220, 0.2) 0%, transparent 70%);
+            top: 55%;
+            right: 12%;
+            animation-delay: -6s;
+        }
+
+        .orb-3 {
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(180, 185, 200, 0.18) 0%, transparent 70%);
+            bottom: 15%;
+            left: 45%;
+            animation-delay: -12s;
+        }
+
+        .orb-4 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(240, 240, 250, 0.15) 0%, transparent 70%);
+            top: 35%;
+            right: 35%;
+            animation-delay: -3s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(35px, -25px) scale(1.03); }
+            66% { transform: translate(-25px, 30px) scale(0.97); }
+        }
+
+        /* ========================================
+           左侧导航栏 - 毛玻璃风格
+        ======================================== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            padding: 30px 0;
+            z-index: 1000;
+            overflow-y: auto;
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .sidebar-logo {
+            padding: 0 24px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo h1 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .sidebar-logo span {
+            font-size: 2rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin: 4px 12px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: var(--glass-bg-strong);
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(41, 151, 255, 0.3);
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+            width: 28px;
+            text-align: center;
+        }
+
+        /* ========================================
+           右侧主内容区
+        ======================================== */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .content-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .page-header h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* 内容卡片 - 毛玻璃风格 */
+        .content-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 32px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+        }
+
+        .content-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 600;
+        }
+
+        .card-title-icon {
+            font-size: 1.6rem;
+        }
+
+        /* 副标题 */
+        h3 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin: 32px 0 18px;
+            font-weight: 600;
+        }
+
+        h4 {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin: 24px 0 14px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 18px;
+            color: var(--text-secondary);
+            line-height: 1.75;
+        }
+
+        /* 标签 */
+        .tag {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 4px;
+        }
+
+        .tag-purple {
+            background: rgba(139, 92, 246, 0.25);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .tag-green {
+            background: rgba(16, 185, 129, 0.25);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .tag-blue {
+            background: rgba(59, 130, 246, 0.25);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .tag-orange {
+            background: rgba(255, 159, 10, 0.25);
+            color: #fbbf24;
+            border: 1px solid rgba(255, 159, 10, 0.3);
+        }
+
+        /* 技术栈表格 */
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 0.95rem;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .tech-table th,
+        .tech-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .tech-table th {
+            background: var(--glass-bg-strong);
+            color: var(--text-primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .tech-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* 文件树样式 */
+        .file-tree {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            padding: 28px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tree-line {
+            color: var(--text-secondary);
+            white-space: pre;
+            line-height: 1.8;
+        }
+
+        .tree-folder {
+            color: #60a5fa;
+        }
+
+        .tree-file {
+            color: #34d399;
+        }
+
+        .tree-comment {
+            color: var(--text-muted);
+        }
+
+        .tree-branch {
+            color: var(--text-muted);
+        }
+
+        /* 代码块 */
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid var(--glass-border);
+        }
+
+        .code-block pre {
+            color: var(--text-secondary);
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* 链接卡片 */
+        .link-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            padding: 14px 24px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 12px 12px 12px 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 16px rgba(41, 151, 255, 0.3);
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(41, 151, 255, 0.4);
+        }
+
+        /* 信息卡片网格 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 28px 0;
+        }
+
+        .info-item {
+            background: var(--glass-bg-strong);
+            padding: 24px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* 高亮框 */
+        .highlight-box {
+            background: rgba(41, 151, 255, 0.1);
+            border-left: 4px solid var(--accent-blue);
+            padding: 24px;
+            border-radius: 0 14px 14px 0;
+            margin: 24px 0;
+        }
+
+        /* 列表样式 */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 14px 0 14px 32px;
+            position: relative;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent-green);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .feature-list li strong {
+            color: var(--text-primary);
+        }
+
+        /* ========================================
+           流程图样式 - 苹果毛玻璃风格适配
+        ======================================== */
+        .flow-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .flow-tab {
+            padding: 12px 20px;
+            background: var(--glass-bg-strong);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .flow-tab.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 16px rgba(41, 151, 255, 0.3);
+        }
+
+        .flow-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .flow-content {
+            display: none;
+            width: 100%;
+        }
+
+        .flow-content.active {
+            display: block;
+        }
+
+        .flowchart-container {
+            background: var(--glass-bg-strong);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+            min-height: 500px;
+            min-width: 320px;
+            width: 100%;
+            position: relative;
+            overflow-x: auto;
+            border: 1px solid var(--glass-border);
+        }
+
+        .flowchart-svg {
+            min-width: 750px;
+            min-height: 500px;
+            display: block;
+        }
+
+        .flow-node {
+            cursor: pointer;
+        }
+
+        .flow-node-rect {
+            rx: 8;
+            ry: 8;
+        }
+
+        .flow-node-action {
+            fill: var(--accent-blue);
+        }
+
+        .flow-node-decision {
+            fill: var(--accent-orange);
+        }
+
+        .flow-node-end {
+            fill: var(--accent-green);
+        }
+
+        .flow-text {
+            fill: white;
+            font-size: 13px;
+            font-weight: 500;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        .flow-link {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.4);
+            stroke-width: 2;
+        }
+
+        .flow-label {
+            fill: var(--text-muted);
+            font-size: 11px;
+            text-anchor: middle;
+        }
+
+        /* FAQ 样式 */
+        .faq-item {
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .faq-question {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+
+        .faq-answer {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* 页脚 */
+        footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        footer p {
+            margin: 10px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--accent-purple);
+        }
+
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(41, 151, 255, 0.4);
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(41, 151, 255, 0.5);
+        }
+
+        .back-to-top svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+
+        /* ========================================
+           响应式设计
+        ======================================== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-content {
+                margin-left: 240px;
+                padding: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px 16px;
+            }
+
+            .content-card {
+                padding: 20px;
+                border-radius: 16px;
+                margin-bottom: 16px;
+            }
+
+            .page-header h2 {
+                font-size: 1.6rem;
+            }
+
+            .card-title {
+                font-size: 1.2rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .back-to-top {
+                bottom: 80px;
+                right: 16px;
+            }
+
+            .flow-tab {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* ========================================
+           动画效果
+        ======================================== */
+        .fade-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+        .stagger-5 { animation-delay: 0.5s; }
+
+        /* 内容卡片入场动画 */
+        .content-card {
+            opacity: 0;
+            animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* 装饰角标 */
+        .corner-accent {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+        }
+
+        .corner-accent.top-left {
+            top: 8px;
+            left: 8px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 10px 0 0 0;
+        }
+
+        .corner-accent.top-right {
+            top: 8px;
+            right: 8px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 10px 0 0;
+        }
+
+        .corner-accent.bottom-left {
+            bottom: 8px;
+            left: 8px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 10px;
+        }
+
+        .corner-accent.bottom-right {
+            bottom: 8px;
+            right: 8px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 10px 0;
+        }
+
+        /* 移动端导航按钮 */
+        .mobile-nav-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 1001;
+            width: 48px;
+            height: 48px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-nav-toggle span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            margin: 5px auto;
+            transition: 0.3s;
+            border-radius: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav-toggle {
+                display: block;
+            }
+        }
+
+        /* 移动端侧边栏 */
+        .mobile-sidebar {
+            display: none;
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1002;
+            padding: 80px 0 20px;
+            transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+        }
+
+        .mobile-sidebar.open {
+            left: 0;
+        }
+
+        .mobile-sidebar-overlay {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mobile-sidebar-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-sidebar {
+                display: block;
+            }
+        }
+
+        /* 移动端底部导航 */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .mobile-bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            list-style: none;
+        }
+
+        .mobile-bottom-nav-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .mobile-bottom-nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 4px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.7rem;
+            transition: color 0.2s;
+        }
+
+        .mobile-bottom-nav-link.active {
+            color: var(--accent-blue);
+        }
+
+        .mobile-bottom-nav-icon {
+            font-size: 1.4rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-nav {
+                display: block;
+            }
+            .main-content {
+                padding-bottom: 100px;
+            }
+        }
+
+        /* 代码关键字高亮 */
+        .code-keyword { color: #c792ea; }
+        .code-function { color: #82aaff; }
+        .code-string { color: #c3e88d; }
+        .code-comment { color: #546e7a; }
+    </style>
+</head>
+<body>
+    <!-- 动态背景 -->
+    <div class="background">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <!-- 移动端导航按钮 -->
+    <button class="mobile-nav-toggle" onclick="toggleMobileSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- 移动端侧边栏遮罩 -->
+    <div class="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- 移动端侧边栏 -->
+    <nav class="mobile-sidebar">
+        <div class="sidebar-logo">
+            <h1><span>♟️</span> 五子棋</h1>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="#home" class="nav-link active" onclick="closeMobileSidebar()"><span class="nav-icon">🏠</span>首页</a></li>
+            <li class="nav-item"><a href="#features" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">✨</span>项目特点</a></li>
+            <li class="nav-item"><a href="#tech" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">🛠️</span>技术架构</a></li>
+            <li class="nav-item"><a href="#structure" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">📁</span>项目结构</a></li>
+            <li class="nav-item"><a href="#flowchart" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">📊</span>流程图</a></li>
+            <li class="nav-item"><a href="#database" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">🗄️</span>数据库设计</a></li>
+            <li class="nav-item"><a href="#replay-update" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">🔄</span>回放优化</a></li>
+            <li class="nav-item"><a href="#deploy" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">🚀</span>部署指南</a></li>
+            <li class="nav-item"><a href="#faq" class="nav-link" onclick="closeMobileSidebar()"><span class="nav-icon">❓</span>常见问题</a></li>
+        </ul>
+    </nav>
+
+    <!-- 左侧导航栏 -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <h1><span>♟️</span> 五子棋</h1>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="#home" class="nav-link active"><span class="nav-icon">🏠</span>首页</a></li>
+            <li class="nav-item"><a href="#features" class="nav-link"><span class="nav-icon">✨</span>项目特点</a></li>
+            <li class="nav-item"><a href="#tech" class="nav-link"><span class="nav-icon">🛠️</span>技术架构</a></li>
+            <li class="nav-item"><a href="#structure" class="nav-link"><span class="nav-icon">📁</span>项目结构</a></li>
+            <li class="nav-item"><a href="#flowchart" class="nav-link"><span class="nav-icon">📊</span>流程图</a></li>
+            <li class="nav-item"><a href="#database" class="nav-link"><span class="nav-icon">🗄️</span>数据库设计</a></li>
+            <li class="nav-item"><a href="#replay-update" class="nav-link"><span class="nav-icon">🔄</span>回放优化</a></li>
+            <li class="nav-item"><a href="#deploy" class="nav-link"><span class="nav-icon">🚀</span>部署指南</a></li>
+            <li class="nav-item"><a href="#faq" class="nav-link"><span class="nav-icon">❓</span>常见问题</a></li>
+        </ul>
+    </nav>
+
+    <!-- 右侧主内容区 -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <!-- 项目链接 -->
+            <div style="margin-bottom: 30px;">
+                <a href="https://github.com/kinglionsz/wuziqi/tree/at_home" target="_blank" class="link-card">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+                <a href="https://wuziqi-frontend-production.up.railway.app/" target="_blank" class="link-card">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    在线试玩
+                </a>
+            </div>
+
+            <!-- 首页 -->
+            <section id="home" class="content-card" style="animation-delay: 0s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                <div class="corner-accent bottom-left"></div>
+                <div class="corner-accent bottom-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">🏠</span>
+                    首页
+                </h2>
+                <h3>项目概述</h3>
+                <p>本项目是一个功能完整的五子棋在线游戏，采用前后端分离架构，支持三种游戏模式：<span class="tag tag-purple">PVP</span> <span class="tag tag-green">PVE</span> <span class="tag tag-blue">在线对战</span>。使用 React + Vite 构建前端，Node.js + Express + Socket.io 构建后端服务，部署于腾讯云 CloudBase 平台。</p>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">项目版本</div>
+                        <div class="info-value">v2.1.0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">文档版本</div>
+                        <div class="info-value">2.1.0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">最后更新</div>
+                        <div class="info-value">2026-03-14</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">部署平台</div>
+                        <div class="info-value">CloudBase 静态托管</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 项目特点 -->
+            <section id="features" class="content-card" style="animation-delay: 0.05s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">✨</span>
+                    项目特点
+                </h2>
+
+                <h3>核心功能</h3>
+                <ul class="feature-list">
+                    <li><strong>三种游戏模式</strong> - PVP双人本地对战、PVE人机对战、在线对战</li>
+                    <li><strong>六种主题皮肤</strong> - 默认、木质、海洋、森林、夜间、粉色</li>
+                    <li><strong>智能AI对手</strong> - 多种难度级别的人机对战体验</li>
+                    <li><strong>实时在线对战</strong> - 基于WebSocket的实时通信</li>
+                    <li><strong>游戏回放功能</strong> - 支持棋谱回放，可拖拽移动</li>
+                    <li><strong>丰富音效</strong> - 落子音效、胜利音效</li>
+                    <li><strong>玩家排名系统</strong> - 积分排行榜、段位系统、战绩统计</li>
+                </ul>
+
+                <h3>最新更新 (2026-03-14) - v2.1.0</h3>
+                <ul class="feature-list">
+                    <li><strong>Railway GitHub 自动部署优化</strong> - 统一使用 GitHub Actions 进行自动部署</li>
+                    <li><strong>部署配置修复</strong> - 修复 Railway 前端 Root Directory 配置问题</li>
+                    <li><strong>移除 CLI 部署</strong> - 移除 Railway CLI 部署方式，改用 GitHub 集成</li>
+                    <li><strong>版本控制脚本</strong> - 添加 scripts/update-version.js 版本管理脚本</li>
+                    <li><strong>地址修正</strong> - 在线试玩地址更改为 https://wuziqi-frontend-production.up.railway.app/</li>					
+                    <li><strong>版本统一</strong> - 根目录、前端、后端统一版本号 v2.1.0</li>
+                </ul>
+
+                <h3>历史更新 (2026-03-11) - v1.2.7</h3>
+                <ul class="feature-list">
+                    <li><strong>文档更新</strong> - 更新在线试玩地址为 MinimMaxi 工作空间地址</li>
+                    <li><strong>地址修正</strong> - 在线试玩地址更改为 https://a0xdsp5yw1f8.space.minimaxi.com/</li>
+                    <li><strong>部署优化</strong> - 文档部署到 MiniMaxi 工作空间，提供稳定访问</li>
+                    <li><strong>版本统一</strong> - 版本号更新至 v1.2.7</li>
+                </ul>
+
+                <h3>历史更新 (2026-03-10) - v1.2.7</h3>
+                <ul class="feature-list">
+                    <li><strong>Railway 后端部署</strong> - 后端服务器部署到 Railway，确保在线对战稳定运行</li>
+                    <li><strong>Cloud Studio 前端部署</strong> - 前端部署到 Cloud Studio，提供快速访问</li>
+                    <li><strong>Dockerfile 配置优化</strong> - 添加 Dockerfile 配置解决构建问题</li>
+                    <li><strong>版本号统一</strong> - 所有代码、配置、文档统一版本号 v1.2.7</li>
+                </ul>
+
+                <h3>最新更新 (2026-03-07) - v1.2.6</h3>
+                <ul class="feature-list">
+                    <li><strong>排名系统上线</strong> - 新增玩家排行榜功能，支持积分、胜率、段位显示</li>
+                    <li><strong>段位系统</strong> - 青铜、白银、黄金、钻石、王者五个段位</li>
+                    <li><strong>战绩统计</strong> - 展示总场次、胜率、连胜数等详细数据</li>
+                    <li><strong>更新工作流命令</strong> - 优化 my-workflow 测试和部署流程</li>
+                    <li><strong>修复测试问题</strong> - 修正测试文件导入路径，提升测试稳定性</li>
+                    <li><strong>清理备份文件</strong> - 删除所有副本和备份文件，保持项目整洁</li>
+                </ul>
+
+                <h3>最新更新 (2026-03-06)</h3>
+                <ul class="feature-list">
+                    <li><strong>观众模式功能</strong> - 新增观战功能，玩家可以输入房间号观看在线对战，无需加入游戏</li>
+                    <li><strong>实时观众人数</strong> - 房间内实时显示观众数量</li>
+                    <li><strong>WebSocket 身份验证</strong> - 添加 Token 身份验证机制，增强安全性</li>
+                </ul>
+
+                <h3>最新更新 (2026-03-04)</h3>
+                <ul class="feature-list">
+                    <li><strong>回放模式毛玻璃效果</strong> - 模仿苹果网站的专业毛玻璃设计</li>
+                    <li><strong>拖拽移动功能</strong> - 支持桌面端鼠标和移动端触摸拖拽</li>
+                    <li><strong>流畅动画</strong> - 平滑的过渡效果和交互反馈</li>
+                </ul>
+            </section>
+
+            <!-- 技术架构 -->
+            <section id="tech" class="content-card" style="animation-delay: 0.1s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">🛠️</span>
+                    技术架构
+                </h2>
+
+                <h3>技术栈</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>层级</th>
+                            <th>技术选型</th>
+                            <th>版本</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>前端框架</td>
+                            <td>React</td>
+                            <td>19.2.0</td>
+                        </tr>
+                        <tr>
+                            <td>构建工具</td>
+                            <td>Vite</td>
+                            <td>7.3.1</td>
+                        </tr>
+                        <tr>
+                            <td>样式方案</td>
+                            <td>Tailwind CSS</td>
+                            <td>4.2.1</td>
+                        </tr>
+                        <tr>
+                            <td>后端框架</td>
+                            <td>Express</td>
+                            <td>4.18.2</td>
+                        </tr>
+                        <tr>
+                            <td>实时通信</td>
+                            <td>Socket.io</td>
+                            <td>4.7.2</td>
+                        </tr>
+                        <tr>
+                            <td>云服务</td>
+                            <td>腾讯云 CloudBase</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="highlight-box">
+                    <p><strong>前端层:</strong> React + Vite → 用户浏览器</p>
+                    <p><strong>通信层:</strong> Socket.io WebSocket → 云托管服务</p>
+                    <p><strong>后端层:</strong> Node.js + Express → CloudBase 云托管</p>
+                    <p><strong>数据层:</strong> NoSQL 数据库 → 游戏数据持久化</p>
+                </div>
+            </section>
+
+            <!-- 项目结构 -->
+            <section id="structure" class="content-card" style="animation-delay: 0.15s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">📁</span>
+                    项目结构
+                </h2>
+
+                <div class="file-tree">
+<div class="tree-line"><span class="tree-folder">wuziqi/</span></div>
+<div class="tree-line"><span class="tree-branch">├──</span> <span class="tree-folder">src/</span>                      <span class="tree-comment"># 前端源代码</span></div>
+<div class="tree-line"><span class="tree-branch">│   ├──</span> <span class="tree-folder">components/</span>               <span class="tree-comment"># React 组件</span></div>
+<div class="tree-line"><span class="tree-branch">│   │   ├──</span> Board.jsx             <span class="tree-comment"># 棋盘组件</span></div>
+<div class="tree-line"><span class="tree-branch">│   │   ├──</span> <span class="tree-folder">Modals/</span>                <span class="tree-comment"># 模态框组件</span></div>
+<div class="tree-line"><span class="tree-branch">│   │   │   └──</span> ReplayModal.jsx    <span class="tree-comment"># 回放模态框 ★</span></div>
+<div class="tree-line"><span class="tree-branch">│   ├──</span> <span class="tree-folder">hooks/</span>                   <span class="tree-comment"># React Hooks</span></div>
+<div class="tree-line"><span class="tree-branch">│   ├──</span> <span class="tree-folder">utils/</span>                    <span class="tree-comment"># 工具函数</span></div>
+<div class="tree-line"><span class="tree-branch">│   │   └──</span> ai.js                 <span class="tree-comment"># AI 算法</span></div>
+<div class="tree-line"><span class="tree-branch">│   ├──</span> App.jsx                    <span class="tree-comment"># 主应用</span></div>
+<div class="tree-line"><span class="tree-branch">│   └──</span> App.css                    <span class="tree-comment"># 样式文件</span></div>
+<div class="tree-line"><span class="tree-branch">├──</span> <span class="tree-folder">cloudbase/</span>               <span class="tree-comment"># 后端服务</span></div>
+<div class="tree-line"><span class="tree-branch">├──</span> <span class="tree-folder">public/</span>                   <span class="tree-comment"># 静态资源</span></div>
+<div class="tree-line"><span class="tree-branch">├──</span> package.json                  <span class="tree-comment"># 项目配置</span></div>
+<div class="tree-line"><span class="tree-branch">└──</span> vite.config.js               <span class="tree-comment"># Vite 配置</span></div>
+                </div>
+            </section>
+
+            <!-- 流程图 -->
+            <section id="flowchart" class="content-card" style="animation-delay: 0.2s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">📊</span>
+                    流程图
+                </h2>
+
+                <div class="flow-tabs">
+                    <button class="flow-tab active" onclick="showFlow('flow-overall', this)">整体业务流程</button>
+                    <button class="flow-tab" onclick="showFlow('flow-online', this)">在线对战流程</button>
+                    <button class="flow-tab" onclick="showFlow('flow-place', this)">落子处理流程</button>
+                    <button class="flow-tab" onclick="showFlow('flow-dev', this)">开发部署流程</button>
+                </div>
+
+                <!-- 整体业务流程 -->
+                <div id="flow-overall" class="flow-content active">
+                    <div class="flowchart-container" id="overall-flowchart"></div>
+                </div>
+
+                <!-- 在线对战流程 -->
+                <div id="flow-online" class="flow-content">
+                    <div class="flowchart-container" id="online-flowchart"></div>
+                </div>
+
+                <!-- 落子处理流程 -->
+                <div id="flow-place" class="flow-content">
+                    <div class="flowchart-container" id="place-flowchart"></div>
+                </div>
+
+                <!-- 开发部署流程 -->
+                <div id="flow-dev" class="flow-content">
+                    <div class="flowchart-container" id="dev-flowchart"></div>
+                </div>
+            </section>
+
+            <!-- 数据库设计 -->
+            <section id="database" class="content-card" style="animation-delay: 0.25s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                <div class="corner-accent bottom-left"></div>
+                <div class="corner-accent bottom-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">🗄️</span>
+                    数据库设计
+                </h2>
+
+                <h3>Supabase表结构</h3>
+                <h4>game_records (游戏记录表)</h4>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>字段名</th>
+                            <th>类型</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>id</td>
+                            <td>uuid</td>
+                            <td>主键，自增</td>
+                        </tr>
+                        <tr>
+                            <td>created_at</td>
+                            <td>timestamp</td>
+                            <td>创建时间</td>
+                        </tr>
+                        <tr>
+                            <td>game_mode</td>
+                            <td>varchar(20)</td>
+                            <td>游戏模式(PVP/PVE/ONLINE)</td>
+                        </tr>
+                        <tr>
+                            <td>winner</td>
+                            <td>varchar(10)</td>
+                            <td>获胜方(black/white/ai/draw)</td>
+                        </tr>
+                        <tr>
+                            <td>moves</td>
+                            <td>jsonb</td>
+                            <td>落子记录数组</td>
+                        </tr>
+                        <tr>
+                            <td>duration</td>
+                            <td>integer</td>
+                            <td>游戏时长(秒)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>CloudBase NoSQL集合</h3>
+                <div class="code-block">
+                    <pre><span class="code-comment">// wuziqi_rooms (在线房间集合)</span>
+{
+  <span class="code-string">"_id"</span>: <span class="code-string">"ObjectId"</span>,
+  <span class="code-string">"roomId"</span>: <span class="code-string">"123456"</span>,
+  <span class="code-string">"hostId"</span>: <span class="code-string">"socket_id_1"</span>,
+  <span class="code-string">"guestId"</span>: <span class="code-string">"socket_id_2"</span>,
+  <span class="code-string">"board"</span>: [[0,0,...],...],
+  <span class="code-string">"currentPlayer"</span>: <span class="code-string">"black"</span>,
+  <span class="code-string">"gameStatus"</span>: <span class="code-string">"playing"</span>,
+  <span class="code-string">"createdAt"</span>: <span class="code-string">"2024-01-01T00:00:00Z"</span>
+}</pre>
+                </div>
+
+                <h3>Socket.io 事件</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>事件名</th>
+                            <th>功能</th>
+                            <th>参数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>create_room</td>
+                            <td>创建游戏房间</td>
+                            <td>hostId</td>
+                        </tr>
+                        <tr>
+                            <td>join_room</td>
+                            <td>加入游戏房间</td>
+                            <td>roomId, playerId</td>
+                        </tr>
+                        <tr>
+                            <td>place_piece</td>
+                            <td>落子处理</td>
+                            <td>roomId, row, col, player</td>
+                        </tr>
+                        <tr>
+                            <td>leave_room</td>
+                            <td>离开房间</td>
+                            <td>roomId, playerId</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 回放模式优化 (新增) -->
+            <section id="replay-update" class="content-card" style="animation-delay: 0.3s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                <div class="corner-accent bottom-left"></div>
+                <div class="corner-accent bottom-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">🔄</span>
+                    回放模式优化 (v1.2.3)
+                </h2>
+
+                <h3>新功能概述</h3>
+                <p>本次更新为回放模式添加了专业级的苹果风格毛玻璃效果，并实现了可拖拽的模态框移动功能。</p>
+
+                <h3>毛玻璃效果特点</h3>
+                <ul class="feature-list">
+                    <li><strong>背景模糊</strong> - 使用 <code>backdrop-filter: blur(12px) saturate(180%)</code></li>
+                    <li><strong>透明度层</strong> - <code>rgba(255, 255, 255, 0.45)</code> 半透明背景</li>
+                    <li><strong>边框高光</strong> - 细微的白色边框模拟玻璃边缘</li>
+                    <li><strong>多层阴影</strong> - 柔和的阴影创造深度感</li>
+                    <li><strong>光泽动画</strong> - 微妙的扫过光效</li>
+                </ul>
+
+                <h3>拖拽功能</h3>
+                <ul class="feature-list">
+                    <li><strong>桌面端</strong> - 鼠标拖拽标题栏移动模态框</li>
+                    <li><strong>移动端</strong> - 触摸拖拽支持，优化的触摸事件处理</li>
+                    <li><strong>平滑动画</strong> - 拖拽时无动画，释放时有缓动效果</li>
+                    <li><strong>位置记忆</strong> - 打开时自动居中</li>
+                </ul>
+
+                <h3>核心代码实现</h3>
+                <h4>CSS 样式 (App.css)</h4>
+                <div class="code-block">
+<pre><span class="code-comment">/* 毛玻璃主体样式 */</span>
+.modal-content {
+  <span class="code-keyword">background</span>: rgba(255, 255, 255, 0.45);
+  <span class="code-keyword">backdrop-filter</span>: blur(12px) saturate(180%);
+  <span class="code-keyword">-webkit-backdrop-filter</span>: blur(12px) saturate(180%);
+  <span class="code-keyword">border</span>: 1px solid rgba(255, 255, 255, 0.3);
+  <span class="code-keyword">border-radius</span>: 20px;
+  <span class="code-keyword">box-shadow</span>: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}</pre>
+                </div>
+
+                <h4>React 组件 (ReplayModal.jsx)</h4>
+                <div class="code-block">
+<pre><span class="code-comment">// 拖拽状态管理</span>
+<span class="code-keyword">const</span> [position, setPosition] = <span class="code-keyword">useState</span>({ x: 0, y: 0 })
+<span class="code-keyword">const</span> [isDragging, setIsDragging] = <span class="code-keyword">useState</span>(<span class="code-keyword">false</span>)
+
+<span class="code-comment">// 支持鼠标和触摸</span>
+<span class="code-keyword">const</span> getClientPosition = (e) => {
+  <span class="code-keyword">if</span> (e.touches?.[0]) {
+    <span class="code-keyword">return</span> { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  <span class="code-keyword">return</span> { x: e.clientX, y: e.clientY }
+}
+
+<span class="code-comment">// 拖拽事件处理</span>
+<span class="code-keyword">const</span> handleStart = (e) => {
+  <span class="code-keyword">if</span> (e.type === <span class="code-string">'touchstart'</span>) e.preventDefault()
+  <span class="code-keyword">const</span> { x, y } = getClientPosition(e)
+  setIsDragging(<span class="code-keyword">true</span>)
+  setDragOffset({ x: x - position.x, y: y - position.y })
+}</pre>
+                </div>
+
+                <h3>演示文件</h3>
+                <a href="http://7538cbf2fe354c0db87ee9c5a81ce066.codebuddy.cloudstudio.run/apple-glass.html" target="_blank" class="link-card">
+                <p>查看独立演示文件 <code>apple_glassmorphism_demo.html</code> 体验完整的苹果毛玻璃效果。</p></a>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">模糊程度</div>
+                        <div class="info-value">12px blur</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">透明度</div>
+                        <div class="info-value">0.45</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">饱和度</div>
+                        <div class="info-value">180%</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">边框圆角</div>
+                        <div class="info-value">20px</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 部署指南 -->
+            <section id="deploy" class="content-card" style="animation-delay: 0.35s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                <div class="corner-accent bottom-left"></div>
+                <div class="corner-accent bottom-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">🚀</span>
+                    部署指南
+                </h2>
+
+                <h3>前端部署</h3>
+                <div class="code-block">
+<pre><span class="code-comment"># 构建生产版本</span>
+npm run build
+
+<span class="code-comment"># 部署到 CloudBase</span>
+npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2</pre>
+                </div>
+
+                <h3>后端部署</h3>
+                <div class="code-block">
+<pre><span class="code-comment"># 进入后端目录</span>
+cd cloudbase/server
+
+<span class="code-comment"># 部署到 CloudRun</span>
+tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force</pre>
+                </div>
+
+                <h3>环境变量配置</h3>
+                <div class="code-block">
+<pre><span class="code-comment"># .env.production 示例</span>
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
+NODE_ENV=production
+ALLOWED_ORIGIN=*</pre>
+                </div>
+
+                <div class="highlight-box">
+                    <p><strong>注意：</strong> 部署前请确保已配置正确的环境变量，包括 Supabase API Key 和 CloudBase 配置。</p>
+                </div>
+            </section>
+
+            <!-- 常见问题 -->
+            <section id="faq" class="content-card" style="animation-delay: 0.4s;">
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent top-right"></div>
+                <div class="corner-accent bottom-left"></div>
+                <div class="corner-accent bottom-right"></div>
+                
+                <h2 class="card-title">
+                    <span class="card-title-icon">❓</span>
+                    常见问题
+                </h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">Q1: 如何开始游戏？</div>
+                    <div class="faq-answer">打开游戏后，选择三种游戏模式之一：PVP（双人本地对战）、PVE（人机对战）或 ONLINE（在线对战）。选择后即可开始游戏。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Q2: 如何进行在线对战？</div>
+                    <div class="faq-answer">选择 ONLINE 模式后，可以选择"创建房间"生成房间号发送给朋友，或输入房间号"加入房间"与朋友对战。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Q3: 如何切换主题？</div>
+                    <div class="faq-answer">点击设置按钮，在主题选项中选择喜欢的皮肤：默认、木质、海洋、森林、夜间、粉色。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Q4: 游戏记录在哪里查看？</div>
+                    <div class="faq-answer">游戏结束后会自动保存记录到本地存储和云端，可以在设置中查看游戏历史记录。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Q5: 部署遇到问题怎么办？</div>
+                    <div class="faq-answer">请确保 Node.js 版本 >= 18.0.0，Docker 版本 >= 20.10.0。如遇问题，可查看控制台日志或联系技术支持。</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Q6: 如何本地开发调试？</div>
+                    <div class="faq-answer">
+                        <div class="code-block">
+                            <pre><span class="code-comment"># 启动前端开发服务器</span>
+npm run dev
+
+<span class="code-comment"># 启动后端服务</span>
+cd cloudbase/server
+node server.js</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 页脚 -->
+            <footer>
+                <p>Made with <span style="color: #ff4d6d;">♥</span> by 狮王李</p>
+                <p>保留一切版权 © 2026</p>
+                <p style="margin-top: 16px; font-size: 0.9rem;">
+                    <a href="https://github.com/kinglionsz/wuziqi/tree/at_home">GitHub</a> |
+                    <a href="https://wuziqi-frontend-production.up.railway.app/">在线试玩</a> 
+                    
+                </p>
+            </footer>
+        </div>
+    </main>
+
+    <!-- 移动端底部导航 -->
+    <nav class="mobile-bottom-nav">
+        <ul class="mobile-bottom-nav-items">
+            <li class="mobile-bottom-nav-item">
+                <a href="#home" class="mobile-bottom-nav-link active">
+                    <span class="mobile-bottom-nav-icon">🏠</span>
+                    <span>首页</span>
+                </a>
+            </li>
+            <li class="mobile-bottom-nav-item">
+                <a href="#features" class="mobile-bottom-nav-link">
+                    <span class="mobile-bottom-nav-icon">✨</span>
+                    <span>特点</span>
+                </a>
+            </li>
+            <li class="mobile-bottom-nav-item">
+                <a href="#tech" class="mobile-bottom-nav-link">
+                    <span class="mobile-bottom-nav-icon">🛠️</span>
+                    <span>技术</span>
+                </a>
+            </li>
+            <li class="mobile-bottom-nav-item">
+                <a href="#deploy" class="mobile-bottom-nav-link">
+                    <span class="mobile-bottom-nav-icon">🚀</span>
+                    <span>部署</span>
+                </a>
+            </li>
+            <li class="mobile-bottom-nav-item">
+                <a href="#faq" class="mobile-bottom-nav-link">
+                    <span class="mobile-bottom-nav-icon">❓</span>
+                    <span>FAQ</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" onclick="scrollToTop()">
+        <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+    </button>
+
+    <script>
+        // 移动端侧边栏切换
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.mobile-sidebar');
+            const overlay = document.querySelector('.mobile-sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.querySelector('.mobile-sidebar');
+            const overlay = document.querySelector('.mobile-sidebar-overlay');
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        }
+
+        // 返回顶部
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 显示/隐藏返回顶部按钮
+        window.addEventListener('scroll', () => {
+            const backToTop = document.querySelector('.back-to-top');
+            if (window.scrollY > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        // 导航高亮
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // ========================================
+        // 流程图功能
+        // ========================================
+        
+        // 流程图标签切换
+        function showFlow(flowId, clickedTab) {
+            document.querySelectorAll('.flow-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            if (clickedTab) {
+                clickedTab.classList.add('active');
+            } else {
+                const tabs = document.querySelectorAll('.flow-tab');
+                const tabIndex = ['flow-overall', 'flow-online', 'flow-place', 'flow-dev'].indexOf(flowId);
+                if (tabIndex >= 0 && tabs[tabIndex]) {
+                    tabs[tabIndex].classList.add('active');
+                }
+            }
+
+            document.querySelectorAll('.flow-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(flowId).classList.add('active');
+
+            if (flowId === 'flow-overall') renderOverallFlow();
+            else if (flowId === 'flow-online') renderOnlineFlow();
+            else if (flowId === 'flow-place') renderPlaceFlow();
+            else if (flowId === 'flow-dev') renderDevFlow();
+        }
+
+        // 创建流程图节点
+        function createNode(x, y, width, height, text, type, container) {
+            const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            node.classList.add('flow-node');
+            node.setAttribute('transform', `translate(${x}, ${y})`);
+
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('width', width);
+            rect.setAttribute('height', height);
+            rect.classList.add('flow-node-rect', `flow-node-${type}`);
+
+            const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            textEl.setAttribute('x', width / 2);
+            textEl.setAttribute('y', height / 2);
+            textEl.classList.add('flow-text');
+            textEl.textContent = text;
+
+            node.appendChild(rect);
+            node.appendChild(textEl);
+            container.appendChild(node);
+            return { x: x + width / 2, y: y + height };
+        }
+
+        // 创建连接线
+        function createLink(x1, y1, x2, y2, container, label) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const midY = (y1 + y2) / 2;
+            const d = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+            path.setAttribute('d', d);
+            path.classList.add('flow-link');
+            container.appendChild(path);
+
+            if (label) {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', (x1 + x2) / 2);
+                text.setAttribute('y', midY - 5);
+                text.classList.add('flow-label');
+                text.textContent = label;
+                container.appendChild(text);
+            }
+        }
+
+        // 渲染整体业务流程图
+        function renderOverallFlow() {
+            const container = document.getElementById('overall-flowchart');
+            container.innerHTML = '';
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '850');
+            svg.setAttribute('height', '600');
+            svg.classList.add('flowchart-svg');
+
+            createNode(380, 20, 120, 45, '用户访问', 'action', svg);
+            createLink(440, 65, 440, 95, svg);
+
+            createNode(340, 95, 200, 45, '选择游戏模式?', 'decision', svg);
+            createLink(340, 120, 180, 155, svg, 'PVP');
+            createLink(440, 140, 440, 175, svg, 'PVE');
+            createLink(540, 120, 620, 155, svg, 'ONLINE');
+
+            createNode(120, 155, 120, 38, '本地双人对战', 'action', svg);
+            createLink(180, 193, 180, 230, svg);
+            createNode(120, 230, 120, 38, '落子', 'action', svg);
+            createLink(180, 268, 180, 305, svg);
+            createNode(120, 305, 120, 38, '胜负判定', 'decision', svg);
+            createLink(180, 343, 180, 380, svg, '五子连珠');
+            createNode(120, 380, 120, 38, '显示胜利', 'end', svg);
+
+            createNode(380, 175, 120, 38, '选择难度', 'action', svg);
+            createLink(440, 213, 440, 250, svg);
+            createNode(380, 250, 120, 38, 'AI落子', 'action', svg);
+            createLink(440, 288, 440, 325, svg);
+            createNode(380, 325, 120, 38, '胜负判定', 'decision', svg);
+            createLink(440, 363, 440, 400, svg, '有胜负');
+            createNode(380, 400, 120, 38, '游戏结束', 'end', svg);
+
+            createNode(560, 155, 120, 38, '创建/加入房间', 'action', svg);
+            createLink(620, 193, 620, 230, svg);
+            createNode(560, 230, 120, 38, 'Socket连接', 'action', svg);
+            createLink(620, 268, 620, 305, svg);
+            createNode(560, 305, 120, 38, '落子同步', 'action', svg);
+            createLink(620, 343, 620, 380, svg);
+            createNode(560, 380, 120, 38, '胜负判定', 'decision', svg);
+            createLink(620, 418, 620, 455, svg, '有胜负');
+            createNode(560, 455, 120, 38, '游戏结束', 'end', svg);
+
+            container.appendChild(svg);
+        }
+
+        // 渲染在线对战流程图
+        function renderOnlineFlow() {
+            const container = document.getElementById('online-flowchart');
+            container.innerHTML = '';
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '750');
+            svg.setAttribute('height', '550');
+            svg.classList.add('flowchart-svg');
+
+            createNode(80, 20, 140, 45, '玩家1: 创建房间', 'action', svg);
+            createLink(150, 65, 150, 110, svg);
+
+            createNode(40, 110, 180, 45, '服务器: 保存房间信息', 'action', svg);
+            createLink(150, 155, 150, 200, svg);
+
+            createNode(40, 200, 180, 45, '返回 roomId 给玩家1', 'action', svg);
+            createLink(150, 245, 350, 135, svg);
+
+            createNode(350, 110, 140, 45, '玩家2: 加入房间', 'action', svg);
+            createLink(420, 155, 420, 200, svg);
+
+            createNode(310, 200, 180, 45, '服务器: 查询房间', 'action', svg);
+            createLink(420, 245, 420, 290, svg);
+
+            createNode(310, 290, 180, 45, '广播 game_start', 'end', svg);
+            createLink(400, 335, 200, 360, svg);
+            createLink(400, 335, 500, 360, svg);
+
+            createNode(130, 360, 140, 45, '玩家1 落子', 'action', svg);
+            createNode(420, 360, 140, 45, '玩家2 落子', 'action', svg);
+
+            createNode(260, 430, 140, 45, '同步棋盘状态', 'action', svg);
+
+            container.appendChild(svg);
+        }
+
+        // 渲染落子处理流程图
+        function renderPlaceFlow() {
+            const container = document.getElementById('place-flowchart');
+            container.innerHTML = '';
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '900');
+            svg.setAttribute('height', '650');
+            svg.classList.add('flowchart-svg');
+
+            createNode(385, 20, 130, 45, '玩家点击棋盘', 'action', svg);
+            createLink(450, 65, 450, 95, svg);
+
+            createNode(350, 95, 200, 45, '落子位置有效?', 'decision', svg);
+            createLink(350, 117, 180, 155, svg, '否');
+            createLink(450, 140, 450, 175, svg, '是');
+
+            createNode(120, 155, 100, 35, '忽略', 'end', svg);
+
+            createNode(350, 175, 200, 45, '判断游戏模式', 'decision', svg);
+            createLink(350, 197, 150, 240, svg, 'PVP');
+            createLink(450, 217, 450, 255, svg, 'PVE');
+            createLink(550, 197, 650, 240, svg, 'ONLINE');
+
+            // PVP分支
+            createNode(80, 240, 140, 40, '更新本地棋盘', 'action', svg);
+            createLink(150, 280, 150, 320, svg);
+            createNode(80, 320, 140, 45, '胜负判定', 'decision', svg);
+            createLink(150, 365, 150, 410, svg, '五子连珠');
+            createNode(80, 410, 140, 40, '显示胜利', 'end', svg);
+
+            // PVE分支
+            createNode(390, 255, 120, 45, 'AI计算落子', 'action', svg);
+            createLink(450, 300, 450, 340, svg);
+            createNode(390, 340, 120, 40, '更新棋盘', 'action', svg);
+            createLink(450, 380, 450, 420, svg);
+            createNode(390, 420, 120, 45, '胜负判定?', 'decision', svg);
+            createLink(450, 465, 450, 510, svg, '有胜负');
+            createNode(390, 510, 120, 40, '游戏结束', 'end', svg);
+
+            // ONLINE分支
+            createNode(590, 240, 140, 40, '发送到服务器', 'action', svg);
+            createLink(660, 280, 660, 320, svg);
+            createNode(585, 320, 150, 45, '服务器确认?', 'decision', svg);
+            createLink(585, 342, 480, 380, svg, '失败');
+            createLink(660, 365, 660, 400, svg, '成功');
+            createNode(480, 380, 100, 35, '显示错误', 'end', svg);
+            createNode(590, 400, 140, 40, '更新本地棋盘', 'action', svg);
+            createLink(660, 440, 660, 480, svg);
+            createNode(585, 480, 150, 45, '胜负判定?', 'decision', svg);
+            createLink(585, 502, 500, 545, svg, '有胜负');
+            createLink(660, 525, 660, 570, svg, '继续');
+
+            createNode(500, 545, 130, 40, '显示胜利/失败', 'end', svg);
+            createNode(590, 545, 140, 40, '切换玩家', 'action', svg);
+
+            container.appendChild(svg);
+        }
+
+        // 渲染开发部署流程图
+        function renderDevFlow() {
+            const container = document.getElementById('dev-flowchart');
+            container.innerHTML = '';
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '750');
+            svg.setAttribute('height', '550');
+            svg.classList.add('flowchart-svg');
+
+            createNode(320, 20, 130, 45, '代码编写', 'action', svg);
+            createLink(385, 65, 385, 110, svg);
+
+            createNode(320, 110, 130, 45, '本地测试', 'action', svg);
+            createLink(385, 155, 385, 200, svg);
+
+            createNode(285, 200, 190, 45, '测试通过?', 'decision', svg);
+            createLink(285, 222, 180, 270, svg, '否');
+            createLink(385, 245, 385, 290, svg, '是');
+
+            createNode(320, 290, 130, 45, '代码提交', 'action', svg);
+            createLink(385, 335, 385, 380, svg);
+
+            createNode(320, 380, 130, 45, '构建检查', 'action', svg);
+            createLink(385, 425, 385, 470, svg);
+
+            createNode(285, 470, 190, 45, '构建成功?', 'decision', svg);
+            createLink(140, 492, 140, 35, svg);
+            createLink(140, 35, 320, 35, svg);
+            createLink(475, 492, 600, 470, svg, '是');
+
+            createNode(530, 420, 130, 45, '部署测试环境', 'action', svg);
+            createLink(600, 420, 600, 380, svg);
+
+            createNode(530, 330, 130, 45, '测试验证', 'action', svg);
+            createLink(600, 330, 600, 180, svg);
+            createLink(385, 180, 385, 180, svg);
+            createLink(385, 180, 285, 180, svg, '是');
+
+            createNode(530, 130, 130, 45, '部署生产环境', 'end', svg);
+
+            container.appendChild(svg);
+        }
+
+        // 初始化流程图
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOverallFlow();
+        });
+    </script>
+</body>
+</html>
