@@ -1,0 +1,172 @@
+[
+  {
+    "_id": "test_room_001",
+    "roomId": "TEST001",
+    "board": [
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+    ],
+    "players": {
+      "black": "player_black_001",
+      "white": "player_white_001"
+    },
+    "status": "waiting",
+    "currentTurn": "black",
+    "moveHistory": [
+      { "row": 7, "col": 7, "color": "black" },
+      { "row": 7, "col": 8, "color": "white" },
+      { "row": 6, "col": 7, "color": "black" },
+      { "row": 8, "col": 7, "color": "white" },
+      { "row": 6, "col": 6, "color": "black" }
+    ],
+    "createdAt": 1709000000000,
+    "updatedAt": 1709000000000
+  },
+  {
+    "_id": "test_room_002",
+    "roomId": "TEST002",
+    "board": [
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, "black", "white", null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, "white", "black", null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+    ],
+    "players": {
+      "black": "player_black_002",
+      "white": "player_white_002"
+    },
+    "status": "playing",
+    "currentTurn": "white",
+    "moveHistory": [
+      { "row": 7, "col": 7, "color": "black" },
+      { "row": 7, "col": 8, "color": "white" },
+      { "row": 8, "col": 7, "color": "black" },
+      { "row": 8, "col": 8, "color": "white" }
+    ],
+    "createdAt": 1708900000000,
+    "updatedAt": 1708950000000
+  },
+  {
+    "_id": "test_room_003",
+    "roomId": "TEST003",
+    "board": [
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+    ],
+    "players": {},
+    "status": "waiting",
+    "currentTurn": "black",
+    "moveHistory": [],
+    "createdAt": 1708800000000,
+    "updatedAt": 1708800000000
+  },
+  {
+    "_id": "test_room_004",
+    "roomId": "TEST004",
+    "board": [
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+    ],
+    "players": {
+      "black": "player_black_004"
+    },
+    "status": "waiting",
+    "currentTurn": "black",
+    "moveHistory": [],
+    "createdAt": 1708700000000,
+    "updatedAt": 1708700000000
+  },
+  {
+    "_id": "test_room_005",
+    "roomId": "TEST005",
+    "board": [
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, "black", "white", null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, "black", null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, "white", null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+    ],
+    "players": {
+      "black": "player_black_005",
+      "white": "player_white_005"
+    },
+    "status": "finished",
+    "currentTurn": "black",
+    "moveHistory": [
+      { "row": 4, "col": 3, "color": "black" },
+      { "row": 4, "col": 4, "color": "white" },
+      { "row": 5, "col": 5, "color": "black" },
+      { "row": 6, "col": 4, "color": "white" }
+    ],
+    "winner": "black",
+    "winningLine": [
+      { "row": 4, "col": 3 },
+      { "row": 5, "col": 4 },
+      { "row": 6, "col": 5 },
+      { "row": 7, "col": 6 },
+      { "row": 8, "col": 7 }
+    ],
+    "createdAt": 1708600000000,
+    "updatedAt": 1708650000000
+  }
+]

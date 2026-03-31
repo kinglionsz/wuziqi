@@ -1,0 +1,6 @@
+fix: fix Railway login parameter in GitHub Actions
+
+- Change railway login parameter from --headless to --browserless
+- Fix ci-cd.yml and deploy-dev.yml workflow files
+- Railway CLI has been updated, --headless parameter is deprecated
+- Now using --browserless parameter for browserless login

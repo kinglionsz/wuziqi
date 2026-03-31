@@ -1,0 +1,62 @@
+App.jsx:184 ========== [回放] 步骤 6 ==========
+App.jsx:185 [回放] moveHistory 完整记录:
+App.jsx:187   步骤1: player=black, position=(7, 7)
+App.jsx:187   步骤2: player=white, position=(9, 9)
+App.jsx:187   步骤3: player=black, position=(8, 7)
+App.jsx:187   步骤4: player=white, position=(6, 7)
+App.jsx:187   步骤5: player=black, position=(9, 7)
+App.jsx:187   步骤6: player=white, position=(10, 8)
+App.jsx:187   步骤7: player=black, position=(10, 7)
+App.jsx:187   步骤8: player=white, position=(11, 7)
+App.jsx:189 [回放] 重建棋盘后的棋子位置:
+App.jsx:192   (6,7) = white
+App.jsx:192   (7,7) = black
+App.jsx:192   (8,7) = black
+App.jsx:192   (9,7) = black
+App.jsx:192   (9,9) = white
+App.jsx:192   (10,8) = white
+App.jsx:195 [回放] targetMove: 
+{board: Array(15), player: 'white', position: {…}, blackTime: 3, whiteTime: 0, …}
+App.jsx:184 ========== [回放] 步骤 7 ==========
+App.jsx:185 [回放] moveHistory 完整记录:
+App.jsx:187   步骤1: player=black, position=(7, 7)
+App.jsx:187   步骤2: player=white, position=(9, 9)
+App.jsx:187   步骤3: player=black, position=(8, 7)
+App.jsx:187   步骤4: player=white, position=(6, 7)
+App.jsx:187   步骤5: player=black, position=(9, 7)
+App.jsx:187   步骤6: player=white, position=(10, 8)
+App.jsx:187   步骤7: player=black, position=(10, 7)
+App.jsx:187   步骤8: player=white, position=(11, 7)
+App.jsx:189 [回放] 重建棋盘后的棋子位置:
+App.jsx:192   (6,7) = white
+App.jsx:192   (7,7) = black
+App.jsx:192   (8,7) = black
+App.jsx:192   (9,7) = black
+App.jsx:192   (9,9) = white
+App.jsx:192   (10,7) = black
+App.jsx:192   (10,8) = white
+App.jsx:195 [回放] targetMove: 
+{board: Array(15), player: 'black', position: {…}, blackTime: 5, whiteTime: 0, …}
+App.jsx:184 ========== [回放] 步骤 8 ==========
+App.jsx:185 [回放] moveHistory 完整记录:
+App.jsx:187   步骤1: player=black, position=(7, 7)
+App.jsx:187   步骤2: player=white, position=(9, 9)
+App.jsx:187   步骤3: player=black, position=(8, 7)
+App.jsx:187   步骤4: player=white, position=(6, 7)
+App.jsx:187   步骤5: player=black, position=(9, 7)
+App.jsx:187   步骤6: player=white, position=(10, 8)
+App.jsx:187   步骤7: player=black, position=(10, 7)
+App.jsx:187   步骤8: player=white, position=(11, 7)
+App.jsx:189 [回放] 重建棋盘后的棋子位置:
+App.jsx:192   (6,7) = white
+App.jsx:192   (7,7) = black
+App.jsx:192   (8,7) = black
+App.jsx:192   (9,7) = black
+App.jsx:192   (9,9) = white
+App.jsx:192   (10,7) = black
+App.jsx:192   (10,8) = white
+App.jsx:192   (11,7) = white
+App.jsx:195 [回放] targetMove: 
+{board: Array(15), player: 'white', position: {…}, blackTime: 5, whiteTime: 0, …}
+﻿
+

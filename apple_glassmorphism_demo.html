@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apple Glassmorphism - 五子棋回放模式</title>
+  <style>
+    /* ========================================
+       全局重置与基础样式
+    ======================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.18);
+      --glass-shadow: rgba(0, 0, 0, 0.35);
+      --accent-blue: #2997ff;
+      --accent-green: #30d158;
+      --text-primary: rgba(255, 255, 255, 0.92);
+      --text-secondary: rgba(255, 255, 255, 0.55);
+      --blur-amount: 14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* ========================================
+       动态渐变背景 - 黑底灰白风格
+    ======================================== */
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: 
+        radial-gradient(ellipse at 15% 25%, rgba(200, 200, 210, 0.15) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 75%, rgba(180, 180, 195, 0.12) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 50%, rgba(160, 160, 175, 0.08) 0%, transparent 60%),
+        linear-gradient(180deg, #050505 0%, #0a0a0c 40%, #0d0d10 70%, #080808 100%);
+      animation: bgShift 25s ease-in-out infinite;
+    }
+
+    @keyframes bgShift {
+      0%, 100% { 
+        background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%;
+      }
+      25% { 
+        background-position: 25% 35%, 75% 65%, 50% 50%, 0% 0%;
+      }
+      50% { 
+        background-position: 45% 55%, 55% 45%, 50% 50%, 0% 0%;
+      }
+      75% { 
+        background-position: 30% 40%, 70% 60%, 50% 50%, 0% 0%;
+      }
+    }
+
+    /* 浮动光球效果 - 灰白银色调 */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: 0.4;
+      animation: float 18s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(220, 220, 235, 0.25) 0%, transparent 70%);
+      top: 8%;
+      left: 15%;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(200, 205, 220, 0.2) 0%, transparent 70%);
+      top: 55%;
+      right: 12%;
+      animation-delay: -6s;
+    }
+
+    .orb-3 {
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(180, 185, 200, 0.18) 0%, transparent 70%);
+      bottom: 15%;
+      left: 45%;
+      animation-delay: -12s;
+    }
+
+    .orb-4 {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(240, 240, 250, 0.15) 0%, transparent 70%);
+      top: 35%;
+      right: 35%;
+      animation-delay: -3s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(35px, -25px) scale(1.03); }
+      66% { transform: translate(-25px, 30px) scale(0.97); }
+    }
+
+    /* ========================================
+       页面布局
+    ======================================== */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .main-title {
+      font-size: 56px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.72) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 40px;
+      animation: titleGlow 4s ease-in-out infinite;
+    }
+
+    @keyframes titleGlow {
+      0%, 100% { filter: drop-shadow(0 0 25px rgba(255,255,255,0.12)); }
+      50% { filter: drop-shadow(0 0 45px rgba(255,255,255,0.22)); }
+    }
+
+    /* ========================================
+       毛玻璃模态框 - 黑底灰白明亮边框
+    ======================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-glass {
+      /* 核心毛玻璃效果 */
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(150%);
+      
+      border-radius: 24px;
+      padding: 32px 40px;
+      min-width: 380px;
+      max-width: 90vw;
+      
+      /* 明亮边框 - 多层效果 */
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 
+        0 30px 60px -15px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+        0 -1px 0 rgba(255, 255, 255, 0.12) inset,
+        0 1px 0 rgba(255, 255, 255, 0.08) inset;
+      
+      /* 动画 */
+      transform: translateY(20px) scale(0.96);
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal-glass {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    /* 顶部高光边框 */
+    .modal-glass::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 8%;
+      right: 8%;
+      height: 1px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.45) 20%,
+        rgba(255,255,255,0.5) 50%,
+        rgba(255,255,255,0.45) 80%,
+        transparent 100%);
+    }
+
+    /* 侧面光泽效果 */
+    .modal-glass::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, 
+        rgba(255,255,255,0.06) 0%, 
+        transparent 55%);
+      pointer-events: none;
+      animation: shimmer 10s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(12%, 8%); }
+    }
+
+    /* ========================================
+       拖拽标题栏
+    ======================================== */
+    .drag-handle {
+      cursor: grab;
+      padding: 8px 0 20px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .drag-handle::after {
+      content: '····';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.25);
+      font-size: 14px;
+      letter-spacing: 3px;
+      font-weight: 300;
+    }
+
+    .modal-title {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+      padding-right: 40px;
+      letter-spacing: -0.5px;
+    }
+
+    /* ========================================
+       回放信息展示
+    ======================================== */
+    .replay-info {
+      margin: 24px 0;
+      text-align: center;
+    }
+
+    .step-counter {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .step-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .move-details {
+      margin-top: 20px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .move-position {
+      font-size: 18px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .move-player {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .player-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .player-dot.black {
+      background: #000;
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+
+    .player-dot.white {
+      background: #fff;
+      box-shadow: 0 0 8px rgba(255,255,255,0.3);
+    }
+
+    /* ========================================
+       控制按钮 - 苹果风格
+    ======================================== */
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 28px 0;
+      flex-wrap: wrap;
+    }
+
+    .control-btn {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .control-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.24);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
+    }
+
+    .control-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .control-btn.primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      box-shadow: 0 4px 12px rgba(41, 151, 255, 0.32);
+    }
+
+    .control-btn.primary:hover:not(:disabled) {
+      background: #1e96ff;
+      box-shadow: 0 8px 24px rgba(41, 151, 255, 0.42);
+    }
+
+    /* ========================================
+       关闭按钮
+    ======================================== */
+    .close-btn {
+      width: 100%;
+      padding: 14px 32px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #0066d6 100%);
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 
+        0 4px 16px rgba(41, 151, 255, 0.32),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      margin-top: 8px;
+    }
+
+    .close-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 28px rgba(41, 151, 255, 0.42),
+        0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+    }
+
+    .close-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ========================================
+       进度条
+    ======================================== */
+    .progress-container {
+      margin: 20px 0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      border-radius: 2px;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 10px rgba(41, 151, 255, 0.5);
+    }
+
+    /* ========================================
+       装饰元素 - 明亮边框角标
+    ======================================== */
+    .corner-accent {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      pointer-events: none;
+    }
+
+    .corner-accent.top-left {
+      top: 10px;
+      left: 10px;
+      border-right: none;
+      border-bottom: none;
+      border-radius: 14px 0 0 0;
+    }
+
+    .corner-accent.top-right {
+      top: 10px;
+      right: 10px;
+      border-left: none;
+      border-bottom: none;
+      border-radius: 0 14px 0 0;
+    }
+
+    .corner-accent.bottom-left {
+      bottom: 10px;
+      left: 10px;
+      border-right: none;
+      border-top: none;
+      border-radius: 0 0 0 14px;
+    }
+
+    .corner-accent.bottom-right {
+      bottom: 10px;
+      right: 10px;
+      border-left: none;
+      border-top: none;
+      border-radius: 0 0 14px 0;
+    }
+
+    /* ========================================
+       响应式设计
+    ======================================== */
+    @media (max-width: 480px) {
+      .main-title {
+        font-size: 36px;
+      }
+      
+      .modal-glass {
+        padding: 24px 20px;
+        min-width: auto;
+        width: 90vw;
+      }
+      
+      .step-counter {
+        font-size: 36px;
+      }
+      
+      .controls {
+        gap: 8px;
+      }
+      
+      .control-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+    }
+
+    /* ========================================
+       动画类
+    ======================================== */
+    .fade-in {
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 动态背景 -->
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <div class="container">
+    <p class="title">Wuziqi Gomoku</p>
+    <h1 class="main-title">回放模式</h1>
+    
+    <!-- 打开模态框按钮 -->
+    <button class="control-btn primary" onclick="openModal()">
+      打开回放
+    </button>
+  </div>
+
+  <!-- 毛玻璃模态框 -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-glass" id="modalGlass">
+      <!-- 装饰角标 -->
+      <div class="corner-accent top-left"></div>
+      <div class="corner-accent top-right"></div>
+      <div class="corner-accent bottom-left"></div>
+      <div class="corner-accent bottom-right"></div>
+      
+      <!-- 可拖拽标题栏 -->
+      <div class="drag-handle" id="dragHandle">
+        <h2 class="modal-title">回放模式</h2>
+      </div>
+      
+      <!-- 回放信息 -->
+      <div class="replay-info">
+        <div class="step-counter" id="stepCounter">3 / 15</div>
+        <div class="step-label">当前步数</div>
+        
+        <div class="move-details">
+          <div class="move-position" id="movePosition">第 4 行，第 8 列</div>
+          <div class="move-player">
+            <span class="player-dot black"></span>
+            <span>黑棋</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 进度条 -->
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 20%"></div>
+        </div>
+      </div>
+      
+      <!-- 控制按钮 -->
+      <div class="controls">
+        <button class="control-btn" onclick="goToStart()">开始</button>
+        <button class="control-btn" onclick="prevStep()">上一步</button>
+        <button class="control-btn" onclick="nextStep()">下一步</button>
+        <button class="control-btn" onclick="goToEnd()">结束</button>
+      </div>
+      
+      <!-- 关闭按钮 -->
+      <button class="close-btn" onclick="closeModal()">退出回放</button>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // 状态管理
+    // ========================================
+    let state = {
+      isOpen: false,
+      currentStep: 3,
+      totalSteps: 15,
+      isDragging: false,
+      dragOffset: { x: 0, y: 0 },
+      position: { x: 0, y: 0 }
+    };
+
+    // 模拟棋谱数据
+    const moveHistory = [
+      { row: 7, col: 7, player: 'black' },
+      { row: 7, col: 8, player: 'white' },
+      { row: 8, col: 7, player: 'black' },
+      { row: 7, col: 9, player: 'white' },
+      { row: 6, col: 7, player: 'black' },
+      { row: 9, col: 7, player: 'white' },
+      { row: 6, col: 8, player: 'black' },
+      { row: 8, col: 9, player: 'white' },
+      { row: 5, col: 7, player: 'black' },
+      { row: 10, col: 7, player: 'white' },
+      { row: 5, col: 8, player: 'black' },
+      { row: 9, col: 8, player: 'white' },
+      { row: 6, col: 6, player: 'black' },
+      { row: 8, col: 10, player: 'white' },
+      { row: 5, col: 6, player: 'black' }
+    ];
+
+    // ========================================
+    // DOM 元素
+    // ========================================
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalGlass = document.getElementById('modalGlass');
+    const dragHandle = document.getElementById('dragHandle');
+    const stepCounter = document.getElementById('stepCounter');
+    const movePosition = document.getElementById('movePosition');
+    const progressFill = document.getElementById('progressFill');
+
+    // ========================================
+    // 模态框控制
+    // ========================================
+    function openModal() {
+      state.isOpen = true;
+      state.position = { x: 0, y: 0 };
+      modalOverlay.classList.add('active');
+      modalGlass.style.transform = `translate(0px, 0px)`;
+      updateUI();
+    }
+
+    function closeModal() {
+      state.isOpen = false;
+      modalOverlay.classList.remove('active');
+    }
+
+    function updateUI() {
+      stepCounter.textContent = `${state.currentStep + 1} / ${state.totalSteps}`;
+      
+      const currentMove = moveHistory[state.currentStep];
+      movePosition.textContent = `第 ${currentMove.row + 1} 行，第 ${currentMove.col + 1} 列`;
+      
+      const playerDot = document.querySelector('.player-dot');
+      const playerText = document.querySelector('.move-player span:last-child');
+      playerDot.className = `player-dot ${currentMove.player}`;
+      playerText.textContent = currentMove.player === 'black' ? '黑棋' : '白棋';
+      
+      const progress = ((state.currentStep + 1) / state.totalSteps) * 100;
+      progressFill.style.width = `${progress}%`;
+    }
+
+    // ========================================
+    // 步进控制
+    // ========================================
+    function goToStart() {
+      state.currentStep = 0;
+      updateUI();
+      animateStep();
+    }
+
+    function prevStep() {
+      if (state.currentStep > 0) {
+        state.currentStep--;
+        updateUI();
+        animateStep();
+      }
+    }
+
+    function nextStep() {
+      if (state.currentStep < state.totalSteps - 1) {
+        state.currentStep++;
+        updateUI();
+        animateStep();
+      }
+    }
+
+    function goToEnd() {
+      state.currentStep = state.totalSteps - 1;
+      updateUI();
+      animateStep();
+    }
+
+    function animateStep() {
+      modalGlass.style.animation = 'none';
+      modalGlass.offsetHeight; // 触发重绘
+      modalGlass.style.animation = 'fadeIn 0.3s ease';
+    }
+
+    // ========================================
+    // 拖拽功能 - 支持鼠标和触摸
+    // ========================================
+    function getClientPosition(e) {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    function handleStart(e) {
+      if (!state.isOpen) return;
+      
+      const pos = getClientPosition(e);
+      state.isDragging = true;
+      state.dragOffset = {
+        x: pos.x - state.position.x,
+        y: pos.y - state.position.y
+      };
+      
+      // 阻止默认行为（触摸时防止滚动）
+      if (e.type === 'touchstart') {
+        e.preventDefault();
+      }
+    }
+
+    function handleMove(e) {
+      if (!state.isDragging || !state.isOpen) return;
+      
+      const pos = getClientPosition(e);
+      state.position = {
+        x: pos.x - state.dragOffset.x,
+        y: pos.y - state.dragOffset.y
+      };
+      
+      modalGlass.style.transition = 'none';
+      modalGlass.style.transform = `translate(${state.position.x}px, ${state.position.y}px)`;
+    }
+
+    function handleEnd() {
+      state.isDragging = false;
+      if (state.isOpen) {
+        modalGlass.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+      }
+    }
+
+    // 绑定拖拽事件
+    dragHandle.addEventListener('mousedown', handleStart);
+    dragHandle.addEventListener('touchstart', handleStart, { passive: false });
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', handleMove, { passive: false });
+
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchend', handleEnd);
+    document.addEventListener('touchcancel', handleEnd);
+
+    // ========================================
+    // 键盘快捷键
+    // ========================================
+    document.addEventListener('keydown', (e) => {
+      if (!state.isOpen) return;
+      
+      switch(e.key) {
+        case 'Escape':
+          closeModal();
+          break;
+        case 'ArrowLeft':
+          prevStep();
+          break;
+        case 'ArrowRight':
+          nextStep();
+          break;
+        case 'Home':
+          goToStart();
+          break;
+        case 'End':
+          goToEnd();
+          break;
+      }
+    });
+
+    // ========================================
+    // 点击遮罩层关闭
+    // ========================================
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        closeModal();
+      }
+    });
+
+    // 初始化
+    updateUI();
+  </script>
+</body>
+</html>

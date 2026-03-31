@@ -1,13 +1,15 @@
-# 五子棋游戏 (Gomoku)
+# 五子棋游戏 (Gomoku) - xiaochidian
 
-一个精美的在线五子棋游戏，支持人机对战、双人对战等多种模式。
+一个精美的在线五子棋游戏，支持人机对战、双人对战、在线对战等多种模式。
+
+> **项目名称**: xiaochidian - 来源于 `package.json` 中的 `name` 字段，作为项目的唯一标识符
 
 ## 功能特性
 
 ### 游戏模式
 - **双人对战** - 本地双人对战模式
 - **人机对战** - 与内置 AI 对战
-- **在线对战** - 创建/加入房间（开发中）
+- **在线对战** - 创建/加入房间，支持观战
 
 ### AI 智能对手
 - **三种难度级别**：简单 / 中等 / 困难
@@ -27,12 +29,20 @@
 - **云端存储** - 游戏记录自动同步到 Supabase 数据库
 - **双记录系统** - 本地存储 + 云端存储双备份
 - **在线对战预留** - 已集成实时订阅功能，支持未来在线对战
+- **在线对战服务器** - 使用 CloudBase 云托管部署，支持 WebSocket 实时通信
 
 ### 其他功能
 - 最后落子高亮标记
 - 悔棋功能
 - 倒计时显示
 - 胜负判定
+
+### 排名系统 (v1.2.7 新增)
+- **排行榜** - 查看全服前 50 名玩家
+- **战绩面板** - 查看个人胜率、总对局、连胜等数据
+- **段位系统** - 青铜 🥉 / 白银 🥈 / 黄金 🥇 / 钻石 💎
+- **积分系统** - PVP 胜 +25 / 负 -25，PVE 胜 +20 / 负 -20
+- **自动更新** - 游戏结束后自动更新积分和胜率
 
 ## 技术栈
 
@@ -47,6 +57,62 @@
 ```bash
 npm install
 ```
+
+### 启动开发服务器
+```bash
+npm start
+```
+- 前端：http://localhost:5173
+- 后端：http://localhost:3000
+
+## 在线对战使用指南
+
+### 创建房间
+1. 在游戏主界面点击「在线对战」按钮
+2. 点击「创建房间」按钮
+3. 系统会自动生成一个 6 位房间号（如：`ABC123`）
+4. 将房间号分享给朋友
+5. 等待对手加入
+
+### 加入房间
+1. 在游戏主界面点击「在线对战」按钮
+2. 输入房主提供的 6 位房间号
+3. 点击「加入房间」按钮
+4. 等待游戏开始
+
+### 房间号规则
+- 房间号由 6 位字母和数字组成（如：`ABC123`, `XY5678`）
+- 字母使用大写，排除易混淆字符（I, O, 0, 1）
+- 房间号唯一，不可重复
+
+### 退出房间
+- 点击「退出房间」按钮即可离开当前房间
+- 如果是房主退出，房间会自动解散
+- 如果是玩家退出，对方会收到「对手已离开」通知
+
+### 观战功能
+1. 在游戏主界面点击「在线对战」按钮
+2. 点击「观战」标签页
+3. 输入正在进行的 6 位房间号
+4. 点击「进入观战」按钮
+5. 即可观看对局，实时同步棋盘和落子
+
+### 观众功能说明
+- 观众无需加入游戏，直接输入房间号即可观战
+- 实时显示双方玩家信息和观众人数
+- 观众离开不影响游戏进行
+- 游戏结束后显示胜负结果
+
+### 游戏规则
+- 黑棋先行（房主执黑）
+- 白棋后行（加入者执白）
+- 率先连成五子者获胜
+- 支持重新开始游戏
+
+### 注意事项
+- 在线对战需要两端都连接互联网
+- 确保防火墙允许 5173 和 3000 端口
+- 局域网内可直接使用内网 IP 访问
 
 ### 开发模式
 ```bash
@@ -77,13 +143,17 @@ wuziqi/
 ├── src/
 │   ├── components/
 │   │   ├── Board/           # 棋盘组件
+│   │   │   ├── Board.jsx
+│   │   │   └── Board.css
 │   │   └── Modals/          # 模态框组件
 │   │       ├── VictoryModal.jsx
 │   │       ├── RulesModal.jsx
 │   │       ├── SettingsModal.jsx
-│   │       └── ReplayModal.jsx
+│   │       ├── ReplayModal.jsx
+│   │       └── RoomModal.jsx
 │   ├── hooks/
-│   │   └── useGameLogic.js  # 游戏逻辑 Hook
+│   │   ├── useGameLogic.js  # 游戏逻辑 Hook
+│   │   └── useOnlineGame.js # 在线对战 Hook
 │   ├── lib/
 │   │   └── supabase.js      # Supabase 客户端和操作函数
 │   ├── utils/
@@ -94,19 +164,212 @@ wuziqi/
 │   ├── App.css              # 主应用样式
 │   ├── index.css            # 全局样式
 │   └── main.jsx             # 入口文件
+├── cloudbase/
+│   ├── server/              # CloudBase 云托管后端
+│   │   ├── index.js         # 云函数入口
+│   │   ├── server.js        # 服务器主逻辑
+│   │   ├── utils/
+│   │   │   └── gameLogic.js # 游戏逻辑
+│   │   ├── package.json
+│   │   ├── Dockerfile
+│   │   └── cloudbaserc.json
+│   └── DEPLOY_GUIDE.md     # 部署指南
 ├── public/                  # 静态资源
 ├── index.html               # HTML 模板
-├── .env                     # 环境变量配置
+├── .env                    # 开发环境变量
+├── .env.production         # 生产环境变量
 ├── vite.config.js           # Vite 配置
 └── package.json             # 项目配置
 ```
 
 ## 部署信息
 
-- **在线地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
-- **当前版本**: v0.51
-- **部署时间**: 2026-02-23
-- **部署平台**: 腾讯云 CloudBase 静态网站托管
+### Railway 部署（当前使用）
+
+| 服务 | 地址 |
+|------|------|
+| 前端 | https://vfsmt568wm0q.space.minimaxi.com/ |
+| 后端 | https://wuziqi-railway-production.up.railway.app |
+
+#### Railway 部署配置详情
+
+**问题描述**：
+首次部署 Railway 后端时遇到错误：
+```
+/bin/bash: line 1: npm: command not found
+Build Failed: build daemon returned an error
+```
+
+这是因为 Railway 的 Nixpacks 构建系统无法正确识别 Node.js 环境。
+
+**解决方案**：
+创建 Dockerfile 明确指定 Node.js 20 环境，强制使用 Docker 构建。
+
+**创建的配置文件**：
+
+1. `railway-backend/Dockerfile` - Docker 构建文件：
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+2. `railway-backend/railway.json` - Railway 配置：
+```json
+{
+  "$schema": "https://railway.com/railway.json",
+  "name": "wuziqi-backend",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  }
+}
+```
+
+3. `railway.json` - 项目配置：
+```json
+{
+  "$schema": "https://railway.com/railway.json",
+  "projects": {
+    "wuziqi-backend": {
+      "root": "railway-backend"
+    },
+    "wuziqi-frontend": {
+      "root": "railway-frontend"
+    }
+  }
+}
+```
+
+#### Railway 部署步骤
+
+1. **后端部署**：
+   - 在 Railway Dashboard 创建新服务
+   - 连接 GitHub 仓库
+   - 设置 Root Directory 为 `railway-backend`
+   - 设置 Build 为 "Dockerfile"
+   - 部署后获得后端 URL
+
+2. **前端部署**：
+   - 构建前端：`npm run build`
+   - 将 dist 目录上传到 MiniMax 平台
+   - 设置环境变量 `VITE_SOCKET_URL` 为 Railway 后端地址
+
+#### 前端环境变量配置
+
+在 `.env.production` 中配置：
+```
+VITE_SOCKET_URL=https://wuziqi-railway-production.up.railway.app
+VITE_SUPABASE_URL=https://pjnzmyvoucgmanoqvbav.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+#### Railway 前端配置 (备选方案)
+
+如果要在 Railway 上部署前端，需要创建 `railway-frontend` 目录，包含以下配置文件：
+
+1. `railway-frontend/Dockerfile` - 多阶段构建：
+```dockerfile
+# 多阶段构建：第一阶段构建前端
+FROM node:20-alpine as builder
+
+# 设置环境变量
+ENV VITE_SUPABASE_URL=https://pjnzmyvoucgmanoqvbav.supabase.co
+ENV VITE_SUPABASE_ANON_KEY=your_anon_key
+ENV VITE_SOCKET_URL=wuziqi-railway-production.up.railway.app
+
+WORKDIR /app
+
+# 复制配置文件
+COPY package*.json ./
+COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY tsconfig.json ./
+COPY jsconfig.json ./
+COPY index.html ./
+COPY src ./src
+COPY public ./public
+
+# 安装依赖并构建
+RUN npm install
+RUN npm run build
+
+# 第二阶段：运行静态服务器
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install -g serve
+COPY --from=builder /app/dist ./dist
+EXPOSE 3000
+CMD ["serve", "-s", "dist", "-l", "3000"]
+```
+
+2. `railway-frontend/railway.json` - Railway 配置：
+```json
+{
+  "$schema": "https://railway.com/railway.json",
+  "name": "wuziqi-frontend",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
+
+> ⚠️ **注意**: 前端配置文件包含敏感的环境变量，实际部署时请使用 Railway 的环境变量功能或创建 `.env` 文件（已添加到 `.gitignore`）。
+
+#### 部署结果
+
+- ✅ 后端服务器成功运行
+- ✅ 在线对战功能完全正常
+- ✅ WebSocket 实时通信正常
+- ⚠️ 使用内存存储（容器重启后数据丢失）
+
+---
+
+### CloudBase 部署（备选）
+
+- **前端地址**: https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/
+- **后端服务**: wuziqi-server (容器型云托管)
+- **后端地址**: wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
+- **部署平台**: 腾讯云 CloudBase 静态网站托管 + 云托管
+
+### 当前状态
+
+- **当前版本**: v1.2.8
+- **部署时间**: 2026-03-11
+- ✅ **游戏功能**: 在线对战完全正常
+- ✅ **WebSocket**: 实时通信正常
+- ✅ **项目文档**: 已更新并部署
+- ⚠️ **数据库**: 使用内存存储（容器重启后数据丢失）
+
+### 数据库配置说明
+
+**当前状态**：
+- 服务使用内存存储房间数据
+- 容器重启后房间数据会丢失
+- 游戏对战功能完全正常
+
+**未来持久化配置（可选）**：
+
+如需实现排行榜、历史战绩等持久化功能，需要配置 VPC 网络让容器访问 CloudBase 数据库：
+
+1. 进入 [CloudBase 控制台](https://console.cloud.tencent.com/tcb) - 云托管
+2. 点击 wuziqi-server 服务 - 服务设置
+3. 启用「私有网络 (VPC)」
+4. 选择或创建 VPC 网络
+5. 重新部署服务
+
+配置成功后，容器即可通过 VPC 访问 CloudBase NoSQL 数据库，实现数据持久化。
 
 ### 部署步骤
 
@@ -114,18 +377,353 @@ wuziqi/
 # 1. 构建生产版本
 npm run build
 
-# 2. 部署到 CloudBase
+# 2. 部署前端到 CloudBase
 npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
+
+# 3. 部署后端到 CloudBase 云托管
+# 方式一：使用 CloudBase CLI
+tcb cloudrun deploy -s wuziqi-server --port 3000 --source ./cloudbase/server --force
+
+# 方式二：进入 server 目录后部署
+cd cloudbase/server
+tcb cloudrun deploy -s wuziqi-server --port 3000 --source . --force
+
+# 4. 部署云函数 (可选，用于在线对战)
+cloudbase fn deploy wuziqi-server -e codebuddy-9gu42kpn62ead2e2 --dir ./cloudfunctions/wuziqi-server --ws --force
+
+# 5. 创建 HTTP 访问服务 (可选)
+cloudbase service create -e codebuddy-9gu42kpn62ead2e2 -p wuziqi -f wuziqi-server
 ```
 
-### 本次 v0.51 部署内容
+### 本次 v1.0 部署内容
 
-- 新增 AI 难度系统（简单/中等/困难）
-- 优化 Vite 配置使用相对路径 `./`
-- 更新页脚版本号至 v0.51
+- 成功部署 CloudBase 云托管后端服务器
+- 后端服务：wuziqi-server (函数型云托管) - 运行正常
+- 后端服务地址：wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
+- 在线对战功能正式上线！
+- 前后端 WebSocket 连接成功
+- 更新版本号至 v1.0
+
+**部署日志：**
+```
+node server.js
+
+[配置] CORS origin: *
+========================================
+🎮 五子棋在线对战服务器已启动 (CloudBase版)
+📡 监听端口: 3000
+🌐 环境: development
+========================================
+
+tcb cloudrun deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --port 3000 --force
+CloudBase CLI 2.12.2
+试试 tcb ai 命令，开启 AI 原生开发
+i 当前环境 Id：codebuddy-9gu42kpn62ead2e2
+? 是否启用灰度部署？ 否（发布成功后自动切换流量至新版本）
+i 正在提交函数型云托管 wuziqi-server 中，请稍候...
+i 提交函数型云托管 wuziqi-server 已完成！
+┌───────────────┬────────────┬─────────────────────┬──────────┬──────────┐
+│ 服务名称      │ 类型       │ 更新时间            │ 运行状态 │ 公网访问 │
+├───────────────┼────────────┼─────────────────────┼──────────┼──────────┤
+│ wuziqi-server │ 函数型服务 │ 2026-02-25 02:03:50 │ normal   │ 允许     │
+└───────────────┴────────────┴─────────────────────┴──────────┴──────────┘
+```
+
+### 本次 v1.2 部署内容 (2026-02-27)
+
+| 修复项 | 问题描述 | 解决方案 | 效果 |
+|--------|----------|----------|------|
+| **断线重连缓冲期** | `disconnect` 定时器60秒，`getDisconnectedUser` 检查10秒，不匹配 | 统一为60秒缓冲期 | 手机端断线后可正常恢复房间 |
+| **数据库操作阻塞** | `create_room`、`join_room`、`place_piece` 中的 `await dbSaveRoom()` 阻塞响应 | 改为后台异步执行 | 创建/加入/落子即时响应 |
+| **数据库查询** | `place_piece` 尝试从数据库加载房间，等待超时 | 完全移除数据库查询依赖 | 纯内存操作，无延迟 |
+| **落子高亮** | 手机端自己落子后高亮不显示，需等服务端响应 | 乐观更新：本地立即更新棋盘状态 | 自己落子立即显示高亮 |
+| **代码优化** | `placePiece` 闭包陷阱，回滚状态可能过期 | 使用函数式更新获取最新状态 | 回滚机制更可靠 |
+
+#### 优化效果
+- ✅ 创建房间：即时响应，立即显示房间号
+- ✅ 加入房间：即时响应，立即进入游戏
+- ✅ 落子：即时响应，棋子立即显示，高亮即时显示
+- ✅ 断线重连：60秒内可正常恢复房间状态
+
+#### 代码审查报告 (2026-02-27)
+
+##### 发现的问题
+
+| 严重程度 | 位置 | 问题描述 |
+|----------|------|----------|
+| **CRITICAL** | `src/hooks/useOnlineGame.js:417-436` | 乐观更新缺少回滚机制 - 落子被服务器拒绝时不会回滚本地状态 |
+| WARNING | `cloudbase/server/index.js:554,603` | `disconnectedUsers` 和 `disconnectTimeouts` 对象可能内存泄漏 |
+| WARNING | `cloudbase/server/index.js:510,530` | 数据库保存失败无重试机制 |
+
+##### 已修复
+- ✅ **CRITICAL**: 乐观更新回滚机制 - 落子被服务器拒绝时自动回滚本地状态
+
+##### 待修复 (后续版本)
+- 断线用户对象定期清理机制
+- 数据库保存重试机制
+
+### 本次 v1.2.3 部署内容 (2026-03-03)
+
+**v1.2.3 - 回放模式优化 + Bug 修复**
+
+#### 功能更新
+- ✅ 新增回放模式毛玻璃效果
+- ✅ 新增回放模态框拖拽功能（支持鼠标和触摸）
+- ✅ 修复回放后AI不继续下棋的bug
+- ✅ 修复 turnTime 变量作用域错误
+- ✅ 使用 refs 追踪最新状态，避免闭包陷阱
+- ✅ PVE模式下增加权限检查，防止用户在AI回合落子
+
+#### Bug 修复
+| 修复项 | 问题描述 | 解决方案 |
+|--------|----------|----------|
+| **回放后AI不落子** | 退出回放后PVE模式下AI不继续下棋 | 新增 resetAiMove 和 triggerAiMove 函数控制AI落子 |
+| **ReferenceError** | turnTime 变量在 if 块外未定义 | 将变量声明移至 if 块外 |
+| **闭包陷阱** | AI落子时使用过期的状态值 | 使用 refs 追踪最新状态值 |
+
+#### 修改的文件
+| 文件路径 | 修改内容 |
+|----------|----------|
+| `src/hooks/useGameLogic.js` | 重构AI落子逻辑，修复闭包问题 |
+| `src/App.jsx` | 增强回放状态恢复逻辑 |
+| `src/components/Modals/ReplayModal.jsx` | 新增拖拽功能 |
+| `src/App.css` | 毛玻璃效果样式 |
+| `src/hooks/__tests__/replay.test.jsx` | 新增回放功能测试 |
+| `index.html` | 版本号更新至 v1.2.3 |
+| `package.json` | 版本号更新至 v1.2.3 |
+
+### 本次 v1.2.4 部署内容 (2026-03-04)
+
+**v1.2.4 - 回放模式棋子位置修复**
+
+#### 问题描述
+- 回放模式下棋子位置随机出错
+- 上一步→下一步棋盘状态不一致
+- 有时回放点下一步棋盘没有棋子
+
+#### 问题根源
+- AI 落子 useEffect 依赖了 board，导致 board 更新时触发闭包问题
+- 闭包中 currentPlayer 是旧值，导致 AI 多次触发落子
+- moveHistory 中 player 字段记录错误
+
+#### 修复方案
+- 使用 useRef 追踪最新状态，避免闭包问题
+- useEffect 只依赖 currentPlayer 变化，不依赖 board
+- 删除调试日志，优化代码结构
+
+#### 修改的文件
+| 文件路径 | 修改内容 |
+|----------|----------|
+| `src/hooks/useGameLogic.js` | 修复 AI 落子 useEffect 闭包问题 |
+| `src/App.jsx` | 版本号更新至 v1.2.4 |
+| `package.json` | 版本号更新至 v1.2.4 |
+
+### 本次 v1.2.5 部署内容 (2026-03-06)
+
+**v1.2.5 - 观众模式 + WebSocket 身份验证**
+
+#### 更新内容
+- ✅ 新增观众模式功能，允许用户观看在线对战
+- ✅ 添加 WebSocket Token 身份验证机制
+- ✅ 实时显示观众人数
+- ✅ 清理生产环境调试日志
+
+#### 观众模式功能
+- 观众通过房间号进入观战，无需加入游戏
+- 实时同步棋盘、落子、计时器
+- 显示双方玩家信息和观众人数
+- 观众离开不影响游戏进行
+
+#### 安全增强
+- 后端添加 SERVER_TOKEN 生成和验证
+- 添加 /api/token 端点供客户端获取 token
+- 连接时自动进行身份验证
+
+#### 修改的文件
+| 文件路径 | 修改内容 |
+|----------|----------|
+| `cloudbase/server/index.js` | 添加观众模式、Token 验证、版本号 |
+| `src/hooks/useOnlineGame.js` | 添加观众加入/离开函数和事件监听 |
+| `src/components/Modals/RoomModal.jsx` | 添加观战 Tab 和观众显示 |
+| `src/App.jsx` | 传递观众相关 props |
+| `package.json` | 版本号更新至 v1.2.5 |
+| `index.html` | 版本号更新至 v1.2.5 |
+
+### 本次 v1.2.1 部署内容 (2026-02-27)
+
+**v1.2.1 - 在线对战计时器功能 + Bug 修复**
+
+#### 更新内容
+- ✅ 新增在线对战计时器功能
+- ✅ 实时显示游戏总时间
+- ✅ 分别追踪黑方和白方累计落子时间
+- ✅ 获胜页面正确显示所有时间数据
+- ✅ 修复时间不走动的 bug
+- ✅ 修复获胜页面不显示时间的 bug
+
+#### Bug 修复 (2026-02-28)
+| 修复项 | 问题描述 | 解决方案 |
+|--------|----------|----------|
+| **计时器精度问题** | `useEffect` 依赖数组包含 `blackTime` 和 `whiteTime`，导致计时器每秒被重置 | 从依赖数组中移除时间状态，使用 refs 追踪时间 |
+| **竞态条件** | 两个独立的 `useEffect` 处理回合切换和计时器，存在竞态条件 | 合并为一个 `useEffect`，使用 `prevTurnRef` 追踪回合变化 |
+
+#### 修改的文件
+| 文件路径 | 修改内容 |
+|----------|----------|
+| `cloudbase/server/server.js` | 后端计时器逻辑 |
+| `cloudbase/server/utils/gameLogic.js` | 房间初始化添加时间字段 |
+| `cloudbase/server/index.js` | 时间计算与同步 |
+| `src/hooks/useOnlineGame.js` | 前端计时器与状态管理（修复依赖数组问题） |
+| `src/App.jsx` | 版本号更新至 v1.2.1 |
+| `index.html` | 版本号更新至 v1.2.1 |
+
+#### 技术细节
+- 游戏开始时自动启动计时器
+- 每次落子时更新当前方累计时间
+- 时间数据通过 WebSocket 实时同步
+- 获胜时计算准确的游戏总时间和各方累计时间
+- **关键修复**：使用 `useRef` 而非 `useState` 追踪时间，避免不必要的 effect 重新执行
+
+### 本次 v1.1 部署内容 (2026-02-26)
+
+#### 问题描述
+服务器日志出现以下错误：
+```
+ReferenceError: dbInitFailed is not defined
+[数据库] 保存房间失败: dbInitFailed is not defined
+[数据库] 删除房间失败: dbInitFailed is not defined
+```
+
+#### 问题分析
+1. 在 `cloudbase/server/utils/database.js` 第58行使用了 `dbInitFailed` 变量，但没有在文件开头声明
+2. 在 `cloudbase/server/index.js` 中缺少 `setSocketEmitter` 调用，导致数据库状态无法通知客户端
+
+#### 修复步骤
+
+**步骤1：修复 database.js 变量声明**
+```javascript
+// 修改前 (cloudbase/server/utils/database.js 第13-15行)
+let app, db
+let io = null  // Socket.io 实例
+
+// 修改后
+let app, db
+let dbInitFailed = false  // 数据库初始化失败标记
+let io = null  // Socket.io 实例
+```
+
+**步骤2：修复 index.js 缺少的调用**
+```javascript
+// 添加导入 (cloudbase/server/index.js)
+import {
+  getRoom as dbGetRoom,
+  saveRoom as dbSaveRoom,
+  deleteRoom as dbDeleteRoom,
+  initDatabase,
+  setSocketEmitter  // 新增
+} from './utils/database.js'
+
+// 在创建 io 实例后添加调用
+const io = new Server(httpServer, {...})
+setSocketEmitter(io)  // 新增
+```
+
+**步骤3：重新部署到 CloudBase**
+```bash
+npx cloudbase run:deploy -e codebuddy-9gu42kpn62ead2e2 -s wuziqi-server --targetPath ./cloudbase/server
+```
+
+#### 修复结果
+- 新版本：wuziqi-server-031
+- 部署时间：2026-02-26 23:36:17
+- 服务状态：normal ✅
+- 游戏功能正常运行
+
+#### 注意事项
+- 由于 CloudBase 云托管环境无法创建数据库集合（需要更高权限），当前使用内存存储
+- 房间数据在容器重启后会丢失，但游戏对战功能正常
+- 如需持久化存储，需要在 CloudBase 控制台手动创建 `wuziqi_rooms` 集合
+
+### 本次 v0.8 部署内容
+
+- 部署前端到 CloudBase 静态托管
+- 部署云函数 (wuziqi-server)
+- 创建 HTTP 访问服务
+- 更新版本号至 v0.8
+- 保留云托管备份方案 (cloudbase_backup/)
+- 添加云函数部署方案 (cloudfunctions/)
+
+### 在线对战配置说明
+
+**当前状态**：
+- 云函数部署遇到配置问题
+- CloudBase 云托管需要开通按流量计费（包年包月无法使用）
+- 云函数不支持 WebSocket，无法实现真正的实时在线对战
+
+**结论**：
+- 当前版本只支持本地双人对战和人机对战
+- 在线对战功能需要使用其他方案（如自建服务器）
+
+### 本次 v0.6 部署内容
+
+- 新增在线对战功能（开发完成）
+  - 新增后端服务器 Express + Socket.io
+  - 实现创建房间、加入房间功能（6位房间码）
+  - 实现实时棋盘同步
+  - 前后端胜负判定
+  - 前端在线游戏 Hook (useOnlineGame.js)
+  - 房间 UI 组件 (RoomModal)
+- 统一版本号至 v0.6
+- 修复已知问题，优化游戏体验
 
 ## 版本历史
 
+| 版本 | 日期 | 更新内容 |
+|------|------|----------|
+| **v2.1.0** | 2026-03-13 | Railway GitHub 自动部署优化：前后端统一使用 GitHub Actions 自动同步构建产物并触发 Railway 自动部署，修复前端部署配置 |
+| **v2.0.0** | 2026-03-11 | Railway 部署重大更新：完整功能后端（断线重连、观众、计时器、排名），CI/CD 自动部署，统一版本号 |
+| **v1.2.8** | 2026-03-11 | 文档更新：修正在线试玩地址，部署到 CloudBase 静态托管 |
+| **v1.2.7** | 2026-03-10 | Railway 后端部署成功，添加 Dockerfile 配置解决构建问题；前端部署到 MiniMax |
+| **v1.2.7** | 2026-03-10 | 恢复 CloudBase 规则文件，更新 EdgeOne 部署配置 |
+| **v1.2.5** | 2026-03-06 | 新增观众模式功能，实时显示观众人数；添加 WebSocket Token 身份验证机制 |
+| **v1.2.4** | 2026-03-04 | 修复回放模式棋子位置错误问题 |
+| **v1.2.3** | 2026-03-03 | 回放模式优化（毛玻璃+拖拽），修复回放后AI不落子 |
+| **v1.2.1** | 2026-02-27 | 新增在线对战计时器功能，实时显示游戏时间和双方累计时间 |
+| **v1.2** | 2026-02-27 | 修复断线重连缓冲期、数据库阻塞、落子高亮等问题，详见上方更新详情 |
+| **v1.1** | 2026-02-26 | 修复数据库初始化问题 |
+- **v1.2.1** - 在线对战计时器功能 (2026-02-27)
+  - 新增在线对战计时器功能
+  - 实时显示游戏总时间
+  - 分别追踪黑方和白方累计落子时间
+  - 获胜页面正确显示所有时间数据
+  - 修复时间不走动的 bug
+  - 修复获胜页面不显示时间的 bug
+- **v1.1** - 修复数据库初始化问题 (2026-02-26)
+  - 修复 `dbInitFailed is not defined` 错误
+  - 添加缺失的变量声明 `let dbInitFailed = false`
+  - 修复 index.js 缺少的 `setSocketEmitter` 调用
+  - 重新部署到 CloudBase (wuziqi-server-031)
+  - 当前使用内存存储房间数据（容器重启后丢失）
+- **v1.0** - CloudBase 云托管部署成功，在线对战正式上线
+  - 成功部署 CloudBase 云托管后端服务器（容器型）
+  - 后端服务地址：wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com
+  - 在线对战功能正式可用
+  - 前后端 WebSocket 连接成功
+  - 更新版本号至 v1.0
+- **v0.8** - 部署到腾讯云 CloudBase
+  - 前端部署到 CloudBase 静态托管
+  - 云函数部署 (wuziqi-server)
+  - 创建 HTTP 访问服务
+  - 更新版本号至 v0.8
+  - 保留云托管备份方案 (cloudbase_backup/)
+  - 添加云函数部署方案 (cloudfunctions/)
+- **v0.6** - 实现在线对战功能
+  - 新增后端服务器 (Express + Socket.io)
+  - 实现创建/加入房间功能（6位房间码）
+  - 实时棋盘状态同步
+  - 后端胜负判定逻辑
+  - 新增 useOnlineGame.js Hook
+  - 新增 RoomModal 房间管理组件
 - **v0.51** - 实现 AI 难度系统
   - 新增三种 AI 难度级别：简单、中等、困难
   - 简单难度：随机性 + 基础进攻，适合新手
@@ -173,5 +771,71 @@ npx cloudbase hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2
 | move_history | JSONB | 移动历史 |
 
 ---
+## 本地运行示例
+
+在项目根目录下运行以下命令启动开发服务器：
+
+```bash
+npm start
+```
+
+**预期输出：**
+
+```
+> xiaochidian@1.0.0 start
+> concurrently "npm run dev" "npm run server"
+
+[0] 
+[0] > xiaochidian@1.0.0 dev
+[0] > vite
+
+[1] 
+[1] > xiaochidian@1.0.0 server
+[1] > node cloudbase/server/index.js
+
+[1] 🎮 五子棋在线对战服务器已启动
+[1] 📡 监听端口: 3000
+
+[0]   VITE v7.3.1  ready in XXX ms
+[0] 
+[0]   ➜  Local:   http://localhost:5173/
+[0]   ➜  Network: http://192.168.1.9:5173/
+[0]   ➜  Network: http://192.168.1.8:5173/
+```
+
+启动成功后：
+- 前端地址: http://localhost:5173
+- 后端服务器: http://localhost:3000
+
+### 局域网访问
+
+如需从局域网其他设备访问，需要：
+
+1. **添加防火墙规则（管理员权限）**：
+```cmd
+netsh advfirewall firewall add rule name="Vite Port 5173" dir=in action=allow protocol=TCP localport=5173
+netsh advfirewall firewall add rule name="Node Server Port 3000" dir=in action=allow protocol=TCP localport=3000
+```
+
+2. 在其他设备上访问 `http://[本机IP地址]:5173`
+   - 例如：`http://192.168.1.9:5173`
+
+## 线上部署信息
+
+### 部署地址
+
+| 服务 | 地址 |
+|------|------|
+| 前端（静态网站） | https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/ |
+| 后端（云托管） | https://wuziqi-server-227261-9-1402693592.sh.run.tcloudbase.com |
+| 项目文档 | https://codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com/docs.html |
+
+### 部署时间
+- 2026-03-11 (文档更新 v1.2.8)
+
+### CloudBase 资源
+- 环境 ID：codebuddy-9gu42kpn62ead2e2
+- 云托管服务：wuziqi-server（容器型，端口 3000）
+- 静态网站托管：codebuddy-9gu42kpn62ead2e2-1402693592.tcloudbaseapp.com
 
 © 2026 狮王李

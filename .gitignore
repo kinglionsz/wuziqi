@@ -1,3 +1,7 @@
+# Railway 部署配置 (需要提交)
+!railway-backend/
+!railway-frontend/
+
 # Logs
 logs
 *.log
@@ -12,6 +16,10 @@ dist
 dist-ssr
 *.local
 
+# 允许提交 railway-frontend/dist 用于部署
+!railway-frontend/dist/
+!railway-frontend/dist/**
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +30,30 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+.env.local
+.env
+# .env.production 需要提交到仓库用于部署
+
+# Claude Code 配置（包含敏感信息）
+.env.claude-code
+start-claude.bat
+
+# Claude Code 本地配置
+.claude/settings.local.json
+.claude-state.json
+
+# Playwright 测试报告和截图
+playwright-report/
+playwright-report-advanced/
+e2e-report/
+test-results/
+test-screenshots/
+test-error.png
+
+# MiniMax CLI 配置（包含敏感信息）
+.minimax/
+
+# Agent 历史记录
+.agent_history/

@@ -1,0 +1,7 @@
+fix: 修复GitHub Actions工作流语法错误
+
+- 修复E2E测试job中的services部分语法错误
+- 删除services中不允许的steps属性
+- 将后端服务启动逻辑移到主steps部分
+- 保持Railway登录参数修复不变（--browserless）
+- 确保工作流文件通过语法验证

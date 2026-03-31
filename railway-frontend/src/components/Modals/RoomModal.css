@@ -1,0 +1,304 @@
+.room-modal {
+  min-width: 400px;
+  max-width: 500px;
+}
+
+.connection-status {
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.connection-status.connected {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.connection-status.disconnected {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #f5c6cb;
+}
+
+.room-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.room-tabs button {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #8B4513;
+  background: transparent;
+  color: #8B4513;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.room-tabs button.active {
+  background: #8B4513;
+  color: white;
+}
+
+.room-tabs button:hover:not(.active) {
+  background: rgba(139, 69, 19, 0.1);
+}
+
+.create-room-section,
+.join-room-section {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.create-room-section p,
+.join-room-section p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.create-room-button,
+.join-room-button {
+  width: 100%;
+  padding: 14px;
+  background: #8B4513;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.create-room-button:hover:not(:disabled),
+.join-room-button:hover:not(:disabled) {
+  background: #6d3610;
+}
+
+.create-room-button:disabled,
+.join-room-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.room-input {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 8px;
+  border: 2px solid #8B4513;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+.room-input:focus {
+  outline: none;
+  border-color: #6d3610;
+}
+
+.room-input::placeholder {
+  letter-spacing: normal;
+  font-size: 14px;
+}
+
+/* 房间信息样式 */
+.room-info {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.room-id-display {
+  margin-bottom: 20px;
+}
+
+.room-id-display .label {
+  font-size: 16px;
+  color: #666;
+}
+
+.room-id-display .room-id {
+  font-size: 32px;
+  font-weight: bold;
+  color: #8B4513;
+  letter-spacing: 4px;
+  display: block;
+  margin-top: 8px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.player-role {
+  margin-bottom: 20px;
+}
+
+.player-role .label {
+  font-size: 16px;
+  color: #666;
+}
+
+.player-role .role {
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.player-role .role.black {
+  color: #000;
+}
+
+.player-role .role.white {
+  color: #666;
+}
+
+/* 观众角色样式 */
+.spectator-role {
+  margin-bottom: 20px;
+}
+
+.spectator-role .label {
+  font-size: 16px;
+  color: #666;
+}
+
+.spectator-role .role.spectator {
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 8px;
+  color: #6a5acd;
+}
+
+/* 观众人数显示 */
+.spectator-count {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #e8e8ff;
+  border-radius: 8px;
+}
+
+.spectator-count .label {
+  font-size: 14px;
+  color: #666;
+}
+
+.spectator-count .count {
+  font-size: 16px;
+  font-weight: bold;
+  color: #6a5acd;
+  margin-left: 8px;
+}
+
+/* 观战区域样式 */
+.spectate-room-section {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.spectate-room-section p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.spectate-room-button {
+  width: 100%;
+  padding: 14px;
+  background: #6a5acd;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.spectate-room-button:hover:not(:disabled) {
+  background: #5848b5;
+}
+
+.spectate-room-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.host-badge {
+  background: #ffd700;
+  color: #333;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.room-status {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.waiting-text {
+  color: #856404;
+  font-size: 16px;
+}
+
+.playing-text {
+  color: #155724;
+  font-size: 16px;
+}
+
+.disconnected-text {
+  color: #721c24;
+  font-size: 16px;
+}
+
+.game-preview {
+  margin: 20px 0;
+  padding: 15px;
+  background: #e7f3ff;
+  border-radius: 8px;
+}
+
+.game-preview p {
+  margin: 5px 0;
+}
+
+.game-preview .game-over {
+  font-size: 18px;
+  font-weight: bold;
+  color: #8B4513;
+  margin-top: 10px !important;
+}
+
+.leave-room-button {
+  width: 100%;
+  padding: 14px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 20px;
+}
+
+.leave-room-button:hover {
+  background: #c82333;
+}

@@ -1,0 +1,144 @@
+# 五子棋游戏项目 CI/CD 工作流
+
+name: Wuziqi CI/CD
+
+on:
+  # 手动触发工作流
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '执行操作'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - lint
+          - test
+          - build
+          - deploy
+
+# 环境变量
+env:
+  NODE_VERSION: '24'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+jobs:
+  # 代码检查
+  lint:
+    name: 代码检查
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && (inputs.action == 'all' || inputs.action == 'lint')
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行 ESLint
+        run: npm run lint
+
+      - name: 运行 Prettier 检查
+        run: npm run format:check
+
+  # 测试
+  test:
+    name: 单元测试
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && (inputs.action == 'all' || inputs.action == 'test')
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行单元测试
+        run: npm run test:run
+
+      - name: 上传测试覆盖率
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  # 构建
+  build:
+    name: 构建项目
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && (inputs.action == 'all' || inputs.action == 'build')
+    needs: [lint, test]
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建生产版本
+        run: npm run build
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+  # 部署到腾讯云
+  deploy:
+    name: 部署到腾讯云
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && (inputs.action == 'all' || inputs.action == 'deploy')
+    needs: [build]
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 下载构建产物
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+      - name: 安装 CloudBase CLI
+        run: npm install -g @cloudbase/cli
+
+      - name: 部署到腾讯云
+        run: |
+          tcb login --key --apiKeyId ${{ secrets.TCB_API_KEY_ID }} --apiKey ${{ secrets.TCB_API_KEY }}
+          tcb hosting:deploy dist -e codebuddy-9gu42kpn62ead2e2

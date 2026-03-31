@@ -1,0 +1,11 @@
+fix: 添加调试信息并修复Railway登录参数
+
+- 在ci-cd.yml和deploy-dev.yml中添加调试信息
+- 确认railway login命令使用--browserless参数
+- 添加echo命令显示实际执行的命令
+- 修复格式问题，使用多行run命令语法
+
+调试信息将显示：
+1. 开始执行Railway登录
+2. 显示实际执行的命令
+3. 帮助诊断format()函数动态生成命令的问题

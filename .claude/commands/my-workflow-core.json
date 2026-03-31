@@ -1,0 +1,100 @@
+{
+  "id": "my-workflow-core",
+  "name": "五子棋工作流-核心版",
+  "description": "简化版工作流，包含核心流程",
+  "version": "1.0.0",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "label": "开始",
+      "data": {},
+      "visual": { "x": 400, "y": 50 }
+    },
+    {
+      "id": "receive_task",
+      "type": "default",
+      "label": "接收任务",
+      "data": { "description": "询问用户需求" },
+      "visual": { "x": 400, "y": 150 }
+    },
+    {
+      "id": "is_clear",
+      "type": "switch",
+      "label": "任务清晰?",
+      "data": {},
+      "visual": { "x": 400, "y": 250 }
+    },
+    {
+      "id": "clarify",
+      "type": "default",
+      "label": "详细询问",
+      "data": { "description": "询问更多细节" },
+      "visual": { "x": 650, "y": 250 }
+    },
+    {
+      "id": "code_modify",
+      "type": "default",
+      "label": "代码修改",
+      "data": { "description": "按需修改代码" },
+      "visual": { "x": 400, "y": 350 }
+    },
+    {
+      "id": "run_test",
+      "type": "default",
+      "label": "运行测试",
+      "data": { "description": "执行测试" },
+      "visual": { "x": 400, "y": 450 }
+    },
+    {
+      "id": "test_pass",
+      "type": "switch",
+      "label": "测试通过?",
+      "data": {},
+      "visual": { "x": 400, "y": 550 }
+    },
+    {
+      "id": "fix_test",
+      "type": "default",
+      "label": "修复测试",
+      "data": { "description": "修复测试问题" },
+      "visual": { "x": 650, "y": 550 }
+    },
+    {
+      "id": "commit",
+      "type": "default",
+      "label": "提交代码",
+      "data": { "description": "git commit" },
+      "visual": { "x": 400, "y": 650 }
+    },
+    {
+      "id": "deploy",
+      "type": "default",
+      "label": "部署上线",
+      "data": { "description": "部署到CloudBase" },
+      "visual": { "x": 400, "y": 750 }
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "完成",
+      "data": {},
+      "visual": { "x": 400, "y": 850 }
+    }
+  ],
+  "connections": [
+    { "from": "start", "to": "receive_task", "condition": "" },
+    { "from": "receive_task", "to": "is_clear", "condition": "" },
+    { "from": "is_clear", "to": "clarify", "condition": "否" },
+    { "from": "clarify", "to": "receive_task", "condition": "" },
+    { "from": "is_clear", "to": "code_modify", "condition": "是" },
+    { "from": "code_modify", "to": "run_test", "condition": "" },
+    { "from": "run_test", "to": "test_pass", "condition": "" },
+    { "from": "test_pass", "to": "fix_test", "condition": "否" },
+    { "from": "fix_test", "to": "run_test", "condition": "" },
+    { "from": "test_pass", "to": "commit", "condition": "是" },
+    { "from": "commit", "to": "deploy", "condition": "" },
+    { "from": "deploy", "to": "end", "condition": "" }
+  ]
+}

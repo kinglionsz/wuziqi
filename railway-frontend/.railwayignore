@@ -1,0 +1,7 @@
+# 只包含必要的文件
+!start.sh
+!package.json
+!server.js
+!railway.json
+!dist/
+!node_modules/

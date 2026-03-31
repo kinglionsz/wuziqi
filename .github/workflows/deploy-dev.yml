@@ -1,0 +1,78 @@
+name: 部署开发环境
+
+on:
+  push:
+    branches: [at_home]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '24'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  deploy-dev:
+    name: 部署到开发环境
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment:
+      name: development
+      url: https://wuziqi-dev.up.railway.app
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建前端
+        run: npm run build
+        env:
+          NODE_ENV: development
+
+      - name: 同步构建产物到 railway-frontend
+        run: |
+          echo "📦 同步构建产物到 railway-frontend/dist/..."
+          rm -rf railway-frontend/dist
+          cp -r dist railway-frontend/dist
+          cp docs.html railway-frontend/dist/docs.html
+          echo "✅ docs.html 已复制到 railway-frontend/dist/"
+          ls -la railway-frontend/dist/
+
+      - name: 提交构建产物触发 Railway 自动部署
+        run: |
+          echo "🚀 提交构建产物触发 Railway 自动部署..."
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add railway-frontend/dist/
+          git diff --staged --quiet || git commit -m "chore: 同步前端构建产物到开发环境"
+          git push origin at_home
+          echo "✅ 构建产物已提交，Railway 将自动部署"
+
+      - name: 等待 Railway 自动部署完成
+        run: |
+          echo "⏳ 等待 Railway 自动部署完成..."
+          echo "Railway 检测到代码更改后会自动部署前端"
+          sleep 45
+
+      - name: 健康检查
+        run: |
+          echo "🔍 检查开发环境..."
+          echo "检查后端服务..."
+          curl -f https://wuziqi-railway-production.up.railway.app/health || exit 1
+          echo "✅ 后端服务正常！"
+          echo ""
+          echo "前端服务 URL: https://wuziqi-frontend-production.up.railway.app"
+          echo "✅ 开发环境部署完成！"

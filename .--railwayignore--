@@ -1,0 +1,5 @@
+# 忽略这些目录，只部署 railway-backend  railway-frontend
+*
+
+!railway-backend/
+!railway-frontend/
